@@ -1,6 +1,6 @@
 # Filare Labs · three-minute click track
 
-Before the timer, reset, select Luca and run the simulated 08:30 sweep. Wait for seven role-specific briefs. Keep a second local instance warmed with BRAIN_MODE=offline. Present the mode shown in the header. Vertex sends model calls externally. The fallback runs locally. All identities and emails are synthetic and deliveries use a mock outbox.
+Before the timer, reset, select Luca and run the simulated 08:30 sweep. Wait for seven role-specific briefs. The header shows the current mode. Open a result’s trace to identify the mode that produced it. Vertex sends model calls externally and can fall back per run. The deterministic fallback runs locally. All identities and emails are synthetic and deliveries use a mock outbox.
 
 | Time | Click and show | Spoken cue |
 |---|---|---|
@@ -14,7 +14,7 @@ Before the timer, reset, select Luca and run the simulated 08:30 sweep. Wait for
 | 2:32–2:45 | Ask as Giulia again. Click the new citation, close, reopen the archived receipt. | “Same question. The answer cites the new decision. Sara’s €12,000 rejection is still on record.” |
 | 2:45–3:00 | Giulia → Approvals → approve the €18,000 confirmation → Needs review. Open Giulia’s empty Outbox. | “The draft cites the superseded decision. Release checks that citation again. Nothing from Giulia went to the outbox.” |
 
-Times are stage allocations. If the external model stalls, switch to the warmed offline instance, disclose the mode, and use the same checklist. For a short recovery, show the approved budget, archive rejection and updated receipt. A private or EU-first deployment is a possible architecture. The investor-onboarding example is a proposed application. Ariete’s earlier private-beta listing does not establish its current capabilities or an endorsement.
+Times are stage allocations. Before the pitch, prepare a second instance with `BRAIN_MODE=offline`. Complete the sweep, reject the archive as Sara, ask the budget question as Giulia and leave her €18,000 confirmation pending. Park on Jury checklist. If Vertex stalls, switch tabs, say “This is the deterministic fallback,” and resume at the newer-claim trigger. Close on the blocked draft and Giulia’s empty outbox. A private or EU-first deployment is a possible architecture. The investor-onboarding example is a proposed application. Ariete’s earlier private-beta listing does not establish its current capabilities or an endorsement.
 
 ## Likely jury questions
 
