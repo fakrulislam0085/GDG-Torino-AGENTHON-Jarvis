@@ -4,10 +4,14 @@ from __future__ import annotations
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel
 
-from . import agents
+from . import env
+
+env.load()   # .env must be read before agents reads GEMINI_MODEL / credentials
+
+from . import agents, voice  # noqa: E402
 from .store import Store, can_see
 
 WEB = Path(__file__).resolve().parent.parent / "web"
@@ -53,7 +57,7 @@ def state(person: str):
         props = [x for x in s.proposals.values() if x["owner_role"] == role]
         prop_ids = {x["id"] for x in props}
         return {
-            "person": p, "mode": agents.mode(), "mode_note": agents.mode_note(),
+            "person": p, "mode": agents.mode(), "mode_note": agents.mode_note(), "voice": voice.enabled(),
             "model": agents.MODEL if agents.mode() == "gemini" else None,
             "clock": s.clock, "company": s.seed["company"],
             "people": list(s.people.values()),
@@ -182,6 +186,24 @@ def approve_proposal(pid_: str, body: PersonBody):
 @app.post("/api/proposals/{pid_}/reject")
 def reject_proposal(pid_: str, body: PersonBody):
     return _decide_proposal(pid_, body.person, False)
+
+
+@app.get("/api/brief/audio")
+def brief_audio(person: str):
+    """The person's own brief, read aloud by ElevenLabs. Only text this person already sees is sent."""
+    p = _person(person)
+    b = store.briefs.get(person)
+    if not b:
+        raise HTTPException(404, "no brief yet")
+    if not voice.enabled():
+        raise HTTPException(503, "ElevenLabs is not configured (ELEVENLABS_API_KEY)")
+    text = voice.script(p, b)
+    try:
+        audio = voice.speak(b["run_id"], text)
+    except Exception as e:
+        raise HTTPException(502, f"voice failed: {str(e)[:160]}")
+    store.log("brain", "voice.brief", b["run_id"], f"read {len(text)} chars aloud for {p['name']}", [p["role"]])
+    return Response(audio, media_type="audio/mpeg")
 
 
 @app.post("/api/reset")

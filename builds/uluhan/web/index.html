@@ -211,7 +211,7 @@ function renderDM() {
   else {
     const b = S.brief;
     h += `<div class="msg"><div class="av">🧠</div><div><div class="meta"><b>Brain</b><span>${time(b.generated_at)} · morning brief, unprompted · <a href="#" data-run="${b.run_id}">trace</a></span></div>
-      <div class="card"><div>Good morning ${esc(S.person.name.split(" ")[0])}. ${b.items.length ? `${b.items.length} thing${b.items.length > 1 ? "s" : ""} need${b.items.length > 1 ? "" : "s"} you today:` : "Nothing needs you today."}</div>
+      <div class="card">${S.voice ? `<div class="row" style="margin-bottom:6px"><button data-voice="1">🔊 Play voice brief</button><span class="muted" style="font-size:12px">ElevenLabs · read from this brief only</span></div>` : ""}<div>Good morning ${esc(S.person.name.split(" ")[0])}. ${b.items.length ? `${b.items.length} thing${b.items.length > 1 ? "s" : ""} need${b.items.length > 1 ? "" : "s"} you today:` : "Nothing needs you today."}</div>
       ${b.items.map((it, i) => `<div class="item"><div class="hl">${i + 1}. ${esc(it.headline)}</div><div class="why">${esc(it.why)}</div>${chips(it.citations)}${proposalBox(props[it.proposal_id])}</div>`).join("")}
       </div></div></div>`;
   }
@@ -312,8 +312,12 @@ async function ask(q) {
 }
 
 document.addEventListener("click", async e => {
-  const t = e.target.closest("[data-view],[data-view-go],[data-run],[data-src],[data-mem],[data-prop],[data-q],#sweep2");
+  const t = e.target.closest("[data-view],[data-view-go],[data-run],[data-src],[data-mem],[data-prop],[data-q],[data-voice],#sweep2");
   if (!t) return;
+  if (t.dataset.voice) return withBusy(t, async () => {
+    const r = await fetch(`/api/brief/audio?person=${person}`);
+    if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || r.statusText);
+    const url = URL.createObjectURL(await r.blob()); new Audio(url).play(); });
   if (t.dataset.run) { e.preventDefault(); return showRun(t.dataset.run); }
   if (t.dataset.view || t.dataset.viewGo) { view = t.dataset.view || t.dataset.viewGo; return render(); }
   if (t.dataset.q) return ask(t.dataset.q);

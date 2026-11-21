@@ -287,3 +287,27 @@ def test_breaker_switches_to_offline(monkeypatch):
         assert "paused" in agents.mode_note()
     finally:
         agents.reset_breaker()
+
+
+# Voice brief (ElevenLabs) ------------------------------------------------------------------------
+def test_voice_brief_reads_only_the_persons_own_brief(monkeypatch):
+    from brain import voice
+    sent = {}
+    monkeypatch.setenv("ELEVENLABS_API_KEY", "test-not-a-real-key")
+    monkeypatch.setattr(voice, "speak", lambda key, text: sent.setdefault(key, text) and b"ID3fake")
+    assert c.get("/api/brief/audio", params={"person": "marco"}).status_code == 404   # no brief yet
+    c.post("/api/sweep")
+    r = c.get("/api/brief/audio", params={"person": "marco"})
+    assert r.status_code == 200 and r.headers["content-type"] == "audio/mpeg"
+    text = list(sent.values())[0]
+    assert text.startswith("Good morning Marco")
+    for s in FINANCE_STRINGS + ("billing", "Billing"):
+        assert s not in text, s
+
+
+def test_voice_brief_without_key_fails_cleanly(monkeypatch):
+    monkeypatch.delenv("ELEVENLABS_API_KEY", raising=False)
+    c.post("/api/sweep")
+    r = c.get("/api/brief/audio", params={"person": "giulia"})
+    assert r.status_code == 503 and "not configured" in r.json()["detail"]
+    assert st("giulia")["voice"] is False
