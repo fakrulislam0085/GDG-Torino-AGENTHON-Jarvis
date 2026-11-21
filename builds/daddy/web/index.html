@@ -143,7 +143,8 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt
 const store = { get(k){ try { return localStorage.getItem(k); } catch { return null; } }, set(k,v){ try { localStorage.setItem(k,v); } catch {} } };
 const URLP = new URLSearchParams(location.search);  // demo links: ?as=sara&view=approvals
 let S = null, me = URLP.get("as") || store.get("brain.user") || "davide", view = URLP.get("view") || store.get("brain.view") || "brain", lastJSON = "", seen = {};
-const drafts = {}, reasons = {};
+const drafts = {}, reasons = {}, speechTexts = {};
+let thinking = null;
 const SUGGEST = ["When does the Langhe fix roll out?", "What's our cash runway?", "What's the office Wi-Fi password?",
                  "How much is the Langhe contract worth?", "What is the Q1 2027 cloud budget?"];
 const ICON = { email: "✉", chat: "#", doc: "📄", task: "☑", mem: "🧠", act: "✋" };
@@ -229,7 +230,15 @@ function render() {
 }
 
 /* ---------- Brain DM ---------- */
-function renderBrain() {
+function thinkingHtml() {
+  if (!thinking) return "";
+  const last = S.dms[S.dms.length - 1];
+  const q = last && last.kind === "question" && last.text === thinking ? "" :
+    `<div class="msg"><div class="avatar user">${esc(S.me.name[0])}</div><div class="body"><span class="who">${esc(S.me.name)}</span><div>${esc(thinking)}</div></div></div>`;
+  return q + `<div class="msg"><div class="avatar">🧠</div><div class="body"><span class="who">Brain</span><div class="meta">Looking in the approved memory you may see…</div></div></div>`;
+}
+function renderBrain() { return renderBrainMsgs() + thinkingHtml(); }
+function renderBrainMsgs() {
   if (!S.dms.length) return `<div class="empty">${S.sweep === "running" ? "The Brain is reading this morning's email, chat and tasks…" : "No messages yet. The morning sweep posts your brief here on its own."}</div>`;
   return S.dms.map(m => {
     if (m.kind === "question") return `<div class="msg"><div class="avatar user">${esc(S.me.name[0])}</div><div class="body"><span class="who">${esc(S.me.name)}</span><span class="when">${hhmm(m.at)}</span><div>${esc(m.text)}</div></div></div>`;
@@ -239,8 +248,9 @@ function renderBrain() {
 
 function briefCard(m) {
   const tr = m.trace || {};
+  speechTexts[m.id] = [m.title, m.headline.text, ...m.sections.map(s => s.title + ". " + s.bullets.map(b => b.text).join(". "))].join(". ");
   return `<div class="card brief"><h3>☀ ${esc(m.title)}</h3>
-    <div class="meta">Posted on its own by the morning sweep. Nobody asked. Everything below is filtered to what you may see.</div>
+    <div class="meta">Posted on its own by the morning sweep. Nobody asked. Everything below is filtered to what you may see. <button data-speak="${esc(m.id)}" title="Read this brief aloud (your browser's voice)">🔊 Read aloud</button></div>
     <div class="headline">${esc(m.headline.text)} ${chips(m.headline.cites)}</div>
     ${m.sections.map(s => `<h5>${esc(s.title)}</h5><ul>${s.bullets.map(b => `<li>${b.level === "danger" ? "⚠ " : ""}${esc(b.text)} ${chips(b.cites)}</li>`).join("")}</ul>`).join("") || "<p>Nothing needs you today.</p>"}
     <details><summary>How this brief was made</summary><ol>
@@ -397,9 +407,14 @@ async function sendPaste() {
 
 /* ---------- events ---------- */
 document.addEventListener("click", async e => {
-  const t = e.target.closest("[data-view],[data-src],[data-sim],[data-act],[data-mem],[data-q],[data-switch],[data-goto],#close,#sweep,#reset,#paste,#pastego");
+  const t = e.target.closest("[data-view],[data-src],[data-sim],[data-act],[data-mem],[data-q],[data-switch],[data-goto],[data-speak],#close,#sweep,#reset,#paste,#pastego");
   if (!t) return;
   if (t.id === "close") return $("#drawer").classList.remove("open");
+  if (t.dataset.speak) {
+    try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(speechTexts[t.dataset.speak] || ""); u.lang = "en-GB"; speechSynthesis.speak(u); }
+    catch { toast("This browser can't read aloud"); }
+    return;
+  }
   if (t.id === "paste") return openPaste();
   if (t.id === "pastego") return sendPaste();
   if (t.dataset.view) { view = t.dataset.view; store.set("brain.view", view); return render(); }
@@ -430,7 +445,8 @@ $("#askform").addEventListener("submit", async e => {
   e.preventDefault();
   const q = $("#q").value.trim(); if (!q) return;
   $("#q").value = ""; $("#q").disabled = true;
-  try { await api("/api/ask", { question: q }); } finally { $("#q").disabled = false; $("#q").focus(); }
+  thinking = q; render();  // show the question and a "looking…" line at once; the answer takes about 3 s
+  try { await api("/api/ask", { question: q }); } finally { thinking = null; $("#q").disabled = false; $("#q").focus(); }
   refresh(true);
 });
 refresh(true);

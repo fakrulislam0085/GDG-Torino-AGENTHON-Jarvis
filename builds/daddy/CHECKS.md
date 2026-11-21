@@ -1,6 +1,6 @@
 # CHECKS.md: Hamid's build (`builds/daddy`)
 
-**Run:** `python builds/daddy/app.py` → http://localhost:8020 (no install). Tests (28): `python -m unittest discover -s builds/daddy/tests -v`
+**Run:** `python builds/daddy/app.py` → http://localhost:8020 (no install). Tests (31): `python -m unittest discover -s builds/daddy/tests -v`
 
 | # | Check | How my build passes it (file:function) | Enforced in code, or only in the prompt? | Steps to show it in the UI |
 |---|---|---|---|---|
@@ -31,7 +31,7 @@
 **Known gaps:**
 - Live Gemini run done end to end (7 checks, both attack emails, 4 pasted emails, restart test, about $0.08 for the whole session). Model proposals vary between runs; the certificate approval is a code rule so it is always there.
 - Offline Q&A is strict keyword matching: an unusual phrasing gets "I don't know". Offline, memory is not extracted from sources and reworded injections are only caught by the keyword list.
-- Extracted memory has some near-duplicates (people reject them), and there is no contradiction check beyond the numbers warning.
+- Extracted memory: exact and near duplicates are dropped and a changed approved number is flagged, but a paraphrase with different words can still slip through (people reject those). Follow-ups use only the last 4 turns of the same person's chat.
 - "Not for your role" confirms that a restricted note exists (a deliberate trade-off).
 - The self-check of a draft is a model call, so it can miss things; the numbers check is code.
 - Identity is a picker, not a login.

@@ -137,6 +137,30 @@ def similar(a: str, b: str) -> bool:
     return bool(ta and tb) and len(ta & tb) / min(len(ta), len(tb)) >= 0.7
 
 
+CALENDAR_WORDS = set("""monday tuesday wednesday thursday friday saturday sunday january february march april may june
+july august september october november december jan feb mar apr jun jul aug sep sept oct nov dec""".split())
+
+
+def topic_words(text: str) -> set[str]:
+    """The nouns of a note: no numbers and no weekday or month names (those collide between unrelated notes)."""
+    return {t for t in tokens(text) if not t.isdigit() and t not in CALENDAR_WORDS}
+
+
+def word_overlap(a: str, b: str) -> float:
+    wa, wb = topic_words(a), topic_words(b)
+    return len(wa & wb) / min(len(wa), len(wb)) if wa and wb else 0.0
+
+
+def duplicate_of(fact: str, items) -> dict | None:
+    """An existing memory item that already says this: same words, or the same numbers and about the same topic."""
+    nf = numbers_in(fact)
+    for m in items:
+        ov = word_overlap(fact, m["fact"])
+        if similar(fact, m["fact"]) or ov >= 0.7 or (nf and nf <= numbers_in(m["fact"]) and ov >= 0.4):
+            return m
+    return None
+
+
 def fingerprint(sections: list[dict]) -> str:
     return json.dumps([[s["title"], [b["text"] for b in s["bullets"]]] for s in sections], ensure_ascii=False)
 
@@ -423,8 +447,8 @@ class Brain:
                                        f"not in the source (possible hallucination): \"{fact}\".",
                                        visible_to=readers, refs=[src["id"]])
                         continue
-                    if any(similar(fact, m["fact"]) for m in self.memory.values()):
-                        continue  # memory already has it
+                    if duplicate_of(fact, self.memory.values()):
+                        continue  # memory already has it (approved, pending or rejected)
                     mid = f"mem-x{len([m for m in self.memory if m.startswith('mem-x')]) + 1:02d}"
                     self.memory[mid] = {"id": mid, "fact": fact, "sources": [src["id"]], "acl": list(src["acl"]),
                                         "status": "pending", "proposed_by": f"brain ({info.get('mode')})",
@@ -517,7 +541,8 @@ class Brain:
             return {"text": "Nothing needs you today.", "cites": []}, {"mode": "rules"}
         fallback = {"text": "Top of your day: " + bullets[0]["text"], "cites": bullets[0]["cites"]}
         system = ("You write the one-sentence opener of a colleague's morning brief: the single most important "
-                  "thing for them today. Use only the items given. Reply as JSON: "
+                  "thing for them today. Use only the items given and keep their wording: never say \"overdue\", \"urgent\" "
+                  "or \"late\" unless an item says so, and keep dates as given. Reply as JSON: "
                   '{"headline": "<max 30 words>", "cites": ["<ids of the items you used>"]}. ' + UNTRUSTED)
         p = self.people[pid]
         items = [{"cites": b["cites"], "text": b["text"]} for b in bullets]
@@ -737,7 +762,19 @@ class Brain:
     def memory_warnings(self, m: dict) -> list[str]:
         """Code, not model: numbers in a memory note that its own sources do not contain (like 83,000 vs 38k)."""
         texts = [self.source(s)["text"] for s in m["sources"] if self.source(s)]
-        return [f"The number {n} does not appear in the sources." for n in unsupported_numbers(m["fact"], texts)]
+        out = [f"The number {n} does not appear in the sources." for n in unsupported_numbers(m["fact"], texts)]
+        # Same topic as an APPROVED note but different numbers: possible conflict. Only against notes that everyone
+        # who can see this candidate can also see, so the warning never leaks a restricted fact.
+        for a in self.memory.values():
+            if a["status"] != "approved" or a["id"] == m["id"]:
+                continue
+            if "all" not in a["acl"] and not set(m["acl"]) <= set(a["acl"]):
+                continue
+            new = [n for n in numbers_in(m["fact"]) - numbers_in(a["fact"]) if not re.fullmatch(r"(19|20)\d\d", n)]
+            shared = topic_words(m["fact"]) & topic_words(a["fact"])
+            if new and len(shared) >= 3 and word_overlap(m["fact"], a["fact"]) >= 0.6:
+                out.append(f"May conflict with approved memory {a['id']}: \"{a['fact'][:90]}\"")
+        return out
 
     def review_memory(self, pid: str, mid: str, decision: str, reason: str = ""):
         with self.lock:
@@ -767,6 +804,8 @@ class Brain:
         if not question:
             raise ValueError("empty question")
         with self.lock:
+            earlier = [m for m in self.dms[pid] if m["kind"] in ("question", "answer")][-4:]
+            history = [{"you" if m["kind"] == "question" else "brain": m["text"][:300]} for m in earlier]
             self.post(pid, {"kind": "question", "text": question})
             approved = [m for m in self.memory.values() if m["status"] == "approved"]
             visible = [m for m in approved if self.can_see(pid, m["acl"])]
@@ -778,11 +817,14 @@ class Brain:
 
         if visible and self.mode() != "offline":
             system = ("You answer a colleague's question using ONLY the memory items given. If they do not clearly "
-                      "answer it, say you don't know. Never guess, never use outside knowledge. Reply as JSON: "
+                      "answer it, say you don't know. Never guess, never use outside knowledge. The earlier chat turns "
+                      "only help you understand follow-ups like \"that\" or \"and the burn?\"; the facts must come from "
+                      "the memory items, which you cite. Reply as JSON: "
                       '{"answer": "<short answer, or I don\'t know>", "cites": ["<ids of the items you used>"]}. '
                       + UNTRUSTED)
             items = [{"id": m["id"], "fact": m["fact"]} for m in visible]
-            prompt = (f"Today is {self.now():%A %d %B %Y}.\n<data>\n{json.dumps(items, ensure_ascii=False)}\n</data>\n"
+            prompt = (f"Today is {self.now():%A %d %B %Y}.\nEarlier chat turns: {json.dumps(history, ensure_ascii=False)}\n"
+                      f"<data>\n{json.dumps(items, ensure_ascii=False)}\n</data>\n"
                       f"Question from {self.people[pid]['name']}: {json.dumps(question, ensure_ascii=False)}")
             out, info = self._llm(system, prompt)
             if out is not None:

@@ -40,6 +40,40 @@ class Hardening(unittest.TestCase):
                              "sources": ["email-002", "chat-003"]}, "paolo", "test")
         self.assertEqual(ok["warnings"], [])
 
+    def test_duplicates_are_dropped_and_new_facts_kept(self):
+        b = B.Brain(model=None)
+        dup = ["At the end of October 2026, the company had EUR 412,000 in the bank with a monthly net burn of EUR 58,000.",
+               "At Langhe Viva, 40 nodes connected to gateway GW-07 have been silent since Wednesday.",
+               "Team lunch is on Friday 27 Nov at 13:00."]
+        new = ["The staging database certificate expires on Wednesday 25 November 2026.",
+               "Demo day at Cantina Roero Alta is scheduled for Thursday, 26 November at 10:00."]
+        self.assertTrue(all(B.duplicate_of(f, b.memory.values()) for f in dup))
+        self.assertFalse(any(B.duplicate_of(f, b.memory.values()) for f in new))  # a shared weekday is not a duplicate
+
+    def test_a_candidate_that_changes_an_approved_number_is_flagged(self):
+        b = B.Brain(model=None)
+        b.memory["mem-zz"] = {"id": "mem-zz", "sources": ["email-003"], "acl": ["finance"], "status": "pending",
+                              "fact": "Cash at end of October 2026 is EUR 500,000; monthly net burn is about EUR 60,000."}
+        self.assertTrue(any("May conflict with approved memory mem-002" in w for w in b.memory_warnings(b.memory["mem-zz"])))
+        # and it never names a restricted note to someone outside its audience
+        b.memory["mem-zy"] = {"id": "mem-zy", "sources": ["chat-001"], "acl": ["tech", "sales"], "status": "pending",
+                              "fact": "Cash at end of October 2026 is EUR 500,000; monthly net burn is about EUR 60,000."}
+        self.assertFalse(any("mem-002" in w for w in b.memory_warnings(b.memory["mem-zy"])))
+
+    def test_follow_up_questions_get_the_earlier_turns(self):
+        prompts = []
+
+        def model(system, prompt):
+            prompts.append(prompt)
+            return {"answer": "About 7 months.", "cites": ["mem-002"]}, {"mode": "gemini", "model": "fake", "ms": 1, "cost_usd": 0}
+        b = B.Brain(model=model)
+        b.ask("giulia", "What is our cash runway?")
+        b.ask("giulia", "How long is that again?")
+        self.assertNotIn("cash runway", prompts[0].split("Earlier chat turns:")[1].split("<data>")[0])
+        self.assertIn("What is our cash runway?", prompts[1].split("Earlier chat turns:")[1].split("<data>")[0])
+        b.ask("sara", "And that?")  # another person's chat is never reused
+        self.assertNotIn("runway", prompts[2].split("Earlier chat turns:")[1].split("<data>")[0])
+
     def test_unblocking_a_task_tells_its_real_owner(self):
         b = B.Brain(model=None)
         # a model proposal that names no owner: the task's own owner (Sara) must still be told
