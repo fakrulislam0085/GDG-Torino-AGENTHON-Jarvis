@@ -80,13 +80,12 @@ def reset_breaker() -> None:
 
 
 def is_network_failure(e: Exception) -> bool:
-    """Only failures to reach Vertex count toward the breaker (Wi-Fi down, DNS, client timeout).
-    An error response (504, 429, 500...) means Vertex answered: fall back for that run only.
-    Seen live: parallel briefs got two 504s at once and paused Gemini for 5 minutes."""
+    """Failures worth pausing Gemini for: transport errors and retryable/config API responses."""
     try:
         from google.genai import errors
         if isinstance(e, errors.APIError):
-            return False
+            status = getattr(e, "code", None) or getattr(e, "status_code", None)
+            return status in (404, 408, 429) or bool(status and status >= 500)
     except Exception:  # pragma: no cover
         pass
     return True
@@ -104,13 +103,22 @@ def record_success() -> None:
     _fails = 0
 
 
-def mode_note() -> str:
+def _latest_run(store: Store | None) -> dict | None:
+    return store.runs[-1] if store is not None and store.runs else None
+
+
+def mode_note(store: Store | None = None) -> str:
     if os.getenv("BRAIN_MODE", "auto") == "offline":
         return "Forced offline (BRAIN_MODE=offline)."
     if time.time() < _down_until:
         return f"Gemini paused after an error ({_down_reason[:80]}). Retrying in {int(_down_until - time.time())}s."
     if _configured() is None:
         return "No Gemini credentials configured."
+    latest = _latest_run(store)
+    if latest and latest["mode"] != "gemini":
+        fallback = next((step["note"] for step in reversed(latest["steps"])
+                         if step["kind"] == "fallback"), None)
+        return fallback or "The last agent run used the deterministic planner."
     return ""
 
 
@@ -144,7 +152,10 @@ def _configured():
     return _client
 
 
-def mode() -> str:
+def mode(store: Store | None = None) -> str:
+    latest = _latest_run(store)
+    if latest:
+        return latest["mode"]
     return "gemini" if client() is not None else "offline"
 
 
@@ -306,8 +317,11 @@ def ingest(store: Store, source_id: str, trigger: str) -> dict:
     tr = Trace("ingest", "system", trigger, list(src["audience"]), store.clock)
     tr.step("trigger", f"New {src['type']} {source_id} from {src['from']}: {src['title']}")
     ctx = T.Ctx(store, "ingest", "system", None, tr, source_id=source_id)
-    if src.get("archived") or T.INJECTION_RE.search(src["body"]):
-        tr.step("guard", "Checking archived evidence or suspicious content before invoking a model.")
+    if src.get("stage") == "overnight" or src.get("archived") or T.INJECTION_RE.search(src["body"]):
+        reason = ("Processing overnight evidence deterministically; the scheduled sweep must not re-propose "
+                  "facts already represented in memory." if src.get("stage") == "overnight" else
+                  "Checking archived evidence or suspicious content before invoking a model.")
+        tr.step("guard", reason)
         _ingest_offline(ctx)
     else:
         _run(ctx, INGEST_SYSTEM, f"New source id: {source_id}. Process it.", _ingest_offline)
@@ -354,6 +368,7 @@ def _brief_offline(ctx: T.Ctx):
 
 # Business rules: generic, driven by the data (org chart, approved memory, message content). No demo ids here.
 REVIEW_TRIGGER = re.compile(r"\b(second notice|final notice|overdue|payment reminder|past due)\b", re.I)
+RISK_TRIGGER = re.compile(r"\b(outage|offline|stopped|renewal|cancel|at risk)\b", re.I)
 
 
 def _approved_fact_citing(ctx: T.Ctx, source_id: str) -> dict | None:
@@ -410,6 +425,20 @@ def _review_request(ctx: T.Ctx) -> dict | None:
     return None
 
 
+def _attention_risk(ctx: T.Ctx) -> dict | None:
+    """Keep a recipient-visible outage or renewal risk in the brief even if a model omits it."""
+    for source in sorted(ctx.store.sources.values(), key=lambda x: x["ts"]):
+        if (source["id"] not in ctx.store.processed_sources
+                or ctx.actor not in source.get("recipient_ids", [])
+                or not RISK_TRIGGER.search(f"{source['title']} {source['body']}")):
+            continue
+        fact = _approved_fact_citing(ctx, source["id"])
+        if fact:
+            return {"headline": source["title"], "why": fact["fact"],
+                    "citations": [source["id"], fact["id"]]}
+    return None
+
+
 def brief(store: Store, person_id: str) -> dict:
     p = store.person(person_id)
     label = store.seed.get("sweep_label", "08:00")
@@ -418,20 +447,22 @@ def brief(store: Store, person_id: str) -> dict:
     ctx = T.Ctx(store, "brief", person_id, p["role"], tr)
     system = BRIEF_SYSTEM.format(name=p["name"], role=p["role"])
     # Business rules run in code in both modes, so a model can't omit them.
-    rule_item = _review_request(ctx)
-    ctx.reserved_items = [rule_item] if rule_item else []
+    rule_items = [item for item in (_review_request(ctx), _attention_risk(ctx)) if item]
+    ctx.reserved_items = rule_items
     ctx.proposals_made = []
     _run(ctx, system, f"Today is {store.clock}. Write the brief for {p['name']}.", _brief_offline)
-    if rule_item:
-        rule_sources = set(rule_item["citations"])
+    if rule_items:
+        rule_sources = {citation for item in rule_items for citation in item["citations"]}
         existing = [item for item in ctx.final["items"] if not any(
             c["source_id"] in rule_sources for c in item["citations"]
         )] if ctx.final else []
-        for citation in rule_item["citations"]:
-            if store.citation(citation) is None:
-                raise RuntimeError(f"Review request missing evidence {citation}")
-        ctx.final = {"items": [{**rule_item, "citations": [store.citation(c) for c in rule_item["citations"]]},
-                               *existing[:4]]}
+        guaranteed = []
+        for item in rule_items:
+            citations = [store.citation(c) for c in item["citations"]]
+            if any(citation is None for citation in citations):
+                raise RuntimeError(f"Brief rule missing evidence for {item['headline']}")
+            guaranteed.append({**item, "citations": citations})
+        ctx.final = {"items": [*guaranteed, *existing[:5 - len(guaranteed)]]}
     if ctx.final is None:
         T.t_submit_brief(ctx, [])
     out = {"person": person_id, "generated_at": store.clock, "run_id": tr.id, "items": ctx.final["items"]}

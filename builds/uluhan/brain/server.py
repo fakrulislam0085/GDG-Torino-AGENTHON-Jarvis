@@ -68,8 +68,8 @@ def state(person: str):
         props = [x for x in s.proposals.values() if s.may_decide_proposal(person, x)]
         prop_ids = {x["id"] for x in props}
         return {
-            "person": p, "mode": agents.mode(), "mode_note": agents.mode_note(), "voice": voice.enabled(),
-            "model": agents.MODEL if agents.mode() == "gemini" else None,
+            "person": p, "mode": agents.mode(s), "mode_note": agents.mode_note(s), "voice": voice.enabled(),
+            "model": agents.MODEL if agents.mode(s) == "gemini" else None,
             "clock": s.clock, "company": s.seed["company"], "sweep_label": s.seed.get("sweep_label", "08:00"),
             "people": list(s.people.values()),
             "brief": s.briefs.get(person),
@@ -82,8 +82,9 @@ def state(person: str):
             "outbox": [o for o in s.outbox if o["proposal_id"] in prop_ids],
             "sources": sorted([x for x in s.sources.values() if can_see(access, x["audience"])],
                               key=lambda x: x["ts"], reverse=True),
-            "pending_events": [{"id": e["id"], "label": e["label"]} for e in s.live_events.values()
-                               if e["id"] not in s.fired_events and can_see(access, e["source"]["audience"])],
+            "pending_events": [{"id": e["id"], "label": e["label"],
+                                "allowed": can_see(access, e["source"]["audience"])}
+                               for e in s.live_events.values() if e["id"] not in s.fired_events],
             "runs": [_run_summary(r) for r in reversed(s.runs) if _visible_run(r, access, person)],
             "audit": [a for a in reversed(s.audit) if can_see(access, a["audience"]) or a["actor"] == person],
         }

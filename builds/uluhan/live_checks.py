@@ -7,6 +7,17 @@ from time import monotonic
 import httpx
 
 
+def _full_run(client, run):
+    """Hydrate privacy-filtered run summaries before inspecting their steps."""
+    if isinstance(run.get("steps"), list):
+        return run
+    viewer = run["actor"] if run["agent"] in {"ask", "brief"} else "elena"
+    response = client.get(f"/api/runs/{run['id']}", params={"person": viewer})
+    if response.status_code != 200:
+        raise RuntimeError(f"run {run['id']}: expected HTTP 200, got {response.status_code} {response.text[:240]}")
+    return response.json()
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("server", nargs="?", default="http://127.0.0.1:8010")
@@ -78,6 +89,7 @@ def main():
         assert not any(item["source_id"] == "email-008" for item in sara["candidates"])
         assert "Memory review" in call("GET", "/")
         print("PASS · archived claim, suspicious email and workspace")
+        runs = [_full_run(client, run) for run in runs]
 
     modes = ", ".join(sorted({run["mode"] for run in runs}))
     cost = sum(run["usage"]["cost_usd"] for run in runs)
@@ -85,7 +97,8 @@ def main():
         def deliberate_ingest_skip(run):
             return run["agent"] == "ingest" and any(
                 step["kind"] == "guard"
-                and step["note"].startswith("Checking archived evidence or suspicious content")
+                and (step["note"].startswith("Checking archived evidence or suspicious content")
+                     or step["note"].startswith("Processing overnight evidence deterministically"))
                 for step in run["steps"]
             )
 

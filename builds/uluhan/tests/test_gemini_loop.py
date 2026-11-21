@@ -195,13 +195,13 @@ def test_last_turn_only_allows_the_finishing_tool(fake):
     assert run["mode"] == "gemini" and not any(st["kind"] == "fallback" for st in run["steps"])
 
 
-def test_vertex_error_response_does_not_trip_breaker(fake):
+def test_retryable_vertex_error_response_trips_breaker(fake):
     from google.genai import errors
     agents.reset_breaker()
     s = Store()
     fake([errors.ServerError(504, {"error": {"code": 504, "message": "Deadline expired", "status": "DEADLINE_EXCEEDED"}})] * 2)
     agents.ask(s, next(iter(s.people)), "anything")
     agents.ask(s, next(iter(s.people)), "anything")
-    assert agents._fails == 0                       # Vertex answered: not a network failure
+    assert agents._fails == 2 and agents._down_until > 0  # repeated 504s pause Gemini instead of stalling every run
     assert agents.is_network_failure(ConnectionError("wifi down")) is True
     agents.reset_breaker()

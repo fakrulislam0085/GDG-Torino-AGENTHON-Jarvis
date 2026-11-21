@@ -52,6 +52,20 @@ def test_shared_morning_dm_and_approval(demo):
     assert len(state(client, "luca")["outbox"]) == len(store.proposals) == 1
 
 
+def test_model_cannot_omit_recipient_outage_risk(demo, monkeypatch):
+    client, store = demo
+    from brain import agents, tools as T
+
+    def empty_model_brief(ctx, _system, _prompt, _offline):
+        T.t_submit_brief(ctx, [])
+
+    store.processed_sources.add("email-002")
+    monkeypatch.setattr(agents, "_run", empty_model_brief)
+    agents.brief(store, "davide")
+    item = store.briefs["davide"]["items"][0]
+    assert item["citations"][0]["id"] == "email-002" and "40 of 120" in item["why"]
+
+
 def test_curation_and_source_change_what_sara_knows(demo):
     client, _ = demo
     question = "When does the Langhe fix roll out?"
@@ -103,6 +117,30 @@ def test_flagged_email_leaves_no_memory_or_recipient(demo):
     assert not store.proposals
     assert not any(m["source_id"] == "email-008" for m in store.memory.values())
     assert "it-support@filare-helpdesk.example" not in tools.allowed_recipients(store, store.access("sara"))
+
+
+def test_event_probe_is_visible_but_locked_for_wrong_persona(demo):
+    client, _ = demo
+    luca = {event["id"]: event for event in state(client, "luca")["pending_events"]}
+    sara = {event["id"]: event for event in state(client, "sara")["pending_events"]}
+    assert luca["email-008"]["allowed"] is False
+    assert sara["email-008"]["allowed"] is True
+
+
+def test_live_check_hydrates_summary_steps(demo):
+    client, _ = demo
+    from live_checks import _full_run
+    summary = client.post("/api/sweep").json()["runs"][0]
+    assert isinstance(summary["steps"], int)
+    assert isinstance(_full_run(client, summary)["steps"], list)
+
+
+def test_visible_ui_guards_are_present(demo):
+    client, _ = demo
+    html = client.get("/").text
+    assert 'timeout: 75000' in html
+    assert 'action !== "voice" || S.voice' in html
+    assert 'await audio.play()' in html and 'browser blocked audio playback' in html
 
 
 def test_conflicting_candidate_does_not_cross_audience(demo):

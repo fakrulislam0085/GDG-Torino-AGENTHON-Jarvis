@@ -168,11 +168,19 @@ function conversation(id) {
 }
 
 async function api(path, opts = {}) {
-  const r = await fetch(path, {headers: {"Content-Type": "application/json"}, ...opts,
-    body: opts.body ? JSON.stringify(opts.body) : undefined});
-  const j = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(j.detail || r.statusText);
-  return j;
+  const {timeout, ...request} = opts;
+  const controller = timeout ? new AbortController() : null;
+  const timer = controller ? setTimeout(() => controller.abort(), timeout) : null;
+  try {
+    const r = await fetch(path, {headers: {"Content-Type": "application/json"}, ...request,
+      signal: controller?.signal, body: request.body ? JSON.stringify(request.body) : undefined});
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.detail || r.statusText);
+    return j;
+  } catch (error) {
+    if (error.name === "AbortError") throw new Error("The sweep exceeded 75 seconds; the demo is switching back to a responsive state.");
+    throw error;
+  } finally { if (timer) clearTimeout(timer); }
 }
 function toast(t) { const el = $("#toast"); el.textContent = t; el.classList.add("on"); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove("on"), 2600); }
 const tag = a => (a || []).map(x => `<span class="tag ${esc(x)}">${esc(x)}</span>`).join(" ");
@@ -207,7 +215,7 @@ function render() {
   $("#personSel").innerHTML = S.people.map(p => `<option value="${p.id}" ${p.id === person ? "selected" : ""}>${esc(p.name)} · ${esc(p.title || p.role)}</option>`).join("");
   $("#sweepBtn").textContent = `⏰ Run ${S.sweep_label} sweep`;
   $("#eventSel").innerHTML = `<option value="">✉ Simulate incoming email…</option>` +
-    S.pending_events.map(e => `<option value="${esc(e.id)}">${esc(e.label)}</option>`).join("");
+    S.pending_events.map(e => `<option value="${esc(e.id)}" ${e.allowed ? "" : "disabled"}>${e.allowed ? "" : "🔒 "}${esc(e.label)}${e.allowed ? "" : " — switch persona"}</option>`).join("");
   const pend = S.proposals.filter(p => p.status === "pending").length;
   const openAlerts = S.alerts.filter(a => !a.closed).length;
   const nav = [["dm", "🧠 Brain", (S.brief ? 0 : 0) + openAlerts], ["email", "📧 Morning email", S.brief ? 1 : 0], ["memory", "📚 Memory review", S.candidates.length],
@@ -370,7 +378,7 @@ function renderJury() {
   ];
   $("#view").innerHTML = checks.map(c => `<div class="card"><div class="row"><span class="tag ${c.n === "★" ? "finance" : "all"}">${esc(c.n)}</span><b>${esc(c.title)}</b></div>
     <div class="why"><b>${esc("Do:")}</b> ${esc(c.do)}</div>
-    <div class="row" style="margin-top:8px">${c.buttons.map(([action, label]) => `<button data-jury="${esc(action)}">${esc(label)}</button>`).join("")}</div>
+    <div class="row" style="margin-top:8px">${c.buttons.filter(([action]) => action !== "voice" || S.voice).map(([action, label]) => `<button data-jury="${esc(action)}">${esc(label)}</button>`).join("")}</div>
     <div class="muted" style="margin-top:7px"><b>${esc("Expected:")}</b> ${esc(c.expected)}</div></div>`).join("");
 }
 
@@ -401,7 +409,16 @@ async function withBusy(btn, fn) {
   try { await fn(); } catch (e) { toast("⚠ " + e.message); } finally { busy = false; $("#personSel").disabled = false; if (btn) { btn.disabled = false; btn.innerHTML = old; } }
 }
 async function sweep(btn) {
-  await withBusy(btn, async () => { const r = await api("/api/sweep", {method: "POST"}); activeRun = null; view = "dm"; await load(); toast(`Sweep done: ${r.runs.length} agent runs`); });
+  await withBusy(btn, async () => { const r = await api("/api/sweep", {method: "POST", timeout: 75000}); activeRun = null; view = "dm"; await load(); toast(`Sweep done: ${r.runs.length} agent runs`); });
+}
+async function playVoiceBrief() {
+  const r = await fetch(`/api/brief/audio?person=${person}`);
+  if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || r.statusText);
+  const url = URL.createObjectURL(await r.blob());
+  const audio = new Audio(url);
+  audio.addEventListener("ended", () => URL.revokeObjectURL(url), {once: true});
+  try { await audio.play(); }
+  catch (error) { URL.revokeObjectURL(url); throw new Error("Your browser blocked audio playback. Click Play voice brief again."); }
 }
 async function ask(q) {
   q = q.trim(); if (!q || !S) return; if (busy) { toast("The brain is still working on the last request…"); return; }
@@ -435,18 +452,11 @@ document.addEventListener("click", async e => {
     if (action === "wifi") return ask("What is the office Wi-Fi password?");
     if (action === "approvals-luca") return as("luca", "approvals");
     if (action === "outbox-luca") return as("luca", "outbox");
-    if (action === "voice") return withBusy(t, async () => {
-      const r = await fetch(`/api/brief/audio?person=${person}`);
-      if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || r.statusText);
-      const url = URL.createObjectURL(await r.blob()); new Audio(url).play();
-    });
+    if (action === "voice") return withBusy(t, playVoiceBrief);
     if (action === "email-006") return withBusy(t, async () => { const r = await api("/api/events/email-006", {method: "POST"}); activeRun = r.runs[0]?.id || null; view = "dm"; await load(); toast(r.note || "Email received and processed"); });
     if (action === "budget-giulia") return as("giulia", "dm", "What is the Q1 2027 cloud budget?");
   }
-  if (t.dataset.voice) return withBusy(t, async () => {
-    const r = await fetch(`/api/brief/audio?person=${person}`);
-    if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || r.statusText);
-    const url = URL.createObjectURL(await r.blob()); new Audio(url).play(); });
+  if (t.dataset.voice) return withBusy(t, playVoiceBrief);
   if (t.dataset.run) { e.preventDefault(); return showRun(t.dataset.run); }
   if (t.dataset.view || t.dataset.viewGo) { view = t.dataset.view || t.dataset.viewGo; return render(); }
   if (t.dataset.q) return ask(t.dataset.q);
