@@ -8,8 +8,8 @@ from brain import access, guard, memory, phone, store, stripe_sync, zoom
 from ui import counts as tally
 
 # The source kinds the brief reads, in the order the panel shows them, with the tool each demo file stands in for.
-KINDS = [("email", "Gmail"), ("chat", "Team chat"), ("task", "Task board"), ("doc", "Docs")]
-NEXT = ["Google Calendar", "Google Drive", "Slack", "Notion"]
+KINDS = [("email", "Gmail"), ("chat", "Team chat"), ("task", "Task board"), ("doc", "Notion")]
+NEXT = ["Google Calendar", "Google Drive", "Slack"]
 
 
 def tool_names() -> dict:

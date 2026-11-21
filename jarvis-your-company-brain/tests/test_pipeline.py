@@ -66,4 +66,4 @@ def test_tool_names_and_actions_are_honest():
     assert set(names) == {"email", "chat", "task", "doc"}
     for a in pipeline.actions_live():
         assert isinstance(a["live"], bool)
-    assert "Slack" in pipeline.NEXT and "Notion" in pipeline.NEXT
+    assert "Slack" in pipeline.NEXT and "Notion" not in pipeline.NEXT and dict(pipeline.KINDS)["doc"] == "Notion"
