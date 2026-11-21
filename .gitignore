@@ -29,7 +29,8 @@ docs/sponsor-research.md
 pitch/strategy-deck/
 
 # film production files: only the rendered films, cue sheets and sources are committed
-pitch/*/assets/
+pitch/cold-open/assets/
+pitch/jarvis-film/assets/
 pitch/*/AGENTS.md
 pitch/*/CLAUDE.md
 pitch/*/out/*_silent.mp4

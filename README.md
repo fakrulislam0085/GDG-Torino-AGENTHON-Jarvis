@@ -5,7 +5,7 @@
 
 An AI colleague for a small company. It reads the team's email, chat, tasks and docs; tells each person what needs their attention **before they ask**; answers **only from memory that people approved**, with sources, or says **"I don't know"**; and **never acts without a person's approval**. Every safety rule lives in **code, not in the prompt**, so a rival team can't talk it out of them.
 
-![How it works](builds/arif/docs/jarvis-workflow.png)
+![How Jarvis works: it reads, guards, a person approves, then it answers and proposes](pitch/agenthon-deck/assets/how-it-works.png)
 
 > **Start here: [`builds/best`](builds/best/README.md)** is the build we present: the best ideas of all three builds, on a fictional scenario built on Ariete Tech Solutions' public services. Pitch deck: [`pitch/agenthon-deck/Jarvis AGENTHON A.pdf`](pitch/agenthon-deck/). Film: [`pitch/jarvis-film/out/jarvis-film.mp4`](pitch/jarvis-film/out/). Every build below stays in the repo.
 
