@@ -6,6 +6,13 @@ Run from the repository root with Python 3.12 and `uv`.
 uv run --no-project --python 3.12 --with-requirements builds/uluhan/requirements.txt uvicorn --app-dir builds/uluhan brain.server:app --port 8010
 ```
 
+## Submission summary
+
+- All 7/7 jury checks are enforced in code: role filtering happens before the model, citations are validated, and “I don't know” is decided in code. No agent can send or approve.
+- The suite has 66 automated tests.
+- A live seven-check run used Vertex AI in location `eu` (EU multi-region) with `gemini-3.8-flash`; that model is not served in `europe-west1`. The run cost USD 0.10–0.13, while one question costs about USD 0.001–0.004.
+- Wi-Fi loss trips a circuit breaker to a deterministic offline planner, labelled in the trace.
+
 ## Signature moment: change control for company facts
 
 1. Start from the approved Q1 2027 cloud-budget fact: **EUR 18,000**.
@@ -16,6 +23,14 @@ uv run --no-project --python 3.12 --with-requirements builds/uluhan/requirements
 6. Ask **What is the Q1 2027 cloud budget?** The answer remains **€18,000**, with its citation.
 
 > “Most AI assistants believe the last thing they read. Ours treats an incoming email as a claim, not a decision. When a message contradicts an approved company fact, it shows both side by side, says why it didn't change anything, and only the person with authority can update the record. Your company's knowledge changes by decision, not by inbox.”
+
+## Feasibility
+
+The target user is a small professional firm with finance and tech teams. The deployment path is one FastAPI service, for example Cloud Run in an EU region, reading the firm's mail, chat and documents through Gmail, Slack and Drive connectors.
+
+That deployment is not built: connectors are mocked with synthetic Filare Labs data. Open production items are real authentication (identity is currently a demo picker), persistent storage (currently in-memory), a data-retention policy, a GDPR DPIA and, in Italy, an Art. 4 Statuto dei Lavoratori workplace-monitoring check.
+
+Memory changes and outgoing drafts always need approval from a named person.
 
 **Limits:** Identity is chosen in a demo picker (no authentication).
 

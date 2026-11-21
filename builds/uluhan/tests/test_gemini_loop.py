@@ -135,6 +135,31 @@ def test_brief_drops_uncited_items_and_unknown_recipients(fake):
     assert sum(st["kind"] == "guard" for st in run["steps"]) >= 2
 
 
+def test_brief_drops_number_not_in_cited_evidence(fake):
+    store = Store(LEGACY_SEED)
+    fake([[fc("submit_brief", items=[{
+        "headline": "Invoice is EUR 99,999",
+        "why": "Staging was signed off",
+        "citations": ["E1"],
+    }])]])
+    run = agents.brief(store, "giulia")
+    assert store.briefs["giulia"]["items"] == []
+    assert any(step["kind"] == "guard"
+               and step["note"] == "brief item dropped: number 99999 not in its cited evidence"
+               for step in run["steps"])
+
+
+def test_brief_keeps_numbers_found_in_cited_evidence(fake):
+    store = Store(LEGACY_SEED)
+    fake([[fc("submit_brief", items=[{
+        "headline": "Spend is EUR 2,050",
+        "why": "That is 85% of the EUR 2,400 budget",
+        "citations": ["E2"],
+    }])]])
+    agents.brief(store, "giulia")
+    assert [item["headline"] for item in store.briefs["giulia"]["items"]] == ["Spend is EUR 2,050"]
+
+
 def test_model_cannot_rewrite_facts_or_use_unrelated_valid_citation(fake):
     store = Store()
     fake([[fc("answer", status="answered", text="The budget is 99,000.", citations=["mem-001"])]])

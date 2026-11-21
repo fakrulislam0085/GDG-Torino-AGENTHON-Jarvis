@@ -1,6 +1,7 @@
 """Exercise the shared-data jury scenario against a running server."""
 import argparse
 import json
+import sys
 from time import monotonic
 
 import httpx
@@ -9,6 +10,8 @@ import httpx
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("server", nargs="?", default="http://127.0.0.1:8010")
+    parser.add_argument("--require-gemini", action="store_true",
+                        help="fail if a jury run unexpectedly uses the offline planner")
     args = parser.parse_args()
     started = monotonic()
     runs = []
@@ -78,8 +81,25 @@ def main():
 
     modes = ", ".join(sorted({run["mode"] for run in runs}))
     cost = sum(run["usage"]["cost_usd"] for run in runs)
+    if args.require_gemini:
+        def deliberate_ingest_skip(run):
+            return run["agent"] == "ingest" and any(
+                step["kind"] == "guard"
+                and step["note"].startswith("Checking archived evidence or suspicious content")
+                for step in run["steps"]
+            )
+
+        unexpected = [run for run in runs
+                      if run["agent"] in {"ask", "brief", "ingest"}
+                      and run["mode"] != "gemini" and not deliberate_ingest_skip(run)]
+        if unexpected:
+            print("FAIL · --require-gemini: runs not in gemini mode:")
+            for run in unexpected:
+                print(f"  {run['id']} · {run['agent']} · {run['trigger']} · {run['mode']}")
+            return 1
     print(f"PASS · seven checks · {len(runs)} runs ({modes}) · {monotonic() - started:.1f}s · ${cost:.4f}")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

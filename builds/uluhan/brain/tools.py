@@ -328,6 +328,21 @@ def t_answer(ctx: Ctx, status: str, text: str = "", citations: list[str] | None 
     return {"ok": True}
 
 
+def _numbers(text: str) -> set[str]:
+    return {re.sub(r"[,.]", "", number) for number in re.findall(r"\d+(?:[,.]\d+)*", text)}
+
+
+def _citation_numbers(store: Store, citations: list[str]) -> set[str]:
+    numbers = set()
+    for item_id in citations:
+        if item_id in store.sources:
+            source = store.sources[item_id]
+            numbers |= _numbers(f"{source['title']} {source['body']}")
+        elif item_id in store.memory:
+            numbers |= _numbers(store.memory[item_id]["fact"])
+    return numbers
+
+
 def t_submit_brief(ctx: Ctx, items: list[dict]) -> dict:
     s = ctx.store
     clean = []
@@ -335,6 +350,11 @@ def t_submit_brief(ctx: Ctx, items: list[dict]) -> dict:
         cits = _valid_citations(ctx, it.get("citations"))
         if not cits:
             ctx.trace.guard(f"brief item dropped (no valid citation): {str(it.get('headline'))[:60]}")
+            continue
+        claimed_numbers = _numbers(f"{it.get('headline', '')} {it.get('why', '')}")
+        unsupported = sorted(claimed_numbers - _citation_numbers(s, cits))
+        if unsupported:
+            ctx.trace.guard(f"brief item dropped: number {unsupported[0]} not in its cited evidence")
             continue
         pid = it.get("proposal_id")
         if pid and (pid not in s.proposals or not s.may_decide_proposal(ctx.actor, s.proposals[pid])):
