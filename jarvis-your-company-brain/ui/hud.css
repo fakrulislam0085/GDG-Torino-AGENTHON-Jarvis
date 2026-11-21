@@ -518,3 +518,10 @@ div[role="dialog"] h2, div[role="dialog"] [data-testid="stDialogHeader"] { font-
 .stat-pills .sp b { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--text); margin-right: .15rem; }
 .stat-pills .sp.wait { border-color: var(--amber-line); background: var(--amber-tint); color: var(--amber); }
 .stat-pills .sp.wait b { color: var(--amber); }
+
+/* Text boxes (notes, paste-an-email, edit draft): no browser focus outline on inner wrappers (it drew a stray teal line
+   above the box); the box itself gets one thin teal border. */
+[data-testid="stTextArea"] textarea:focus, [data-testid="stTextArea"] textarea:focus-visible,
+[data-testid="stTextInput"] input:focus, [data-testid="stTextInput"] input:focus-visible { outline: none !important; box-shadow: none !important; }
+[data-testid="stTextArea"] div:focus-within, [data-testid="stTextInput"] div:focus-within { outline: none !important; box-shadow: none !important; }
+[data-testid="stTextArea"] [data-baseweb="textarea"]:focus-within, [data-testid="stTextArea"] [data-baseweb="base-input"]:focus-within { border-color: var(--cyan) !important; }
