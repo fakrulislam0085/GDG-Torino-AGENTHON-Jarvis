@@ -64,6 +64,23 @@
         "sales",
         "tech"
       ]
+    },
+    {
+      "id": "email-105",
+      "button": "Customer: frost warning (Friday)",
+      "from": "agronomo@langheviva.example",
+      "to": [
+        "paolo"
+      ],
+      "cc": [
+        "davide"
+      ],
+      "subject": "Frost on Friday night",
+      "body": "Paolo, the forecast says -3 °C in Barbaresco on Friday night 27 November. Without the 40 sensors we are blind for frost alerts. Can you confirm today when they will be back online? Stefano, Cantina Langhe Viva.",
+      "acl": [
+        "sales",
+        "tech"
+      ]
     }
   ],
   "offline": {
@@ -135,6 +152,23 @@
           {
             "fact": "For the Thursday 07:00 gateway visit, Langhe Viva asks that the engineer goes to the Barbaresco gate, not to the main cellar.",
             "quote": "send your engineer to the Barbaresco gate, not to the main cellar"
+          }
+        ],
+        "proposals": []
+      },
+      "email-105": {
+        "suspicious": false,
+        "alert": {
+          "headline": "Langhe Viva: -3 °C frost forecast for Friday night 27 Nov, and 40 of their sensors are still offline. The Thursday rollout is already before it, so no earlier repair is needed.",
+          "notify": [
+            "paolo",
+            "davide"
+          ]
+        },
+        "memory": [
+          {
+            "fact": "A frost of -3 °C is forecast in Barbaresco (Cantina Langhe Viva) on Friday night 27 November 2026.",
+            "quote": "the forecast says -3 °C in Barbaresco on Friday night 27 November"
           }
         ],
         "proposals": []

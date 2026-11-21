@@ -18,12 +18,13 @@ aside{display:none;position:absolute;right:0;top:0;bottom:0;width:340px;backgrou
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
 /* ---- additions for the mix: warnings, call screen, orb ---- */
 .warnbox{background:var(--bad-soft);border:1px solid #eac7c1;color:#7f2f29;border-radius:10px;padding:10px 14px;margin:12px 0;font-size:14px}.warnbox ul{margin:4px 0 0;padding-left:18px}
-.tag.waiting{background:var(--warn-soft);color:var(--warn)}.tag.danger{background:var(--bad-soft);color:var(--bad)}.tag.outsider{background:#f3ecff;color:#6a45b3}.tag.sample{background:#eef2f6;color:#66758c}
+.tag.waiting{background:var(--warn-soft);color:var(--warn)}.tag.danger{background:var(--bad-soft);color:var(--bad)}.tag.held{background:#fff3d6;color:#8a5a00;border:1px solid #ecd9a8}.tag.outsider{background:#f3ecff;color:#6a45b3}.tag.sample{background:#eef2f6;color:#66758c}
 .pill.paused{background:var(--warn-soft);color:#885b20}
 textarea{width:100%;font:inherit;font-size:14px;border:1px solid #d9e0ec;border-radius:9px;padding:10px 12px;min-height:96px;background:#fff;color:var(--ink)}
 input[type=text]{min-width:0;flex:1;background:#f7f9fc;border:1px solid #e1e7f0;border-radius:9px;padding:9px 12px;font-size:14px;color:var(--ink)}
 label.f{display:block;font-size:12px;color:var(--muted);margin:12px 0 4px}
 .card.ok{border-left:3px solid var(--ok)}.card.warn{border-left:3px solid #c38f34}.card.danger{border-left:3px solid var(--bad);background:var(--bad-soft)}
+.proposal.held{border-left:3px solid #d6a637;background:#fffdf4}
 .meeting{border:1px solid #cfe0f5;background:#f3f8ff;border-radius:10px;padding:14px 16px;margin:12px 0;font-size:14px}
 .callcard{border:1px solid var(--line);border-radius:14px;background:#fff;padding:22px 24px;margin-bottom:18px}
 #callLayer{position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 30%,#1b2e4bf2,#0c1628f7);backdrop-filter:blur(6px);padding:20px;overflow:auto}
@@ -162,17 +163,21 @@ function actionBox(a) {
     (a.can_decide ? `<textarea data-draft="${a.id}">${esc(a.body)}</textarea>` : `<pre>${esc(a.body)}</pre>`);
   else if (a.kind === "meeting" && a.meeting) body = `<div class="meeting">📅 <b>${esc(a.meeting.topic)}</b><br>${esc(a.meeting.start.replace("T", " "))} · ${a.meeting.minutes} min · with ${a.meeting.with.map(personName).map(esc).join(", ")}<br><span class="muted">Created only after you approve. Without Zoom keys the link is a labelled demo link.</span></div>`;
   else if (a.kind === "task" && a.task_id) body = `<div class="muted" style="margin:8px 0">On approval ${chips([a.task_id])} is unblocked for ${esc(personName(a.owner))}.</div>`;
-  let foot;
-  if (a.status === "waiting" && a.can_decide) {
+  let foot, extra = "";
+  if (a.status === "held") {
+    extra = `<div class="warnbox"><b>🟡 Customer reply needs review</b><div style="margin-top:6px">${esc(a.hold_reason || "New evidence needs a person to look at this before it is sent.")}</div>
+      ${(a.evidence || []).map(ev => `<div class="row" style="align-items:flex-start;margin-top:8px;gap:8px"><span>• ${esc(ev.text)}</span>${chips(ev.cites)}</div>`).join("")}</div>`;
+    foot = `<div class="row"><span class="tag held">⏸ held for review</span><span class="muted" style="font-size:12px">New evidence changed what the customer needs. The Brain can't send it until a person reviews it. It was not rejected.</span></div>`;
+  } else if (a.status === "waiting" && a.can_decide) {
     const label = a.kind === "email" ? "Approve (mock send)" : a.kind === "meeting" ? "Approve and create meeting" : "Approve";
     foot = `<div class="row"><button class="ok" data-act="${a.id}" data-d="approve">${label}</button><input type="text" data-reason="${a.id}" placeholder="Reason (optional, saved in the log)"><button data-act="${a.id}" data-d="reject">Reject</button></div><div class="muted" style="font-size:12px;margin-top:6px">Nothing moves until you approve.</div>`;
   } else if (a.status === "waiting") foot = `<div class="row"><span class="tag waiting">⏳ waiting for ${esc(a.approver_name)}</span><span class="muted" style="font-size:12px">Only ${esc(a.approver_name)} can decide. Switch persona to try.</span></div>`;
   else if (a.status === "approved") foot = `<div class="muted">✅ Approved by ${esc(personName(a.decided_by))} at ${time(a.decided_at)}${a.edited_by ? " after editing the draft" : ""} · ${a.kind === "email" ? "in Outbox (mock)" : a.kind === "meeting" ? "see Calls" : "done"}</div>`;
   else foot = `<div class="muted">✖ Rejected by ${esc(personName(a.decided_by))} at ${time(a.decided_at)}${a.reason ? " · “" + esc(a.reason) + "”" : ""}</div>`;
-  return `<div class="proposal"><div class="row"><span class="tag ${esc(a.status)}">${esc(a.status)}</span><b>${esc(kind)}</b> · ${esc(a.title)}${sample}</div>
+  return `<div class="proposal${a.status === "held" ? " held" : ""}"><div class="row"><span class="tag ${esc(a.status)}">${esc(a.status)}</span><b>${esc(kind)}</b> · ${esc(a.title)}${sample}</div>
     <div class="muted" style="font-size:13px;margin-top:6px">Decides: <b>${esc(a.approver_name)}</b> · ${esc(a.origin)} · ${time(a.created_at)}</div>
     <div class="muted" style="font-size:13px;margin-top:4px">Why: ${esc(a.why)}</div>${chips(a.sources)}
-    ${warnBox(a.warnings, "Self-check: read this carefully before you approve")}${body}${foot}</div>`;
+    ${warnBox(a.warnings, "Self-check: read this carefully before you approve")}${extra}${body}${foot}</div>`;
 }
 
 /* ---------------------------------------------------------------- Brain DM */

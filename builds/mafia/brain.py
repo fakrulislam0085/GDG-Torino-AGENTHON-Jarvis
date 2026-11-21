@@ -105,6 +105,25 @@ def match(question: str, items: list[dict], key="fact", threshold=0.75) -> list[
     return [it for _, it in scored]
 
 
+QUARTER_YEAR = re.compile(r"\bq([1-4])\s*(?:of\s+)?[-/.'’]?\s*((?:19|20)\d{2})\b", re.I)
+
+
+def quarter_years(text: str) -> set[tuple[int, int]]:
+    """Explicit reporting periods written as a quarter and a year together, e.g. "Q1 2032". Only a quarter
+    next to a year counts: a bare four-digit number is never read as a period, so ordinary dates are untouched."""
+    return {(int(q), int(y)) for q, y in QUARTER_YEAR.findall(text)}
+
+
+def period_supported(fact: str, requested: set[tuple[int, int]]) -> bool:
+    """Whether a fact names the requested quarter and year together. Other years in the fact (an approval
+    date, a history note) do not establish a reporting period, so they never satisfy the request."""
+    return not requested or bool(quarter_years(fact) & requested)
+
+
+def fmt_periods(periods: set[tuple[int, int]]) -> str:
+    return ", ".join(f"Q{q} {y}" for q, y in sorted(periods))
+
+
 def _numbers(text: str) -> set[str]:
     out = set()
     for n in re.findall(r"\d[\d,]*(?:\.\d+)?", text):
@@ -207,6 +226,13 @@ def fmt_day(d: date | str) -> str:
     if isinstance(d, str):
         d = date.fromisoformat(d[:10])
     return d.strftime("%a %d %b").replace(" 0", " ")
+
+
+# A "night" and a clock time are read only to label the evidence for a person; the timing comparison below
+# uses whole dates, so we never invent an hour for "Wednesday night".
+NIGHT = re.compile(r"\b(mon|tue|wed|thu|fri|sat|sun)[a-z]*\s+(?:night|evening)\b", re.I)
+CLOCK = re.compile(r"\b(?:[01]?\d|2[0-3]):[0-5]\d\b")
+WEEKDAY = re.compile(r"\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b", re.I)
 
 
 # ----------------------------------------------------------------------------------- the brain
@@ -814,6 +840,8 @@ class Brain:
                 raise KeyError(aid)
             if pid != a["approver"]:
                 raise PermissionError(f"Only {self.name(a['approver'])} can decide on this action.")
+            if a["status"] == "held":
+                raise ValueError(f"This draft is held for review and can't be approved: {a.get('hold_reason', '')}")
             if a["status"] != "waiting":
                 raise ValueError(f"{aid} is already {a['status']}")
             a.update(decided_by=pid, decided_at=self.stamp(), reason=reason)
@@ -926,6 +954,7 @@ class Brain:
         question = (question or "").strip()[:500]
         if not question:
             raise ValueError("empty question")
+        requested = quarter_years(question)  # e.g. "Q1 2032": a reporting period the answer must name
         with self.lock:
             earlier = [m for m in self.dms[pid] if m["kind"] in ("question", "answer")][-4:]
             history = [{"you" if m["kind"] == "question" else "brain": m["text"][:300]} for m in earlier]
@@ -954,6 +983,12 @@ class Brain:
                 ids = {m["id"]: m for m in visible}
                 raw = [c for c in (out.get("cites") or []) if isinstance(c, str)]
                 cites = [c for c in raw if c in ids]
+                if requested:  # a note about another period cannot answer a question about this one
+                    kept = [c for c in cites if period_supported(ids[c]["fact"], requested)]
+                    if len(kept) != len(cites):
+                        trace.append(f"Guard: dropped citations that do not state the asked period "
+                                     f"{fmt_periods(requested)}.")
+                    cites = kept
                 text = str(out.get("answer") or "").strip()
                 trace.append(f"Gemini ({info.get('model')}, {info.get('ms')} ms, ${info.get('cost_usd')}) "
                              f"answered citing {raw or 'nothing'}.")
@@ -975,7 +1010,10 @@ class Brain:
                 trace.append(f"Gemini unavailable ({info.get('error')}). Falling back to keyword match.")
 
         if answer is None and info.get("mode") == "offline" and visible:
-            hits = match(question, visible)[:2]
+            pool = [m for m in visible if period_supported(m["fact"], requested)]
+            if requested and len(pool) != len(visible):
+                trace.append(f"Offline: only notes naming {fmt_periods(requested)} were considered.")
+            hits = match(question, pool)[:2]
             if hits:
                 answer, cites = " ".join(h["fact"] for h in hits), [h["id"] for h in hits]
                 trace.append(f"Offline keyword match found {cites}; the answer is the approved fact itself.")
@@ -1040,6 +1078,80 @@ class Brain:
             sid = f"email-u{n + 1:02d}"
         return self._ingest_spec({"id": sid, "from": frm, "to": [pid], "cc": [], "subject": subject, "body": body,
                                   "acl": groups, "pasted_by": pid}, actor=f"mail (pasted by {self.name(pid)})")
+
+    # ---------- a timing conflict between a new email and the plan (the Langhe hold)
+    def _case_draft(self, contact: str) -> dict | None:
+        """The waiting reply to this customer that relies on that customer's own email: the same customer and the
+        same outage, matched through the existing records, never from the fixture id."""
+        for a in sorted(self.actions.values(), key=lambda a: a.get("created_at", "")):
+            if a["kind"] != "email" or a["status"] != "waiting" or a["to"] != contact:
+                continue
+            if any((self.source(s) or {}).get("kind") == "email" and (self.source(s) or {}).get("from") == contact
+                   for s in a["sources"]):
+                return a
+        return None
+
+    def _plan_date(self, draft: dict, contact: str, year: int) -> dict:
+        """The scheduled date on the engineering side of a draft: the dates in its sources that are not the
+        customer's own email. Returns {date: source id}."""
+        found: dict[date, str] = {}
+        for s in draft["sources"]:
+            src = self.source(s)
+            if not src or src.get("from") == contact:
+                continue
+            for d in dates_in(src["text"], year):
+                found.setdefault(d, s)
+            if src.get("kind") == "task":  # a task's due date is its schedule too
+                try:
+                    found.setdefault(date.fromisoformat(str(src.get("date"))[:10]), s)
+                except (TypeError, ValueError):
+                    pass
+        return found
+
+    def _timing_conflict(self, src: dict) -> dict | None:
+        """Compare the day the customer needs coverage with the day of the planned fix, for the same customer and
+        outage. A confirmed conflict (coverage needed before the fix) returns the waiting draft and its evidence;
+        a missing, ambiguous or non-conflicting pair abstains (returns None)."""
+        contact = src["from"]
+        draft = self._case_draft(contact)
+        if not draft:
+            return None
+        year = self.now().year
+        need = sorted(set(dates_in(src["text"], year)))
+        plan = self._plan_date(draft, contact, year)
+        if len(need) != 1 or len(plan) != 1:  # missing or two competing dates: do not guess
+            return None
+        scheduled = next(iter(plan))
+        if need[0] >= scheduled:  # the fix is on or before the day coverage is needed: no conflict
+            return None
+        return {"action": draft, "need": need[0], "scheduled": scheduled, "plan_id": plan[scheduled]}
+
+    def _evidence_lines(self, src: dict, c: dict) -> list[dict]:
+        night = NIGHT.search(src["text"])
+        need = ("Customer needs coverage " + night.group(0)[:1].upper() + night.group(0)[1:].lower()
+                if night else "Customer needs coverage by " + fmt_day(c["need"]))
+        plan_src = self.source(c["plan_id"]) or {}
+        wd, clock = WEEKDAY.search(plan_src.get("text", "")), CLOCK.search(plan_src.get("text", ""))
+        when = ", ".join(x for x in [wd.group(1).capitalize() if wd else None, clock.group(0) if clock else None] if x)
+        return [{"text": need, "cites": [src["id"]]},
+                {"text": "Engineering rollout scheduled " + (when or fmt_day(c["scheduled"])),
+                 "cites": [c["plan_id"]] if c["plan_id"] else []}]
+
+    def _hold_draft(self, c: dict, src: dict):
+        """Record the confirmed conflict on the waiting draft: keep its text, sources and history, mark it held
+        (not rejected) and store the reason with the two ids that caused it. A person must review it before any
+        approval can go through."""
+        a = c["action"]
+        a["status"] = "held"
+        a["held_at"] = self.stamp()
+        a["hold_reason"] = (f"New evidence from {src['id']}: the customer needs coverage {fmt_day(c['need'])}, but "
+                            f"the {c['plan_id']} rollout is {fmt_day(c['scheduled'])}. Review it before anything is sent.")
+        a["hold_sources"] = [sid for sid in (src["id"], c["plan_id"]) if sid]
+        a["evidence"] = self._evidence_lines(src, c)
+        self.audit("brain", "held draft", f"{a['id']} held after {src['id']}: the customer needs coverage "
+                   f"{fmt_day(c['need'])} but the {c['plan_id']} rollout is {fmt_day(c['scheduled'])}. "
+                   f"It waits for a person to review it.",
+                   visible_to=self.action_viewers(a), refs=[a["id"]] + a["hold_sources"])
 
     def _ingest_spec(self, spec: dict, actor: str):
         sid = spec["id"]
@@ -1124,9 +1236,21 @@ class Brain:
                                         "quote": str(c["quote"]), "external": "@" in str(src.get("from", ""))}
                     self.audit("brain", "memory candidate", f"{mid} proposed from {sid}, waiting for a person to "
                                f"approve it: \"{c['fact']}\".", visible_to=readers, refs=[mid, sid])
+                conflict = self._timing_conflict(src)
+                if conflict:
+                    contact = src["from"]
+                    kept = [p for p in new_props if not (p.get("kind") == "email" and p.get("to") == contact
+                                                          and p.get("to") not in self.people)]
+                    if len(kept) != len(new_props):
+                        self.audit("brain", "guard", f"Dropped a replacement reply to {contact} from {sid}: the "
+                                   "customer reply is held for review, so nothing else is sent to that customer.",
+                                   visible_to=readers, refs=[sid])
+                    new_props = kept
                 for p in new_props:
                     default = notify[0] if notify else readers[0]
                     self.add_proposal(p, default_approver=default, origin=f"new email {sid} ({info.get('mode')})")
+                if conflict:
+                    self._hold_draft(conflict, src)
             alert_rec = {"source": sid, "headline": headline, "notify": notify, "level": level}
             self.alerts.append(alert_rec)
             for pid in notify:
