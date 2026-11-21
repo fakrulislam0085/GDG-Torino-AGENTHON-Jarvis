@@ -9,7 +9,7 @@ An AI colleague for a small company. It reads the team's email, chat, tasks and 
 
 > **No hosted demo: it runs locally (see below).** To see it without installing anything, watch the 21-second [film](pitch/jarvis-film/out/jarvis-film.mp4).
 
-> **Start here: [Jarvis – your company brain](jarvis-your-company-brain/README.md)** (`jarvis-your-company-brain/`): the app we present. The judge's click sequence for the Ariete demo is in [`jarvis-your-company-brain/CHECKS.md`](jarvis-your-company-brain/CHECKS.md). Pitch deck: [`pitch/agenthon-deck/`](pitch/agenthon-deck/) · Film (31 seconds, the cold open with the Jarvis solution, also in the Drive folder): [`pitch/cold-open-jarvis/out/filare-cold-open-jarvis-light.mp4`](pitch/cold-open-jarvis/out/) · earlier 21-second Ariete film: [`pitch/jarvis-film/out/`](pitch/jarvis-film/out/).
+> **Start here: [Jarvis – your company brain](jarvis-your-company-brain/README.md)** (`jarvis-your-company-brain/`): the app we present. The judge's click sequence for the Ariete demo is in [`jarvis-your-company-brain/CHECKS.md`](jarvis-your-company-brain/CHECKS.md). Pitch deck: [`pitch/agenthon-deck/`](pitch/agenthon-deck/) · Film (31 seconds, the cold open with the Jarvis solution, also in the Drive folder): [`pitch/cold-open-jarvis/out/jarvis.mp4`](pitch/cold-open-jarvis/out/) · earlier 21-second Ariete film: [`pitch/jarvis-film/out/`](pitch/jarvis-film/out/).
 >
 > Demo company: a **fictional scenario built on Ariete Tech Solutions' public services. Not Ariete's data.** All people, clients, emails and numbers are invented.
 
