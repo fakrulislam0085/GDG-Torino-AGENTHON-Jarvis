@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import streamlit as st  # noqa: E402
 
-from brain import access, answer, audit, brief, call, llm, memory, phone, propose, store, stripe_sync, voice, watch  # noqa: E402
+from brain import access, answer, audit, brief, call, hold, llm, memory, phone, propose, store, stripe_sync, voice, watch  # noqa: E402
 from ui import counts as tally  # noqa: E402
 from ui.orb import orb  # noqa: E402
 from ui.voice_chat import voice_chat  # noqa: E402
@@ -117,6 +117,13 @@ def do_urgent_email() -> None:
     if ss.last_watch.get("call"):
         ss.user = next((c["to"] for c in store.calls() if c["id"] == ss.last_watch["call"]), ss.user)
         ss.page = PAGES[0]
+
+
+def do_frost_warning() -> None:
+    """The cold open: a Wednesday-night frost warning arrives after the Thursday repair is already scheduled."""
+    ss.last_watch = watch.new_email_arrives(store.demo_events().get("frost_warning"))
+    if ss.last_watch.get("status") == "ingested":
+        ss.page = PAGES[2]   # straight to Approvals, where the held reply and the internal request wait
 
 
 def do_play_brief(user: str) -> None:
@@ -225,6 +232,25 @@ def sources_block(ids: list, user: str) -> None:
                 s = src[cid]
                 md(f"<span class='ids cy'>{cid}</span> <span class='ids'>· {s['kind']} · {esc(s.get('author', ''))} · {s['date'][:10]}</span>")
                 st.write(f"**{s['title']}**: {s['text']}")
+
+
+def cold_open_block(a: dict) -> None:
+    """The cold-open handoff (ported): the film's labels, the two real sources as a timeline, and the case context.
+    Presentation only: it shows the state of a real hold, never a hard-coded one."""
+    md("<div class='coldopen'><div class='co-head'>🟡 Customer reply · Held for review</div>"
+       f"<div class='who'>{esc(a.get('hold_reason', ''))}</div>" + hold.timeline(a) + "</div>")
+    ctx = hold.case_context(ss.user)
+    if not ctx:
+        return
+    rows = "".join(
+        f"<tr><td>{esc(c['who'])}<div class='who'>{esc(c['role'])}</div></td>"
+        f"<td>{esc(c['source'])}" + (" <span class='ids'>simulated source</span>" if c.get("simulated") else "") + "</td>"
+        f"<td>{esc(c['text'])}" + (f" <span class='ids'>{esc(', '.join(c.get('cites', [])))}</span>" if c.get("cites") else "")
+        + "</td></tr>" for c in ctx)
+    md("<div class='coldopen'><div class='co-head'>Simulated case context</div>"
+       "<div class='who'>The same messages the cold open shows arriving from different tools. Slack, Discord, text and "
+       "Drive are simulated sources, not live connectors; the customer email and the engineering chat are real records.</div>"
+       f"<table class='co-table'><tr><th>Stakeholder</th><th>Source</th><th>Message</th></tr>{rows}</table></div>")
 
 
 def how_block(qa: dict) -> None:
@@ -516,6 +542,10 @@ with st.sidebar:
     st.button("New email arrives", icon=":material/mark_email_unread:", on_click=do_new_email, width="stretch")
     st.button("An URGENT email arrives", icon=":material/notification_important:", on_click=do_urgent_email, width="stretch",
               help="Jarvis decides it's urgent, calls the CEO with a spoken briefing, and prepares a fix that waits for approval")
+    if store.demo_events().get("frost_warning"):
+        st.button("Customer: frost warning", icon=":material/ac_unit:", on_click=do_frost_warning, width="stretch",
+                  help="The cold open: a Wednesday-night frost warning arrives after the Thursday repair plan, so the "
+                       "customer reply is held and an internal request to move the repair up waits for approval")
     if ss.get("last_watch", {}).get("status") == "already received":
         st.warning("Jarvis already handled this email: it calls only once per email. The CEO can **Reset the demo** to replay it.",
                    icon=":material/info:")
@@ -911,7 +941,7 @@ elif ss.page == PAGES[2]:
             md("<div class='empty'>Nothing proposed for you.</div>")
         for i, a in enumerate(acts):
             label = {"awaiting_approval": ("Waiting", "medium"), "approved": ("Sent", "low"), "rejected": ("Rejected", "high"),
-                     "needs_review": ("Needs review", "high")}[a["status"]]
+                     "needs_review": ("Needs review", "high"), "held": ("Held for review", "high")}[a["status"]]
             with rise("ac", i):
                 md(f"<div class='row'><div class='when {label[1]}'>{label[0]}</div><div class='txt'><b>{esc(a['subject'])}</b>"
                    f"<div class='who'>{esc(kind_label(a))} · why: {esc(a['reason'])}</div>"
@@ -923,6 +953,8 @@ elif ss.page == PAGES[2]:
                       if a["status"] == "rejected" and a.get("reason_decided") else "")
                    + "</div></div>")
                 sources_block(a["cites"], user)
+                if a["status"] == "held":
+                    cold_open_block(a)
                 if af and af["id"] == a["id"]:
                     st.error(af["msg"], icon=":material/error:")
                 if a.get("edited_by"):

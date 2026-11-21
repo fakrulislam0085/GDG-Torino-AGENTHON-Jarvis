@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import re
 
-from . import access, audit, brief, call, guard, llm, memory, store
+from . import access, audit, brief, call, guard, hold, llm, memory, store
 
 DEMO_EMAIL = {
     "id": "email-010",
@@ -91,6 +91,7 @@ def new_email_arrives(email: dict | None = None) -> dict:
     for uid in store.people():
         if access.can_see(email, uid):
             brief.add_alert(uid, alert, [email["id"]])
+    hold.apply(email)   # cold open: a frost warning can hold the waiting customer reply and raise the internal request
     placed = call.maybe_call(email)
     return {"status": "ingested", "pending": [m["id"] for m in created], "alert": alert, "call": placed["id"] if placed else None}
 

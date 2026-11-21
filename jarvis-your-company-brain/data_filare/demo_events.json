@@ -34,6 +34,24 @@
       "tech"
     ]
   },
+  "frost_warning": {
+    "id": "email-101",
+    "date": "2026-11-23T09:20:00+01:00",
+    "from": "agronomo@langheviva.example",
+    "to": [
+      "paolo"
+    ],
+    "cc": [
+      "davide"
+    ],
+    "subject": "Frost on Wednesday night",
+    "body": "Paolo, the forecast says -4 °C in Barbaresco on Wednesday night 25 November. Without the 40 sensors we are blind for frost alerts. Can you confirm today when they will be back online? Stefano, Cantina Langhe Viva.",
+    "acl": [
+      "sales",
+      "tech"
+    ],
+    "hold_plan_source": "chat-003"
+  },
   "examples": {
     "ceo_fraud": {
       "from": "elena.russo@filare-payments.example",
