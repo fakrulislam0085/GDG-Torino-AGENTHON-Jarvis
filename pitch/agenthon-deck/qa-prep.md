@@ -20,3 +20,4 @@
 | 17 | When does it decide to call? | Only when the model says the email is urgent AND the code finds urgency words; never for a suspicious email; once per email. | F10, F05 |
 | 18 | What would the pilot with Ariete look like? | One client firm, read-only copies of their tools, a few weeks, and a person approving every fact and action. Terms to agree together. | F14 |
 | 19 | Who has time to approve everything? | Each area has one owner (finance by the CFO), and volume is the pilot's open question: the next step is batching low-risk facts. | F05 |
+| 20 | Does Jarvis know about the company itself? | Only what the CEO approved: the company profile, the team and how Ariete works with clients (mem-020, mem-021, mem-022, citing the client handbook). Anything else gets "I don't know", by design. | F05 |

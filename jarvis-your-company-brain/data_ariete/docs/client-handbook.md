@@ -13,3 +13,7 @@ updated: 2026-09-13
 - Support hours: Saturday to Wednesday, 08:30-18:00. In the weeks before a tax deadline (scadenza) the automation team is also on call at weekends.
 - Promise to clients: we answer a client support email within 4 working hours and put an engineer on a stopped automation within 1 working day.
 - Data: EU data centres and GDPR; open-weight models on the client's own servers when the data is sensitive.
+
+## Who we are
+- Ariete Tech Solutions is the tech company of the Ariete Capital group, in Turin (Torino): artificial intelligence for professional firms and SMEs.
+- Our team (7 people): Francesca Morello (CEO), Marta Ghiglione (CFO), Stefano Arduino (Accountant), Andrea Pautasso (CTO), Giorgia Bosio (AI engineer), Lorenzo Bertola (Automation engineer), Silvia Ferraris (Account manager).

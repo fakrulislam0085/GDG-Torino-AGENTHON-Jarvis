@@ -1,4 +1,4 @@
-# Script: Jarvis · Version A (Filare Labs story)
+# Script: Jarvis · final deck (Ariete story)
 Status: APPROVED (founder, 21 Nov 2026)
 Audience: AGENTHON jury, track Agentic AI for business · Decision: score us top 2 · Format: spoken 3 min
 Ideas to remember (5): 1. Jarvis speaks first. 2. It only uses what people approved. 3. It says "I don't know". 4. It never acts without a yes, not even on the phone. 5. The rules live in code, so rivals can't talk it out of them.

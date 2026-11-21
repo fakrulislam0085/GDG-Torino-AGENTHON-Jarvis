@@ -206,5 +206,17 @@
     ],
     "status": "approved",
     "approved_by": "francesca"
+  },
+  {
+    "id": "mem-022",
+    "fact": "How Ariete Tech works with a client: four steps (observation, practical training, mentoring, custom development). Client data stays in EU data centres under GDPR; when the data is sensitive, open-weight models run on the client's own servers.",
+    "sources": [
+      "doc-003"
+    ],
+    "acl": [
+      "all"
+    ],
+    "status": "approved",
+    "approved_by": "francesca"
   }
 ]
