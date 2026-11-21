@@ -4,8 +4,11 @@ from __future__ import annotations
 import os
 
 import requests
+from dotenv import load_dotenv
 
 from . import store
+
+load_dotenv(store.BUILD / ".env")
 
 
 def available() -> bool:

@@ -145,3 +145,17 @@ def approve_action(action_id: str, user_id: str) -> dict:
 
 def reject_action(action_id: str, user_id: str) -> dict:
     return _decide(action_id, user_id, False)
+
+
+def add(user_id: str, kind: str, to: str, subject: str, body: str, reason: str, cites: list):
+    """Add one proposal (used by call escalation). Same recipient rules; it only waits for approval."""
+    if not _recipient_allowed(kind, to, cites):
+        audit.log("action_blocked", user_id, kind=kind, to=to, reason="recipient not allowed")
+        return None
+    acts = store.actions()
+    n = sum(1 for a in acts if a["proposed_to"] == user_id) + 1
+    a = {"id": f"act-{user_id}-u{n}", "type": kind, "proposed_to": user_id, "to": to, "subject": subject, "body": body,
+         "reason": reason, "cites": cites, "status": "awaiting_approval", "created": datetime.now().isoformat(timespec="seconds")}
+    store.save_actions(acts + [a])
+    audit.log("action_proposed", user_id, action_id=a["id"], kind=kind, to=to, cites=cites)
+    return a

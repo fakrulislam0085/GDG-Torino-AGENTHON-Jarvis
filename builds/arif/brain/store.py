@@ -164,3 +164,11 @@ def save_snapshot() -> None:
     for name in ("briefs.json", "actions.json", "memory.json", "audit.jsonl"):
         if (STATE / name).exists():
             shutil.copy(STATE / name, SNAPSHOT / name)
+
+
+def calls() -> list:
+    return _read(STATE / "calls.json", [])
+
+
+def save_calls(items: list) -> None:
+    _write(STATE / "calls.json", items)

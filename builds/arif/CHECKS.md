@@ -18,6 +18,8 @@
 - Sara can't approve Luca's action (PermissionError).
 - Pending and rejected memory is never used.
 
+**Urgent call (brain/call.py):** urgent needs BOTH Gemini "urgent" AND urgency words in the email; suspicious emails never call; one call per email; calling only informs, the fix waits for approval. Tested in tests/test_checks.py.
+
 **Worth grafting:**
 - the Jury checklist sidebar
 - `guard.py` (injection flagging in briefs)

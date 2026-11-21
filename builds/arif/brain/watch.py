@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import re
 
-from . import access, audit, brief, guard, llm, memory, store
+from . import access, audit, brief, call, guard, llm, memory, store
 
 DEMO_EMAIL = {
     "id": "email-010",
@@ -13,6 +13,19 @@ DEMO_EMAIL = {
     "cc": ["davide"],
     "subject": "Re: 40 sensors offline",
     "body": "Paolo, thanks for calling. Thursday 07:00 works for the gateway visit. Please send your engineer to the Barbaresco gate, not to the main cellar. Stefano, Cantina Langhe Viva.",
+    "acl": ["sales", "tech"],
+}
+
+URGENT_EMAIL = {
+    "id": "email-011",
+    "date": "2026-11-23T09:05:00+01:00",
+    "from": "agronomo@langheviva.example",
+    "to": ["paolo"],
+    "cc": ["davide"],
+    "subject": "URGENT: frost tonight, sensors still offline",
+    "body": "Paolo, the forecast says minus 4 degrees in Barbaresco tonight and 40 sensors are still offline, so we have no frost alerts. "
+            "If we lose part of the harvest because of this, we will cancel the contract and ask for damages. "
+            "I need someone here today, not Thursday. Stefano, Cantina Langhe Viva.",
     "acl": ["sales", "tech"],
 }
 
@@ -55,4 +68,5 @@ def new_email_arrives(email: dict | None = None) -> dict:
     for uid in store.people():
         if access.can_see(email, uid):
             brief.add_alert(uid, alert, [email["id"]])
-    return {"status": "ingested", "pending": [m["id"] for m in created], "alert": alert}
+    placed = call.maybe_call(email)
+    return {"status": "ingested", "pending": [m["id"] for m in created], "alert": alert, "call": placed["id"] if placed else None}

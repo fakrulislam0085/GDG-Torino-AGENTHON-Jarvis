@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import streamlit as st  # noqa: E402
 
-from brain import access, answer, audit, brief, llm, memory, propose, store, voice, watch  # noqa: E402
+from brain import access, answer, audit, brief, call, llm, memory, propose, store, voice, watch  # noqa: E402
 
 st.set_page_config(page_title="Jarvis · Filare Labs", page_icon="🎩", layout="wide")
 
@@ -77,6 +77,13 @@ def do_new_email() -> None:
     ss.last_watch = watch.new_email_arrives()
 
 
+def do_urgent_email() -> None:
+    ss.last_watch = watch.new_email_arrives(watch.URGENT_EMAIL)
+    if ss.last_watch.get("call"):
+        ss.user = next((c["to"] for c in store.calls() if c["id"] == ss.last_watch["call"]), ss.user)
+        ss.page = PAGES[0]
+
+
 def norm(q: str) -> str:
     return re.sub(r"[^a-z0-9 ]", "", q.lower()).strip()
 
@@ -140,6 +147,8 @@ with st.sidebar:
     c1.button("▶ 08:00 sweep", on_click=do_sweep, width="stretch", help="Jarvis writes everyone's brief and proposes actions, without anyone asking")
     c2.button("↺ Reset demo", on_click=do_reset, width="stretch")
     st.button("📨 Simulate: a new email arrives", on_click=do_new_email, width="stretch")
+    st.button("🚨 Simulate: an URGENT email arrives", on_click=do_urgent_email, width="stretch",
+              help="Jarvis decides it's urgent, phones the CEO with a spoken briefing, and prepares a fix that waits for approval")
 
     st.markdown("---\n#### Jury checklist")
     status = check_status()
@@ -159,6 +168,29 @@ with st.sidebar:
 
 user = ss.user
 me = PEOPLE[user]
+
+# ---------- incoming call from Jarvis (mock phone, real ElevenLabs voice) ----------
+for c in call.calls_for(user):
+    if c["status"] == "ended":
+        continue
+    with st.container(border=True):
+        st.markdown(f"### 📞 {'Incoming call' if c['status'] == 'ringing' else 'On the call'}: Jarvis → {html.escape(me['name'])}")
+        st.caption(f"Why Jarvis is calling: {c['why']} · source {c['source']} · mock phone today, real calls via ElevenLabs Agents + Twilio")
+        if c["status"] == "ringing":
+            a1, a2 = st.columns(2)
+            a1.button("🟢 Answer", key=f"ans-{c['id']}", on_click=call.answer, args=(c["id"], user), width="stretch")
+            a2.button("🔴 Decline", key=f"dec-{c['id']}", on_click=call.hang_up, args=(c["id"], user), width="stretch")
+        else:
+            if voice.available():
+                try:
+                    st.audio(voice.speak(f"call-{c['id']}", c["script"]), format="audio/mpeg", autoplay=True)
+                except Exception as e:  # never crash the demo
+                    st.warning(f"Voice unavailable: {e}")
+            st.markdown(f"> {html.escape(c['script'])}")
+            b1, b2 = st.columns(2)
+            if c.get("action"):
+                b1.button("✋ Review the fix Jarvis prepared", key=f"rev-{c['id']}", on_click=goto, args=(PAGES[2],), width="stretch")
+            b2.button("Hang up", key=f"hang-{c['id']}", on_click=call.hang_up, args=(c["id"], user), width="stretch")
 
 # ---------- pages ----------
 if ss.page == PAGES[0]:
