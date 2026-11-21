@@ -482,6 +482,46 @@ b,strong{ font-weight:600; }
 .flow4 .st p + p{ margin-top:-6px; }
 .need{ color:#B42318; border-color:#B42318; }
 
+/* final pass 16:15: 7-checks slide + equal team row */
+.checks7{ list-style:none; display:flex; flex-direction:column; gap:12px; width:100%; text-align:left; }
+.checks7 li{ display:grid; grid-template-columns:48px 560px 1fr; gap:24px; align-items:center; background:var(--surface); border:1px solid var(--line);
+             border-radius:16px; padding:15px 32px; font:400 29px/1.25 var(--font-body); color:var(--ink-2); }
+.checks7 li b{ font:600 30px/1.2 var(--font-body); color:var(--ink); }
+.checks7 .ic{ width:48px; height:48px; border-radius:50%; background:var(--ok-soft); display:flex; align-items:center; justify-content:center; }
+.teamrow{ display:flex; align-items:center; justify-content:center; gap:18px; flex-wrap:nowrap; }
+.teamrow .tm{ font:600 24px/1 var(--font-body); letter-spacing:.14em; text-transform:uppercase; color:var(--accent); margin-right:10px; }
+.teamrow .nm{ font:600 36px/1.1 var(--font-display); color:var(--ink); background:var(--surface); border:1px solid var(--line); border-radius:999px; padding:18px 32px; }
+.teamsub{ font:400 28px/1.3 var(--font-body); color:var(--ink-2); margin-top:24px; }
+/* 16:25: real-company workflow slides */
+.wf{ display:grid; align-items:stretch; width:100%; text-align:left; counter-reset:st; }
+.wf5{ grid-template-columns:1fr 48px 1fr 48px 1fr 48px 1fr 48px 1fr; }
+.wf4{ grid-template-columns:1fr 60px 1fr 60px 1fr 60px 1fr; }
+.wf .c{ position:relative; counter-increment:st; background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:34px 28px; display:flex; flex-direction:column; gap:16px; min-height:400px; }
+.wf .c::before{ content:counter(st); position:absolute; top:34px; right:28px; font:600 26px/1 var(--font-num); color:var(--ink-3); }
+.wf .icn{ width:68px; height:68px; border-radius:18px; background:var(--accent-soft); color:var(--accent-deep); display:flex; align-items:center; justify-content:center; margin-bottom:6px; }
+.wf h3{ font:700 36px/1.1 var(--font-display); color:var(--ink); }
+.wf p{ font:400 26px/1.4 var(--font-body); color:var(--ink-2); }
+.wf4 p{ font-size:28px; }
+.wf .c.key{ border:3px solid var(--amber); background:var(--amber-soft); box-shadow:0 20px 44px rgba(154,98,0,.14); }
+.wf .c.key h3, .wf .c.key::before{ color:var(--amber); } .wf .c.key p{ color:#6B4500; }
+.wf .c.key .icn{ background:var(--amber); color:var(--on-brand); }
+.wf .ar{ display:flex; align-items:center; justify-content:center; font:600 40px/1 var(--font-body); color:var(--accent); }
+/* 16:20: 7-slide restructure */
+.wf .c p.big{ font:500 28px/1.32 var(--font-body); color:var(--ink); }
+.wf .c.key p.big{ color:#6B4500; font-weight:600; }
+.wf5 .c{ min-height:330px; }
+.wf4.short .c{ min-height:330px; }
+.wf4.short p{ font-size:30px; }
+.wf4.short h3{ font-size:40px; }
+.checks7{ gap:10px; }
+.checks7 li{ padding:11px 32px; grid-template-columns:48px 560px 1fr; }
+.proofline{ margin-top:18px; display:flex; align-items:center; gap:18px; background:var(--amber-soft); border:3px solid var(--amber); border-radius:16px; padding:16px 32px;
+            font:600 28px/1.25 var(--font-body); color:#6B4500; text-align:left; }
+.proofline > span:not(.ic) + span::before{ content:"·"; margin-right:18px; color:var(--amber); }
+.proofline .fig{ color:var(--amber); }
+.factrow{ display:flex; justify-content:center; gap:18px; margin-top:48px; }
+.factrow span{ background:var(--surface); border:1px solid var(--line); border-radius:999px; padding:18px 30px; font:400 28px/1.2 var(--font-body); color:var(--ink-2); }
+.factrow b{ color:var(--ink); }
 </style>
 </head>
 <body>
@@ -515,13 +555,12 @@ b,strong{ font-weight:600; }
       <div class="mailviz">
         <div class="mail"><div class="env"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#9A6200" stroke-width="2" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6l8.5 7 8.5-7"/></svg></div><div class="lines"><i></i><i></i><i></i></div></div>
         <div class="drop">↓</div>
-        <div class="inboxes" style="grid-template-columns:1fr 1fr"><div class="inbox hit">Silvia · account manager</div><div class="inbox">Lorenzo · engineer (cc)</div></div>
+        <div class="inboxes" style="grid-template-columns:1fr 1fr"><div class="inbox hit">Silvia</div><div class="inbox">Lorenzo (cc)</div></div>
       </div>
       <ul class="pts">
         <li class="key"><span class="ic">1</span><span>Studio Rinaldi: <span class="fig">60</span> client files stuck before the <span class="fig">28</span>&nbsp;November deadline</span></li>
         <li><span class="ic">2</span><span>Silvia and Lorenzo receive the urgent email. Jarvis alerts Francesca, the CEO, and prepares two proposals for her&nbsp;approval</span></li>
         <li><span class="ic">3</span><span>Each person needs to know something different</span></li>
-        <li><span class="ic">i</span><span>Our demo: a fictional scenario on Ariete's public&nbsp;services</span></li>
       </ul>
     </div>
   </div>
@@ -529,27 +568,23 @@ b,strong{ font-weight:600; }
   <aside class="notes">Our demo company does what Ariete does: AI automations for professional firms. Studio Rinaldi has 60 client files stuck before the 28 November deadline. Silvia and Lorenzo receive the urgent email. Jarvis alerts Francesca, the CEO, and prepares two proposals for her approval. Each person needs to know something different, today.</aside>
 </section>
 
-<section class="slide" data-title="Solution">
+<section class="slide" data-title="How it works">
   <p class="kicker">How it works</p>
-  <h1 class="claim">It reads everything. <em class="br">People decide what it remembers.</em></h1>
+  <h1 class="claim">Every morning, every person. <em class="br">Nothing moves without a yes.</em></h1>
   <div class="body">
-    <div class="flow4">
-      <div class="st"><h3>Reads</h3><div class="mini"><span>email</span><span>chat</span><span>tasks</span><span>docs</span></div></div>
+    <div class="wf wf5">
+      <div class="c"><span class="icn"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></span><p class="big">08:00 brief for each person</p></div>
       <div class="ar">→</div>
-      <div class="st"><h3>Guard</h3><p>attacks blocked</p></div>
+      <div class="c"><span class="icn"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.8 2.8L16.5 9.5"/></svg></span><p class="big">A person approves new facts</p></div>
       <div class="ar">→</div>
-      <div class="st key"><h3>A person approves</h3><p>memory</p></div>
+      <div class="c"><span class="icn"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/></svg></span><p class="big">Ask by text or voice: sources or "I&nbsp;don't&nbsp;know"</p></div>
       <div class="ar">→</div>
-      <div class="st"><h3>Answers &amp; proposes</h3><p>cites sources</p><p>waits for a yes</p></div>
+      <div class="c"><span class="icn"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6l8.5 7 8.5-7"/><circle cx="19" cy="5" r="3" fill="currentColor"/></svg></span><p class="big">Urgent email: Jarvis alerts and drafts the fix</p></div>
+      <div class="ar">→</div>
+      <div class="c key"><span class="icn"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V11"/><path d="M12 10.5V9a1.5 1.5 0 0 1 3 0v2"/><path d="M15 10.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-.5a6 6 0 0 1-4.8-2.4L4 15a1.5 1.5 0 0 1 2.3-1.9L9 15"/></svg></span><p class="big">Tap Approve, and only then it&nbsp;happens</p></div>
     </div>
-    <ul class="pts two">
-      <li><span class="ic dot"></span><span>Reads email, chat, tasks and docs (demo copies today)</span></li>
-      <li><span class="ic dot"></span><span>Proposes facts. A person approves.</span></li>
-      <li><span class="ic dot"></span><span>Answers only from approved facts, with sources</span></li>
-      <li><span class="ic dot"></span><span>Drafts messages and Zoom meetings. They wait for a&nbsp;yes.</span></li>
-    </ul>
   </div>
-  <aside class="notes">Jarvis reads the team's tools and proposes facts. A person approves them. It answers only from those, with sources. Messages and meetings wait for a yes.</aside>
+  <aside class="notes">Every morning, each person gets their own brief. A person approves what Jarvis remembers. Anyone can ask, by text or voice, and gets sources or "I don't know". When an urgent email lands, Jarvis alerts the CEO and drafts the fix. Nothing happens until a person taps Approve.</aside>
 </section>
 
 <section class="slide" data-title="Live demo">
@@ -558,7 +593,7 @@ b,strong{ font-weight:600; }
   <div class="body">
     <div class="split" style="grid-template-columns:1fr 600px; gap:56px">
       <div class="screen" style="position:relative"><div class="chrome"><i></i><i></i><i></i></div>
-        <img src="assets/app-today.jpg" alt="Jarvis app, Today page: the 08:00 brief"><span style="position:absolute;left:16px;bottom:14px;background:rgba(255,255,255,.94);padding:4px 12px;font-size:20px;color:#4A5363;border-radius:4px;border:1px solid #DDE2E8">Synthetic Ariete-inspired demo</span></div>
+        <img src="assets/app-today.jpg" alt="Jarvis app, Today page: the 08:00 brief"><span data-allow-overlap style="position:absolute;left:16px;bottom:14px;background:rgba(255,255,255,.94);padding:4px 12px;font-size:20px;color:#4A5363;border-radius:4px;border:1px solid #DDE2E8">Synthetic Ariete-inspired demo</span></div>
       <ol class="steps">
         <li><span class="i">1</span><span>08:00 · the brief nobody asked&nbsp;for</span></li>
         <li><span class="i">2</span><span>"I don't know"</span></li>
@@ -569,43 +604,42 @@ b,strong{ font-weight:600; }
   <aside class="notes">Let me show you. It's eight in the morning. Nobody asked, but Francesca already has her brief. Now the urgent email from Studio Rinaldi arrives. Jarvis can alert Francesca immediately: here is the call card. It has prepared two proposals for Lorenzo, an internal message and a Zoom meeting. They wait for her approval, and the outbox is empty. I approve only the internal message: one item lands in the mock outbox, and the Zoom proposal is still waiting. Memory: it proposed two facts. I approve one and reject the other, and the answer cites its source. Same question, "Has Bellini and Co. paid the pilot invoice?": the finance group and the CEO can read that fact, so Marta gets the answer with its source; Andrea, the CTO, is refused. The Wi-Fi password is nowhere, so Jarvis says "I don't know".</aside>
 </section>
 
-<section class="slide" data-title="What we built and tested">
-  <p class="kicker">Built and tested today</p>
-  <h1 class="claim">Rival teams will try to break it. <em class="br">The rules live in code.</em></h1>
+<section class="slide" data-title="The 7 jury checks">
+  <p class="kicker">The 7 jury checks</p>
+  <h1 class="claim">All seven checks. <em class="br">Enforced in code.</em></h1>
   <div class="body">
-    <div class="proof">
-      <div class="p key"><span class="ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1E7B45" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span><span class="fig">7&nbsp;of&nbsp;7</span> jury checks, enforced in code</span></div>
-      <div class="p"><span class="ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1E7B45" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span><span class="fig">76</span> automated tests pass (Filare data) + a separate Ariete rehearsal</span></div>
-      <div class="p"><span class="ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1E7B45" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span>Fake CEO payment: blocked</span></div>
-      <div class="p"><span class="ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1E7B45" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span>A reworded attack: caught by a second AI check</span></div>
-      <div class="p"><span class="ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1E7B45" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span>On the phone: no approvals. "Tap it in the app."</span></div>
-      <div class="p"><span class="ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1E7B45" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span>Our <span class="fig">3</span> attacker agents: all <span class="fig">3</span> builds still pass&nbsp;<span class="fig">7&nbsp;of&nbsp;7</span></span></div>
-    </div>
+    <ul class="checks7">
+      <li><span class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1E7B45" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><b>It speaks first</b><span>08:00 brief</span></li>
+      <li><span class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1E7B45" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><b>People curate memory</b><span>people approve</span></li>
+      <li><span class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1E7B45" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><b>It knows who's asking</b><span>roles checked first</span></li>
+      <li><span class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1E7B45" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><b>It cites</b><span>sources shown</span></li>
+      <li><span class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1E7B45" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><b>It admits gaps</b><span>"I don't know"</span></li>
+      <li><span class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1E7B45" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><b>It only proposes</b><span>no send tool</span></li>
+      <li><span class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1E7B45" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><b>It fits the team's day</b><span>chat, email, call&nbsp;card</span></li>
+    </ul>
+    <div class="proofline"><span class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1E7B45" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span><span class="fig">87</span> automated tests</span><span>fake CEO payment blocked</span><span>reworded attack caught by second AI check</span></div>
   </div>
-  <footer class="foot"><span class="src">Our tests and live runs, 21 November 2026</span><span class="num"></span></footer>
-  <aside class="notes">So the rules live in code, not in the prompt. A reworded attack that our patterns missed was caught by a second AI check.</aside>
+  <footer class="foot"><span class="src">Tests: older demo data</span><span class="num"></span></footer>
+  <aside class="notes">Seven checks, each in code. You just saw them live. Rival teams will try to break it: a fake CEO payment is blocked, and a reworded attack that our patterns missed was caught by a second AI check.</aside>
 </section>
 
-<section class="slide" data-title="Feasibility">
-  <p class="kicker">Beyond the prototype</p>
-  <h1 class="claim">Built for one company. <em class="br">Ready for any firm.</em></h1>
+<section class="slide" data-title="Getting started">
+  <p class="kicker">Getting started</p>
+  <h1 class="claim">Connect, read-only. <em class="br">Pilot in weeks.</em></h1>
   <div class="body">
-    <div class="conn">
-      <div class="panel live"><div class="lbl">In this demo</div>
-        <div class="chips"><span class="chip live">in-app call card</span><span class="chip live">Zoom proposals</span><span class="chip live">phone call (opt-in, needs setup)</span></div></div>
-      <div class="panel next"><div class="lbl">Next</div>
-        <div class="chips"><span class="chip soon">Gmail</span><span class="chip soon">Slack</span><span class="chip soon">Notion</span></div>
-        <div class="after">with the same rules</div></div>
+    <div class="wf wf4 short">
+      <div class="c"><span class="icn"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v5M15 2v5"/><path d="M6 7h12v4a6 6 0 0 1-12 0z"/><path d="M12 17v5"/></svg></span><h3>Connect</h3><p>email, chat, tasks, docs (read-only)</p></div>
+      <div class="ar">→</div>
+      <div class="c"><span class="icn"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M17 11l1.5 1.5L21.5 9.5"/></svg></span><h3>Set roles</h3><p>who sees what</p></div>
+      <div class="ar">→</div>
+      <div class="c key"><span class="icn"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></svg></span><h3>Pilot</h3><p>one team, a few weeks</p></div>
+      <div class="ar">→</div>
+      <div class="c"><span class="icn"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M7 16v-3M12 16V9M17 16V5"/><path d="M15 5h4v4"/></svg></span><h3>Grow</h3><p>more tools, same rules</p></div>
     </div>
-    <div class="facts4">
-      <div class="panel cost"><div class="pre">About</div><div class="n">$0.003</div><div>per morning brief (earlier Arif build)</div></div>
-      <div class="panel">AI runs on Google Vertex AI; the demo uses synthetic data only</div>
-      <div class="panel">First buyers: small firms, through partners like Ariete (pilot)</div>
-      <div class="panel muted">Market size: not estimated yet</div>
-    </div>
+    <div class="factrow"><span><b>About $0.003</b> per brief (earlier build)</span><span>AI on Google Vertex AI</span><span>Market not estimated yet</span></div>
   </div>
-  <footer class="foot"><span class="src">Demo data · cost measured 21 Nov 2026 on the earlier Arif build</span><span class="num"></span></footer>
-  <aside class="notes">In this demo, Jarvis alerts the CEO with an in-app call card, and proposes messages and Zoom meetings that wait for approval. A real phone call needs setup and opt-in. On our earlier build, a morning brief cost about a third of a cent. The first buyers are small firms, through partners like Ariete. We haven't sized the market yet.</aside>
+  <footer class="foot"><span class="src">Today: demo copies of these tools; in-app call card; a real phone call needs setup · cost measured 21 Nov 2026</span><span class="num"></span></footer>
+  <aside class="notes">A company connects its tools read-only and sets who sees what. Ariete pilots it with one client team for a few weeks, then more tools with the same rules. On our earlier build, a morning brief cost about a third of a cent. We haven't sized the market yet.</aside>
 </section>
 
 <section class="slide close center" data-title="Team, ask and close">
@@ -624,14 +658,13 @@ b,strong{ font-weight:600; }
 </svg>
     <p class="kicker">The ask</p>
     <h1 class="claim" style="margin:0 auto 52px"><em>Ariete:</em> let's pilot Jarvis with one of your client firms.</h1>
-    <div class="team3">
-      <div class="panel"><h3>Arif</h3><p>founder, PoliPrep and Life At PoliTO</p></div>
-      <div class="panel"><h3>Hamid and Uluhan</h3><p>engineering students, Politecnico&nbsp;di&nbsp;Torino</p></div>
-      <div class="panel"><h3>Three builds</h3><p>in parallel, the best ideas merged</p></div>
+    <div class="teamrow">
+      <span class="tm">Token Mafia</span><span class="nm">Fakrul (Arif) Islam</span><span class="nm">Hamid Sajjadi</span><span class="nm">Uluhan Simsek</span>
     </div>
+    <p class="teamsub">Three builds in parallel, the best ideas merged</p>
     <p class="closer">A colleague you trust says "I don't know", and "May I?"</p>
   </div>
-  <aside class="notes">I run PoliPrep, and I built Jarvis because I live this problem. We built three versions in parallel and merged the best ideas. Ariete builds AI agents for professional firms. Let's pilot Jarvis with one of your clients. Because a colleague you trust says "I don't know", and "May I?"</aside>
+  <aside class="notes">We built three versions in parallel and merged the best ideas. Ariete builds AI agents for professional firms. Let's pilot Jarvis with one of your clients. Because a colleague you trust says "I don't know", and "May I?"</aside>
 </section>
 </main>
 <script>

@@ -19,22 +19,22 @@ Ideas to remember (5): 1. Jarvis speaks first. 2. It only uses what people appro
   - Studio Rinaldi: 60 client files stuck before the 28 November deadline
   - Silvia and Lorenzo receive the urgent email. Jarvis alerts Francesca, the CEO, and prepares two proposals for her approval
   - Each person needs to know something different
-  - Our demo: a fictional scenario on Ariete's public services
 - **Visual:** one email card landing with Silvia (to) and Lorenzo (cc)
-- **Sources:** F21, F22 (footer: "Fictional scenario built on Ariete Tech Solutions' public services. Not Ariete's data.")
+- **Sources:** F21, F22 (footer: "Fictional scenario on Ariete's public services. Not Ariete's data.")
 - **Say:** Our demo company does what Ariete does: AI automations for professional firms. Studio Rinaldi has 60 client files stuck before the 28 November deadline. Silvia and Lorenzo receive the urgent email. Jarvis alerts Francesca, the CEO, and prepares two proposals for her approval. Each person needs to know something different, today.
 
-## 03 · Solution
+## 03 · How it works (A day with Jarvis)
 - **Kicker:** How it works
-- **Headline:** It reads everything. / People decide what it remembers.
-- **On slide:**
-  - Reads email, chat, tasks and docs (demo copies today)
-  - Proposes facts. A person approves.
-  - Answers only from approved facts, with sources
-  - Drafts messages and Zoom meetings. They wait for a yes.
-- **Visual:** the How-it-works diagram (Reads → Guard → A person approves → Answers & proposes)
-- **Sources:** F05, F12
-- **Say:** Jarvis reads the team's tools and proposes facts. A person approves them. It answers only from those, with sources. Messages and meetings wait for a yes.
+- **Headline:** Every morning, every person. / Nothing moves without a yes.
+- **On slide:** (5-step flow with icons and arrows; step 5 amber)
+  - 08:00 brief for each person
+  - A person approves new facts
+  - Ask by text or voice: sources or "I don't know"
+  - Urgent email: Jarvis alerts and drafts the fix
+  - Tap Approve, and only then it happens
+- **Visual:** horizontal 5-step workflow
+- **Sources:** F03, F05, F12
+- **Say:** Every morning, each person gets their own brief. A person approves what Jarvis remembers. Anyone can ask, by text or voice, and gets sources or "I don't know". When an urgent email lands, Jarvis alerts the CEO and drafts the fix. Nothing happens until a person taps Approve.
 
 ## 04 · Live demo
 - **Kicker:** Live demo
@@ -47,42 +47,43 @@ Ideas to remember (5): 1. Jarvis speaks first. 2. It only uses what people appro
 - **Sources:** F03, F10
 - **Say:** Let me show you. It's eight in the morning. Nobody asked, but Francesca already has her brief. Now the urgent email from Studio Rinaldi arrives. Jarvis can alert Francesca immediately: here is the call card. It has prepared two proposals for Lorenzo, an internal message and a Zoom meeting. They wait for her approval, and the outbox is empty. I approve only the internal message: one item lands in the mock outbox, and the Zoom proposal is still waiting. Memory: it proposed two facts. I approve one and reject the other, and the answer cites its source. Same question, "Has Bellini & Co. paid the pilot invoice?": the finance group and the CEO can read that fact, so Marta gets the answer with its source; Andrea, the CTO, is refused. The Wi-Fi password is nowhere, so Jarvis says "I don't know". (A real phone call is only part of the pitch if it was rehearsed on the stage laptop with setup and opt-in auto-dial.)
 
-## 05 · What we built and tested
-- **Kicker:** Built and tested today
-- **Headline:** Rival teams will try to break it. / The rules live in code.
-- **On slide:**
-  - 7 of 7 jury checks, enforced in code
-  - 76 automated tests pass (Filare data) + a separate Ariete rehearsal
-  - Fake CEO payment: blocked
-  - A reworded attack: caught by a second AI check
-  - On the phone: no approvals. "Tap it in the app."
-  - Our 3 attacker agents: all 3 builds still pass 7 of 7
-- **Visual:** 6 short proof rows with check icons
-- **Sources:** F05, F06, F07, F08, F09, F10 (footer: "Our tests and live runs, 21 November 2026")
-- **Say:** So the rules live in code, not in the prompt. A reworded attack that our patterns missed was caught by a second AI check.
+## 05 · The 7 jury checks (absorbs "Built and tested")
+- **Kicker:** The 7 jury checks
+- **Headline:** All seven checks. / Enforced in code.
+- **On slide:** (check icon per row; name in bold, then how)
+  - It speaks first · 08:00 brief
+  - People curate memory · people approve
+  - It knows who's asking · roles checked first
+  - It cites · sources shown
+  - It admits gaps · "I don't know"
+  - It only proposes · no send tool
+  - It fits the team's day · chat, email, call card
+  - Proof line: 87 automated tests · fake CEO payment blocked · reworded attack caught by second AI check
+- **Visual:** 7 rows with check icons + one amber proof line
+- **Sources:** F03, F05, F08, F09; 87 tests: jarvis-your-company-brain/README.md (run on the older Filare demo data; Ariete rehearsed separately) (footer: "Tests: older demo data")
+- **Say:** Seven checks, each in code. You just saw them live. Rival teams will try to break it: a fake CEO payment is blocked, and a reworded attack that our patterns missed was caught by a second AI check.
 
-## 06 · Feasibility
-- **Kicker:** Beyond the prototype
-- **Headline:** Built for one company. / Ready for any firm.
-- **On slide:**
-  - In this demo: in-app call card, Zoom proposals, phone call (opt-in, needs setup). Stripe is off in the Ariete dataset.
-  - Next: Gmail, Slack, Notion, with the same rules
-  - AI runs on Google Vertex AI; the demo uses synthetic data only
-  - About $0.003 per morning brief (measured on the earlier Arif build)
-  - First buyers: small firms, through partners like Ariete (pilot)
-  - Market size: not estimated yet
-- **Visual:** connector row, "today" vs "next"
-- **Sources:** F11, F12, F13, F14 (footer: "Demo data; live connectors: phone, and Stripe and Zoom with keys · cost measured on build arif, 21 Nov 2026")
-- **Say:** In this demo, Jarvis alerts the CEO with an in-app call card, and proposes messages and Zoom meetings that wait for approval. A real phone call needs setup and opt-in. On our earlier build, a morning brief cost about a third of a cent. The first buyers are small firms, through partners like Ariete. We haven't sized the market yet.
+## 06 · Getting started (replaces Feasibility)
+- **Kicker:** Getting started
+- **Headline:** Connect, read-only. / Pilot in weeks.
+- **On slide:** (4-step flow; step 3 amber)
+  - Connect · email, chat, tasks, docs (read-only)
+  - Set roles · who sees what
+  - Pilot · one team, a few weeks
+  - Grow · more tools, same rules
+  - Fact row: About $0.003 per brief (earlier build) · AI on Google Vertex AI · Market not estimated yet
+- **Visual:** horizontal 4-step workflow + one fact row
+- **Sources:** F11, F12, F14 (footer: "Today: demo copies of these tools; in-app call card; a real phone call needs setup · cost measured 21 Nov 2026")
+- **Say:** A company connects its tools read-only and sets who sees what. Ariete pilots it with one client team for a few weeks, then more tools with the same rules. On our earlier build, a morning brief cost about a third of a cent. We haven't sized the market yet.
 
 ## 07 · Team, ask and close
 - **Kicker:** The ask
 - **Headline:** Ariete: let's pilot Jarvis with one of your client firms.
 - **On slide:**
-  - Arif · founder, PoliPrep and Life At PoliTO
-  - Hamid and Uluhan · engineering students, Politecnico di Torino
+  - Token Mafia: Fakrul (Arif) Islam · Hamid Sajjadi · Uluhan Simsek (equal, one row, no titles)
   - Three builds in parallel, the best ideas merged
   - A colleague you trust says "I don't know", and "May I?"
-- **Visual:** three names, the closing line large
+- **Visual:** three equal names in one row, the closing line large
 - **Sources:** F14, F17, F18, F19
-- **Say:** I run PoliPrep, and I built Jarvis because I live this problem. We built three versions in parallel and merged the best ideas. Ariete builds AI agents for professional firms. Let's pilot Jarvis with one of your clients. Because a colleague you trust says "I don't know", and "May I?"
+- **Say:** We built three versions in parallel and merged the best ideas. Ariete builds AI agents for professional firms. Let's pilot Jarvis with one of your clients. Because a colleague you trust says "I don't know", and "May I?"
+

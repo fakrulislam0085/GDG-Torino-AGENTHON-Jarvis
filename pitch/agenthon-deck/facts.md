@@ -27,7 +27,7 @@ Founder decisions that override rules: two versions. A = Filare Labs story + Fil
 | F21 | Demo data (Ariete scenario): client Studio Rinaldi's document-intake automation stopped Wednesday night; 60 client files stuck before the 28 Nov tax deadline; the email went to the account manager (Silvia), cc the automation engineer; the CFO-only fact is Bellini & Co.'s unpaid pilot invoice INV-2026-014 (EUR 4,800) | jarvis-your-company-brain/data_ariete/emails.json email-011, memory_seed.json mem-002 | 2026-11-21 |
 
 | F22 | Demo company = a fictional scenario built on Ariete Tech Solutions' PUBLIC services (AI training, mentoring, custom automations, AI agents for professional firms and SMEs; Turin; Ariete Capital group). People, events, clients and numbers are invented; no Ariete finances | founder decision 21 Nov 14:40; docs/sponsor-research.md (arietetech.com, read 21 Nov) | 2026-11-21 |
-| F23 | jarvis-your-company-brain: 76 automated tests pass offline on Filare data; the Ariete demo is rehearsed separately | pytest on the final commit | 2026-11-21 |
+| F23 | jarvis-your-company-brain: 87 automated tests pass offline on the default Filare data (builds/arif: 33) | pytest, 21 Nov 16:15 | 2026-11-21 |
 
 ## Missing (NEED)
 - Cost per brief for jarvis-your-company-brain (slides keep the builds/arif figure, labelled)
