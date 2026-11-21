@@ -26,6 +26,6 @@
 - Proposal guards against leaks and exfiltration (internal recipients must be allowed to see the sources; external recipients must be the sender of a cited email).
 
 **Known gaps:**
-- Not yet run against live Gemini here (no credentials on this laptop); the REST client follows the Vertex `generateContent` API.
+- Live Gemini run done once end to end (7 checks, both attack emails, about $0.047). Model proposals vary between runs; the certificate approval is a code rule so it is always there.
 - Offline Q&A is strict keyword matching: an unusual phrasing gets "I don't know".
 - Identity is a picker, not a login.

@@ -71,7 +71,7 @@ SWEEP_EVERY_MIN=30                          # how often the sweep runs on its ow
 
 The sidebar says which mode is on. If a Gemini call fails, that step falls back to rules and the trace says so. The audit log shows calls, tokens and cost so far.
 
-**Cost (estimate, from the event prices: $0.75 per M tokens in, $3.75 per M out):** a morning sweep for 7 people is 14 calls of about 1 to 4k tokens, roughly $0.03, so about half a cent per person per day. An answer is about 1k tokens, under $0.001.
+**Cost (measured live, event prices $0.75 per M tokens in, $3.75 per M out):** a full demo run (morning sweep for 7 people, 2 new emails, about 12 questions) was 27 Gemini calls, 35k tokens, **$0.047**. A morning sweep alone is about $0.03, so roughly half a cent per person per day. An answer costs under $0.001.
 
 ## Limits
 
@@ -80,5 +80,5 @@ The sidebar says which mode is on. If a Gemini call fails, that step falls back 
 - Identity comes from the "You are" picker. A real deployment would use the company login (Google Workspace / Microsoft SSO).
 - Offline, answers use keyword matching, which is strict: it says "I don't know" rather than guess. With Gemini, phrasing is freer and the same guards apply.
 - Offline, the morning proposals and the reading of the two live emails come from `demo_extra.json`, labelled "offline" on screen.
-- Not tested yet with live Gemini on this machine (no credentials here). The fake-model tests cover how the guards handle a bad model.
+- Tested live on Gemini 3.8 Flash (Vertex AI, `eu`, low thinking): the whole demo script passes, one morning sweep takes about 12 s. Model proposals vary between runs, so the one demo-critical approval (a task blocked on a named person) is a code rule, not left to the model. The fake-model tests cover how the guards handle a bad model.
 - Next steps: real connectors (Gmail, Slack, Drive), embeddings for retrieval, approvals inside Slack.

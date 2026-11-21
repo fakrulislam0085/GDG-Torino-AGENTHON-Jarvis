@@ -262,6 +262,7 @@ class Brain:
                 for pid, (props, info) in zip(pids, proposal_runs):
                     for p in props:
                         self.add_proposal(p, default_approver=pid, origin=f"morning sweep ({info['mode']})")
+                self.propose_blocked_tasks()
             with ThreadPoolExecutor(max_workers=7) as pool:
                 briefs = list(pool.map(self.build_brief, pids))
             with self.lock:
@@ -332,7 +333,7 @@ class Brain:
             for m in self.memory.values():
                 if m["status"] == "pending" and self.can_review(pid, m):
                     waiting.append({"text": f"Check this memory before anyone can use it: \"{m['fact']}\"",
-                                    "cites": [m["id"]]})
+                                    "cites": [m["id"]], "review": True})
             if waiting:
                 sections.append({"title": "Waiting for your decision", "bullets": waiting})
 
@@ -340,7 +341,8 @@ class Brain:
         # Offline opener = the most urgent item: alerts, then tasks due by tomorrow, then decisions, then the week.
         order = {"Needs your attention": 0, "Your tasks due soon": 1, "Waiting for your decision": 2}
         ranked = sorted(bullets, key=lambda b: next((order.get(s["title"], 3) for s in sections if b in s["bullets"]), 3))
-        headline, trace = self._headline(pid, ranked)
+        # Unreviewed memory is not fact yet (it may be wrong, like the 83k): it never feeds the opening line.
+        headline, trace = self._headline(pid, [b for b in ranked if not b.get("review")])
         return {"title": f"Good morning {self.people[pid]['name'].split()[0]}: your brief for {fmt_day(today)}",
                 "headline": headline, "sections": sections, "trace": trace}
 
@@ -353,7 +355,9 @@ class Brain:
                   '{"headline": "<max 30 words>", "cites": ["<ids of the items you used>"]}. ' + UNTRUSTED)
         p = self.people[pid]
         items = [{"cites": b["cites"], "text": b["text"]} for b in bullets]
-        prompt = f"Person: {p['name']}, {p['role']}.\n<data>\n{json.dumps(items, ensure_ascii=False)}\n</data>"
+        prompt = (f"Today is {self.now():%A %d %B %Y}. Person: {p['name']}, {p['role']}. Say \"today\" only for "
+                  f"things dated today; for later dates use the weekday or \"tomorrow\".\n"
+                  f"<data>\n{json.dumps(items, ensure_ascii=False)}\n</data>")
         out, info = self._llm(system, prompt)
         allowed = {c for b in bullets for c in b["cites"]}
         texts = [b["text"] for b in bullets]
@@ -378,9 +382,13 @@ class Brain:
                    if m["status"] == "approved" and self.can_see(pid, m["acl"])]
             people = {i: f"{p['name']} ({p['role']})" for i, p in self.people.items()}
         system = (
-            "You are the Brain of a small company. Propose at most 2 concrete actions that would help this person "
-            "today, only where something is clearly overdue, due within 2 days, blocked, or a customer is waiting. "
-            "You cannot do anything yourself: a person approves every action. Reply as JSON: "
+            "You are the Brain of a small company. Propose at most 1 concrete action that would help this person "
+            "today, only where something is clearly overdue, due within 2 days, or an outside customer or supplier "
+            "is waiting for a reply from them. Rules: only for something this person is the owner of; to answer an "
+            "outside sender use kind email with \"to\" = that sender's address; never email a colleague to ask for "
+            "approval (approvals happen inside this app); never propose a task that already exists; "
+            "never propose anything for someone else. You cannot do anything yourself: a person approves "
+            "every action. Reply as JSON: "
             '{"proposals": [{"kind": "email" | "task", "approver": "<person id who must say yes>", '
             '"to": "<person id, or the external address of the email you reply to>", "subject": "...", '
             '"body": "...", "task_id": "<existing task id if unblocking one>", "title": "<short title>", '
@@ -395,7 +403,20 @@ class Brain:
         if out is None:
             return [p for p in self.extra["offline"]["proposals"] if p["approver"] == pid], info
         props = out.get("proposals") or []
-        return (props[:2] if isinstance(props, list) else []), info
+        return (props[:1] if isinstance(props, list) else []), info
+
+    def propose_blocked_tasks(self):
+        """Rule, not model: a task blocked on a named person's approval always gets a request for that person."""
+        for t in self.tasks.values():
+            if t["status"] != "blocked" or not t.get("blocked_by"):
+                continue
+            who = next((i for i, p in self.people.items() if p["name"].split()[0].lower() in t["blocked_by"].lower()), None)
+            if who and who != t["owner"]:
+                self.add_proposal({"kind": "task", "approver": who, "task_id": t["id"], "owner": t["owner"],
+                                   "title": f"Approve and unblock: {t['title']}",
+                                   "why": f"{self.name(t['owner'])} is blocked until {self.name(who)} says yes "
+                                          f"(due {fmt_day(t['due'])}).", "sources": [t["id"]] + ([t["source"]] if t.get("source") else [])},
+                                  default_approver=who, origin="rule: task blocked on an approval")
 
     def add_proposal(self, p: dict, default_approver: str, origin: str):
         """Every proposal, from the model or not, passes these checks before a person ever sees it."""
@@ -422,6 +443,8 @@ class Brain:
                 repliable = {self.source(s).get("from") for s in srcs}
                 if to not in repliable:
                     errs.append(f"recipient {to!r} is not a colleague nor the sender of a cited email")
+            if to == approver:
+                errs.append("an email to the approver themselves")
             if not (p.get("subject") and p.get("body")):
                 errs.append("empty email")
             title = f"Send email to {self.name(to)}: \"{p.get('subject', '')}\""
