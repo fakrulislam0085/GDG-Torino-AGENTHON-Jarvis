@@ -1,4 +1,4 @@
-"""Company Brain "mafia" web server. Standard library only.
+"""Team Assistant web server. Standard library only.
 
     python builds/mafia/app.py          ->  http://localhost:8030
 
@@ -186,7 +186,7 @@ def make_server(port: int, brain=None) -> ThreadingHTTPServer:
 def main():
     port = int(os.getenv("PORT", "8030"))
     threading.Thread(target=scheduler, daemon=True).start()
-    print(f"Filare Brain on http://localhost:{port}  (mode: {BRAIN.mode()}, state saved: {PERSIST})")
+    print(f"Team Assistant on http://localhost:{port}  (mode: {BRAIN.mode()}, state saved: {PERSIST})")
     make_server(port).serve_forever()
 
 

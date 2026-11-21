@@ -27,7 +27,7 @@ state = {"last_error": None, "calls": 0, "input_tokens": 0, "output_tokens": 0, 
 
 # Circuit breaker: after 2 failed calls in a row, skip Gemini for PAUSE_S seconds and answer from plain rules
 # immediately (instead of making every question wait for a timeout while the Wi-Fi is down).
-TIMEOUT_S = 10
+TIMEOUT_S = int(os.getenv("GEMINI_TIMEOUT_S", "15"))
 PAUSE_S = 15
 _breaker = {"fails": 0, "down_until": 0.0}
 

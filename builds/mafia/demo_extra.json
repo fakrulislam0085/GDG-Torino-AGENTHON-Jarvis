@@ -1,5 +1,5 @@
 {
-  "_note": "Synthetic demo data only. 'incoming' are new emails you can make arrive live from the top bar. 'offline' holds what the Brain does with them when Gemini is not configured; every offline run is labelled 'offline' in the trace.",
+  "_note": "Synthetic demo data only. 'incoming' are new emails you can make arrive live from the top bar. 'offline' holds what the assistant does with them when Gemini is not configured; every offline run is labelled 'offline' in the trace.",
   "incoming": [
     {
       "id": "email-101",
@@ -33,7 +33,7 @@
     },
     {
       "id": "email-103",
-      "button": "URGENT: frost tonight (the Brain phones the CEO)",
+      "button": "URGENT: frost tonight (the assistant phones the CEO)",
       "from": "agronomo@langheviva.example",
       "to": [
         "paolo"
@@ -232,7 +232,7 @@
       "email-103": {
         "urgent": true,
         "why": "A key customer threatens to cancel and claim damages, and frost is forecast tonight with 40 sensors still offline.",
-        "script": "Elena, this is the Brain. Cantina Langhe Viva expects minus 4 degrees tonight and 40 of their sensors are still offline. They say they will cancel the contract and ask for damages. I prepared a message asking Davide to go to Barbaresco today, and a short meeting with Paolo and Davide. Nothing happens until you approve.",
+        "script": "Elena, this is the Team Assistant. Cantina Langhe Viva expects minus 4 degrees tonight and 40 of their sensors are still offline. They say they will cancel the contract and ask for damages. I prepared a message asking Davide to go to Barbaresco today, and a short meeting with Paolo and Davide. Nothing happens until you approve.",
         "fix_for": "davide",
         "fix": "Davide, Cantina Langhe Viva expects minus 4 degrees tonight and 40 sensors are still offline. Can you go to Barbaresco today with the spare gateway? Please confirm when you can leave. Elena",
         "meeting": {

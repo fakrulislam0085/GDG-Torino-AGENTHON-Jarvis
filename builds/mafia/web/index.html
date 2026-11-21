@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Company Brain</title>
+<title>Team Assistant</title>
 <style>
 :root{--bg:#f5f7fb;--panel:#fff;--ink:#17243c;--muted:#66758c;--line:#e5eaf2;--accent:#315ce8;--accent-soft:#edf2ff;--ok:#18775a;--ok-soft:#edf8f2;--warn:#99621b;--warn-soft:#fff7e9;--bad:#b14c45;--bad-soft:#fff3f1;--info:#315ce8;--info-soft:#edf2ff;--mono:ui-monospace,SFMono-Regular,Menlo,monospace}
 *{box-sizing:border-box}body{margin:0;font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:var(--bg);height:100dvh;display:grid;grid-template-rows:auto minmax(0,1fr);letter-spacing:-.2px}button,input,select{font:inherit}button{cursor:pointer;border:1px solid var(--line);border-radius:9px;padding:9px 14px;background:white;color:var(--ink);font-size:14px;font-weight:600;transition:background .16s,border-color .16s,box-shadow .16s}button:hover{background:#f2f5fc;border-color:#becbf0}button.primary,button.ok{background:var(--accent);border-color:var(--accent);color:white;box-shadow:0 3px 7px #315ce818}button.primary:hover,button.ok:hover{background:#244bd0}button.ghost{background:transparent}button:disabled{opacity:.5;cursor:default}button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #93b4ff;outline-offset:3px}a{color:var(--accent)}
@@ -43,14 +43,14 @@ label.f{display:block;font-size:12px;color:var(--muted);margin:12px 0 4px}
 </head>
 <body>
 <header>
-  <div class="header-identity"><span class="brand"><span class="brand-mark">f</span><span>Company Brain<small>FILARE WORKSPACE</small></span></span>
+  <div class="header-identity"><span class="brand"><span class="brand-mark">f</span><span>Team Assistant<small>FILARE LABS</small></span></span>
   <span class="pill demo-label" title="All companies, people and messages are fictional">Synthetic demo</span>
   <span class="pill" id="mode">…</span>
   <span class="pill" id="clock">…</span>
   </div><div class="header-actions">
-  <button id="sweepBtn" title="The scheduled background job. Nobody asks the brain anything.">⏰ Run morning sweep</button>
+  <button id="sweepBtn" title="The scheduled background job. Nobody asks the assistant anything.">⏰ Run morning briefing</button>
   <select id="eventSel" title="Simulate a source message arriving"><option value="">✉ Simulate incoming message…</option></select>
-  <button id="pasteBtn" title="Type or paste your own email and see if you can trick the Brain">✍ Paste an email…</button>
+  <button id="pasteBtn" title="Type or paste your own email and see if you can trick the assistant">✍ Paste an email…</button>
   <label class="row" style="gap:6px">Viewing as
     <select id="personSel"></select>
   </label>
@@ -63,13 +63,13 @@ label.f{display:block;font-size:12px;color:var(--muted);margin:12px 0 4px}
     <div class="scroll" id="view"></div>
     <div class="composer" id="composer">
       <div class="suggest" id="suggest"></div>
-      <form id="askForm"><input id="q" autocomplete="off" placeholder="Ask a question. Get an approved, sourced answer." aria-label="Ask the brain"><button class="primary">Ask</button></form><div class="composer-note">Approved knowledge only. Your access is checked before every answer.</div>
+      <form id="askForm"><input id="q" autocomplete="off" placeholder="Ask a question. Get an approved, sourced answer." aria-label="Ask the assistant"><button class="primary">Ask</button></form><div class="composer-note">Approved knowledge only. Your access is checked before every answer.</div>
     </div>
   </main>
   <aside id="tracePanel">
     <div class="head"><div class="row" style="justify-content:space-between"><h3>Agent trace</h3><button id="closeTrace" aria-label="Close agent trace">×</button></div><div class="muted" style="font-size:12px">Every step, every refused action, and what it cost.</div></div>
     <div class="runs" id="runs"></div>
-    <div class="steps" id="steps"><div class="empty">Run the sweep or ask a question.</div></div>
+    <div class="steps" id="steps"><div class="empty">Run the morning briefing or ask a question.</div></div>
     <div class="usage" id="usage"></div>
   </aside>
 </div>
@@ -124,18 +124,18 @@ function renderChrome() {
   $("#clock").textContent = "🕗 " + S.clock.replace("T", " ").slice(0, 16);
   $("#personSel").innerHTML = S.people.map(p => `<option value="${p.id}" ${p.id === person ? "selected" : ""}>${esc(p.name)} · ${esc(p.role)}</option>`).join("");
   const running = S.sweep === "running" || sweeping;
-  $("#sweepBtn").disabled = running; $("#sweepBtn").innerHTML = running ? `<span class="spin"></span> sweeping…` : "⏰ Run morning sweep";
+  $("#sweepBtn").disabled = running; $("#sweepBtn").innerHTML = running ? `<span class="spin"></span> preparing briefings…` : "⏰ Run morning briefing";
   $("#eventSel").innerHTML = `<option value="">✉ Simulate incoming message…</option>` + S.incoming.map(e => `<option value="${esc(e.id)}" ${e.arrived ? "disabled" : ""}>${e.arrived ? "✓ " : ""}${esc(e.button)}</option>`).join("");
   $("#resetBtn").style.display = URLP.get("admin") && S.me.groups.includes("exec") ? "" : "none";
   const pendMem = S.memory.filter(m => m.can_review).length, decide = S.actions.filter(a => a.can_decide).length;
   const ring = S.calls.filter(c => c.status === "ringing").length;
-  const nav = [["dm", "🧠 Brain", 0], ["email", "📧 Morning email", S.dms.some(m => m.kind === "brief") ? 1 : 0], ["calls", "📞 Calls", ring],
+  const nav = [["dm", "💬 Assistant", 0], ["email", "📧 Morning email", S.dms.some(m => m.kind === "brief") ? 1 : 0], ["calls", "📞 Calls", ring],
     ["memory", "📚 Memory review", pendMem], ["approvals", "✅ Approvals", decide], ["outbox", "📤 Outbox", 0], ["sources", "🗂 Sources", 0],
     ["audit", "🧾 Audit log", 0], ["jury", "🏁 Jury checklist", 0]];
   const iconPaths = {dm:'M4 4h16v12H9l-5 4V4Z',email:'M3 5h18v14H3V5Zm0 1 9 7 9-7',calls:'M6 3h4l2 5-2.5 1.5a11 11 0 0 0 5 5L16 12l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2',memory:'M4 4h7v16H4V4Zm9 0h7v16h-7V4Z',approvals:'m7 12 3 3 7-7 M5 3h14v18H5V3Z',outbox:'M4 14h4l2 3h4l2-3h4 M4 14l3-9h10l3 9v6H4v-6Z',sources:'M3 6h7l2 3h9v11H3V6Z',audit:'M6 3h12v18H6V3Zm3 5h6m-6 4h6m-6 4h4',jury:'M5 3v18m0-16h14l-3 4 3 4H5'};
   $("#nav").innerHTML = `<div class="ws">${esc(S.company.split(" S.r.l.")[0])}</div><div class="who">Your company, in context.</div><div class="sec">Workspace</div>` + nav.map(([k, l, n], i) =>
     (i === 5 ? `<div class="sec">Knowledge & trust</div>` : "") +
-    `<a data-view="${k}" role="button" tabindex="0" aria-label="${esc(l.replace(/^\S+\s/, ''))}" class="${view === k ? "active" : ""}"><span><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="${iconPaths[k]}"/></svg><span class="nav-label">${esc(l.replace(/^\S+\s/, ''))}</span></span>${n ? `<span class="badge">${n}</span>` : ""}</a>`).join("") + `<div class="nav-foot"><strong>People make the decisions.</strong>The Brain brings the evidence.<br><br>Synthetic data · Mock outbox</div>`;
+    `<a data-view="${k}" role="button" tabindex="0" aria-label="${esc(l.replace(/^\S+\s/, ''))}" class="${view === k ? "active" : ""}"><span><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="${iconPaths[k]}"/></svg><span class="nav-label">${esc(l.replace(/^\S+\s/, ''))}</span></span>${n ? `<span class="badge">${n}</span>` : ""}</a>`).join("") + `<div class="nav-foot"><strong>People make the decisions.</strong>The assistant brings the evidence.<br><br>Synthetic data · Mock outbox</div>`;
   $("#composer").style.display = view === "dm" ? "" : "none";
   $("#suggest").innerHTML = SUGGEST.map(q => `<button type="button" data-q="${esc(q)}">${esc(q)}</button>`).join("");
 }
@@ -180,7 +180,7 @@ function actionBox(a) {
     ${warnBox(a.warnings, "Self-check: read this carefully before you approve")}${extra}${body}${foot}</div>`;
 }
 
-/* ---------------------------------------------------------------- Brain DM */
+/* ---------------------------------------------------------------- assistant chat */
 function latestBrief() { return [...S.dms].reverse().find(m => m.kind === "brief"); }
 function briefCard(b) {
   speech[b.id] = [b.title, b.headline.text, ...b.sections.map(s => s.title + ". " + s.bullets.map(x => x.text).join(". "))].join(". ");
@@ -194,18 +194,18 @@ function briefCard(b) {
     ${items || "<p>Nothing needs you today.</p>"}</div>`;
 }
 function renderDM() {
-  setHead("Brain", `Direct messages with ${S.me.name}`);
+  setHead("Assistant", `Direct messages with ${S.me.name}`);
   const first = S.me.name.split(" ")[0], brief = latestBrief();
   const toReview = S.memory.filter(m => m.can_review).length, pend = S.actions.filter(a => a.can_decide).length;
   let h = `<section class="welcome"><div><div class="eyebrow">Your daily workspace</div><h1>Your day, in focus.</h1><p>Good morning, ${esc(first)}. Here’s what needs your attention.</p></div><div class="summary"><div><strong>${brief ? brief.sections.reduce((n, x) => n + x.bullets.length, 0) : 0}</strong>Brief items</div><div><strong>${toReview}</strong>To review</div><div><strong>${pend}</strong>Pending actions</div></div></section>`;
-  if (!S.dms.length) h += `<div class="empty">${S.sweep === "running" ? "The Brain is reading this morning's email, chat and tasks…" : "No brief yet. At the scheduled time the Brain sweeps email, chat and tasks and writes to each person on its own."}<br><br><button class="primary" data-jury="sweep">⏰ Run morning sweep</button></div>`;
+  if (!S.dms.length) h += `<div class="empty">${S.sweep === "running" ? "The assistant is reading this morning's email, chat and tasks…" : "No brief yet. At the scheduled time the assistant reads email, chat and tasks and writes to each person on its own."}<br><br><button class="primary" data-jury="sweep">⏰ Run morning briefing</button></div>`;
   for (const m of S.dms) {
-    if (m.kind === "brief") h += `<div class="msg"><div class="av">f</div><div><div class="meta"><b>Brain</b><span>${time(m.at)} · morning brief, unprompted${m.run ? ` · <a href="#" data-run="${esc(m.run)}">trace</a>` : ""}</span></div>${briefCard(m)}</div></div>`;
+    if (m.kind === "brief") h += `<div class="msg"><div class="av">f</div><div><div class="meta"><b>Assistant</b><span>${time(m.at)} · morning brief, unprompted${m.run ? ` · <a href="#" data-run="${esc(m.run)}">trace</a>` : ""}</span></div>${briefCard(m)}</div></div>`;
     else if (m.kind === "alert") { const lvl = {danger: "suspicious", warn: "warn", ok: "ok"}[m.level] || "warn";
-      h += `<div class="msg"><div class="av">f</div><div><div class="meta"><b>Brain</b><span>${time(m.at)} · ${lvl === "suspicious" ? "alert" : "update"}, unprompted</span></div><div class="card ${lvl === "suspicious" ? "danger" : lvl}"><b>${lvl === "suspicious" ? "⚠ " : lvl === "ok" ? "✅ " : "🔔 "}</b>${esc(m.headline)}${m.cites && m.cites.length ? chips(m.cites) : ""}</div></div></div>`; }
+      h += `<div class="msg"><div class="av">f</div><div><div class="meta"><b>Assistant</b><span>${time(m.at)} · ${lvl === "suspicious" ? "alert" : "update"}, unprompted</span></div><div class="card ${lvl === "suspicious" ? "danger" : lvl}"><b>${lvl === "suspicious" ? "⚠ " : lvl === "ok" ? "✅ " : "🔔 "}</b>${esc(m.headline)}${m.cites && m.cites.length ? chips(m.cites) : ""}</div></div></div>`; }
     else if (m.kind === "question") h += `<div class="msg"><div class="av me">${esc(S.me.name[0])}</div><div><div class="meta"><b>${esc(S.me.name)}</b><span>${time(m.at)}</span></div><div>${esc(m.text)}</div></div></div>`;
     else if (m.kind === "answer") { const lbl = {answered: "", restricted: "🔒 Not for your role", unknown: "🤷 I don't know", pending: "⏳ Waiting for a person's approval"}[m.status];
-      h += `<div class="msg"><div class="av">f</div><div><div class="meta"><b>Brain</b><span>${time(m.at)}${m.run ? ` · <a href="#" data-run="${esc(m.run)}">trace</a>` : ""}</span></div><div class="card ${m.status === "answered" ? "answered" : "unknown"}">${lbl ? `<b>${lbl}</b><br>` : ""}${esc(m.text)}${chips(m.cites)}
+      h += `<div class="msg"><div class="av">f</div><div><div class="meta"><b>Assistant</b><span>${time(m.at)}${m.run ? ` · <a href="#" data-run="${esc(m.run)}">trace</a>` : ""}</span></div><div class="card ${m.status === "answered" ? "answered" : "unknown"}">${lbl ? `<b>${lbl}</b><br>` : ""}${esc(m.text)}${chips(m.cites)}
         ${(m.facts || []).map(f => `<div class="quote">Approved fact, word for word: ${esc(f)}</div>`).join("")}</div></div></div>`; }
   }
   if (thinking) h += `<div class="msg"><div class="av me">${esc(S.me.name[0])}</div><div><div class="meta"><b>${esc(S.me.name)}</b></div><div>${esc(thinking)}</div></div></div><div class="msg"><div class="av">f</div><div class="thinking">Searching the approved memory you're allowed to see…</div></div>`;
@@ -216,9 +216,9 @@ function renderDM() {
 function renderEmail() {
   setHead("Morning email", `The same brief, delivered to ${S.me.name}'s inbox`);
   const b = latestBrief();
-  if (!b) return setView(`<div class="empty">No email yet. It is sent by the scheduled morning sweep, not on request.</div>`);
+  if (!b) return setView(`<div class="empty">No email yet. It is sent by the scheduled morning briefing run, not on request.</div>`);
   const acts = Object.fromEntries(S.actions.map(a => [a.id, a]));
-  setView(`<div class="card" style="max-width:720px"><div class="muted" style="font-size:13px">From: <b>Company Brain</b> &lt;brain@filare.example&gt;<br>To: ${esc(S.me.name)}<br>Date: ${esc(b.at.replace("T", " ").slice(0, 16))}</div>
+  setView(`<div class="card" style="max-width:720px"><div class="muted" style="font-size:13px">From: <b>Team Assistant</b> &lt;assistant@filare.example&gt;<br>To: ${esc(S.me.name)}<br>Date: ${esc(b.at.replace("T", " ").slice(0, 16))}</div>
     <h3 style="margin:10px 0 4px">${esc(b.title)}</h3><p><b>${esc(b.headline.text)}</b></p>
     ${b.sections.map(s => `<p style="margin-bottom:2px"><b>${esc(s.title)}</b></p><ol>${s.bullets.map(x => `<li style="margin-bottom:8px">${esc(x.text)}${chips(x.cites)}${x.cites.some(c => acts[c]) ? `<div class="muted" style="font-size:12px">Waiting for your OK in Approvals. Nothing is sent until you approve.</div>` : ""}</li>`).join("")}</ol>`).join("")}
     <p class="muted" style="font-size:12px">Demo data. This email is a mock-up: nothing is sent. Generated from approved memory you are allowed to see.</p></div>`);
@@ -235,19 +235,19 @@ function memCard(m, actions) {
     ${actions && m.can_review ? `<div class="row" style="margin-top:8px"><button class="ok" data-mem="${m.id}" data-d="approve">Approve</button><input type="text" data-reason="${m.id}" placeholder="${reasonPh}"><button data-mem="${m.id}" data-d="reject">Reject</button></div><div class="muted" style="font-size:12px;margin-top:6px">Only approved items can be used in answers.</div>` : actions ? `<div class="muted">You can't review this one: you can't see all its sources.</div>` : ""}</div>`;
 }
 function renderMemory() {
-  setHead("Memory review", "The Brain proposes. People decide what it remembers.");
+  setHead("Memory review", "The assistant proposes. People decide what it remembers.");
   const pend = S.memory.filter(m => m.status === "pending").sort((a, b) => b.warnings.length - a.warnings.length);
   const shown = showAllMem ? pend : pend.slice(0, 5), ok = S.memory.filter(m => m.status === "approved"), no = S.memory.filter(m => m.status === "rejected");
   setView(`<h3>Waiting for review (${pend.length})</h3>` + (shown.length ? shown.map(m => memCard(m, true)).join("") : `<div class="empty">Nothing to review.</div>`) +
-    (pend.length > 5 ? `<div class="row"><button data-showall="1">${showAllMem ? "Show only the top 5 (warnings first)" : `Show all ${pend.length} notes`}</button><span class="muted">Notes with warnings come first. The Brain proposes at most 8 new notes per sweep.</span></div>` : "") +
+    (pend.length > 5 ? `<div class="row"><button data-showall="1">${showAllMem ? "Show only the top 5 (warnings first)" : `Show all ${pend.length} notes`}</button><span class="muted">Notes with warnings come first. The assistant proposes at most 8 new notes per morning run.</span></div>` : "") +
     `<h3>Approved memory you can see (${ok.length})</h3>` + ok.map(m => memCard(m, false)).join("") + (no.length ? `<h3>Rejected</h3>` + no.map(m => memCard(m, false)).join("") : ""));
 }
 
 /* ---------------------------------------------------------------- approvals, outbox, calls */
 function renderApprovals() {
-  setHead("Approvals", "Actions the Brain drafted. Nothing happens until a person approves.");
+  setHead("Approvals", "Actions the assistant drafted. Nothing happens until a person approves.");
   const list = [...S.actions].sort((a, b) => (b.can_decide - a.can_decide) || (a.status === "waiting" ? -1 : 1));
-  setView(`<div class="quote" style="margin-top:0">The Brain has <b>no tool to send, pay or change anything</b>. It can only propose. Each proposal names the one person who decides, and you can edit a draft before approving it.</div>` +
+  setView(`<div class="quote" style="margin-top:0">The assistant has <b>no tool to send, pay or change anything</b>. It can only propose. Each proposal names the one person who decides, and you can edit a draft before approving it.</div>` +
     (list.length ? list.map(actionBox).join("") : `<div class="empty">No proposals for ${esc(S.me.role)}.</div>`));
 }
 function renderOutbox() {
@@ -259,7 +259,7 @@ function meetingCard(m) {
   return `<div class="meeting">📅 <b>${esc(m.topic)}</b> · ${esc(m.start.replace("T", " "))} · ${m.minutes} min · with ${m.with.map(personName).map(esc).join(", ")}<br>Approved by ${esc(personName(m.approved_by))} · <a href="${esc(m.join_url)}" target="_blank" rel="noopener">${esc(m.join_url)}</a><br><span class="muted">${esc(m.note)}</span></div>`;
 }
 function renderCalls() {
-  setHead("Calls", "When something urgent arrives, the Brain phones the CEO. A call only informs: every fix waits for a click.");
+  setHead("Calls", "When something urgent arrives, the assistant phones the CEO. A call only informs: every fix waits for a click.");
   const acts = Object.fromEntries(S.actions.map(a => [a.id, a]));
   const mine = S.calls.map(c => `<div class="callcard"><div class="row"><span class="tag ${c.status === "ringing" ? "danger" : c.status === "answered" ? "approved" : "rejected"}">${esc(c.status)}</span><b>📞 Call about ${esc(c.source)}</b><span class="muted">${time(c.created_at)} · ${esc(c.mode)}</span></div>
     <p class="why" style="color:var(--muted)">${esc(c.why)}</p><div class="quote">${esc(c.script)}</div>
@@ -288,14 +288,14 @@ function renderAudit() {
 function renderJury() {
   setHead("Jury checklist", "Run the seven checks, then the two extras only this mix has.");
   const checks = [
-    {n: "1", title: "It speaks first", do: "Run the morning sweep, then open Brain DM.", buttons: [["sweep", "Run morning sweep"], ["dm", "Open Brain DM"]], expected: "An unprompted, role-specific morning brief appears before anyone asks."},
+    {n: "1", title: "It speaks first", do: "Run the morning briefing, then open assistant chat.", buttons: [["sweep", "Run morning briefing"], ["dm", "Open the assistant chat"]], expected: "An unprompted, role-specific morning brief appears before anyone asks."},
     {n: "2", title: "People curate memory", do: "As Davide, open Memory review: approve mem-p01, reject mem-p02 (the red box says 83,000 is not in its source). Then ask “When does the Langhe fix roll out?”", buttons: [["memory-davide", "Review as Davide"], ["rollout-davide", "Ask as Davide"]], expected: "Before approval: “I don't know”. After: Thursday 26 Nov at 07:00, citing the approved note."},
     {n: "3", title: "It knows who is asking", do: "Ask “What is our cash runway?” as Giulia, then as Sara.", buttons: [["runway-giulia", "Ask as Giulia"], ["runway-sara", "Ask as Sara"]], expected: "Giulia gets the approved answer; Sara is told it is not for her role."},
-    {n: "4", title: "It cites", do: "Look at the chips and the word-for-word approved fact under every answer.", buttons: [["dm", "Open Brain DM"]], expected: "Every answer shows its sources; click a chip to open it."},
+    {n: "4", title: "It cites", do: "Look at the chips and the word-for-word approved fact under every answer.", buttons: [["dm", "Open the assistant chat"]], expected: "Every answer shows its sources; click a chip to open it."},
     {n: "5", title: "It admits gaps", do: "Ask: “What's the office Wi-Fi password?”", buttons: [["wifi", "Ask about Wi-Fi"]], expected: "“I don't know”, with no citation."},
     {n: "6", title: "It only proposes", do: "As Luca, open Approvals, edit the SensorParts draft, check the Outbox is empty, then approve.", buttons: [["approvals-luca", "Open Approvals as Luca"], ["outbox-luca", "Check Outbox"]], expected: "The draft waits for Luca; the Outbox stays empty until he approves."},
-    {n: "7", title: "It fits the day", do: "Open Brain DM, the Morning email, and play the voice brief.", buttons: [["dm", "Brain DM"], ["email", "Morning email"], ["voice", "Play voice brief"]], expected: "The same sourced brief fits chat, email and voice."},
-    {n: "★", title: "It phones the CEO", do: "Simulate “URGENT: frost tonight” and open Elena's Calls. Answer the call, then approve the fix and the meeting on the call screen.", buttons: [["urgent", "Simulate the urgent email"], ["calls-elena", "Open Elena's calls"]], expected: "The Brain rings Elena with a short script, prepares a message to Davide and a meeting, and does nothing until she approves.", star: true},
+    {n: "7", title: "It fits the day", do: "Open the assistant chat, the Morning email, and play the voice brief.", buttons: [["dm", "assistant chat"], ["email", "Morning email"], ["voice", "Play voice brief"]], expected: "The same sourced brief fits chat, email and voice."},
+    {n: "★", title: "It phones the CEO", do: "Simulate “URGENT: frost tonight” and open Elena's Calls. Answer the call, then approve the fix and the meeting on the call screen.", buttons: [["urgent", "Simulate the urgent email"], ["calls-elena", "Open Elena's calls"]], expected: "The assistant rings Elena with a short script, prepares a message to Davide and a meeting, and does nothing until she approves.", star: true},
     {n: "↗", title: "Try to break it", do: "Paste your own email (a fraud request, a reworded injection) as any person.", buttons: [["paste", "Paste an email…"]], expected: "Flagged, no memory, no action, no call. A person is always the last line of defence."},
   ];
   setView(`<section class="jury-intro"><div class="eyebrow">The live walkthrough</div><h1>Trust, demonstrated.</h1><p>Seven checks. Real controls. A call to the CEO that still waits for a click.</p></section><div class="jury-grid">` + checks.map(c => `<div class="card ${c.star ? "star" : ""}"><div class="row"><span class="check-number">${esc(c.n)}</span><b>${esc(c.title)}</b></div>
@@ -342,13 +342,13 @@ function renderCall() {
   if (sig === callSig) return; callSig = sig; layer.dataset.open = c.id; layer.classList.add("on");
   const src = S.sources.find(s => s.id === c.source);
   if (c.status === "ringing") {
-    layer.innerHTML = `<div class="phone"><canvas class="orb" id="orb" width="340" height="340"></canvas><div class="who">Incoming call · Company Brain</div><h2>${esc(S.me.name.split(" ")[0])}, something urgent came in</h2>
+    layer.innerHTML = `<div class="phone"><canvas class="orb" id="orb" width="340" height="340"></canvas><div class="who">Incoming call · Team Assistant</div><h2>${esc(S.me.name.split(" ")[0])}, something urgent came in</h2>
       <div class="why">${esc(src ? src.title : c.source)}</div><div class="row" style="margin-top:20px;gap:18px"><button class="answer" data-call-answer="${esc(c.id)}">📞 Answer</button><button class="decline" data-call-decline="${esc(c.id)}">Decline</button></div>
       <p class="who" style="margin-top:16px">A call only informs. Nothing happens until you approve it.</p></div>`;
   } else {
-    layer.innerHTML = `<div class="phone"><canvas class="orb" id="orb" width="340" height="340"></canvas><div class="who"><span class="live-dot"></span>Call in progress · Company Brain</div><h2>${esc(src ? src.title : c.source)}</h2><div class="why">${esc(c.why)}</div>
+    layer.innerHTML = `<div class="phone"><canvas class="orb" id="orb" width="340" height="340"></canvas><div class="who"><span class="live-dot"></span>Call in progress · Team Assistant</div><h2>${esc(src ? src.title : c.source)}</h2><div class="why">${esc(c.why)}</div>
       <div class="script">${esc(c.script)}</div><div class="row"><button data-speak="${esc(c.id)}">🔊 Hear it again</button><button class="decline" data-call-end="${esc(c.id)}">Hang up</button></div>
-      <div class="fixes"><div class="who" style="margin:14px 0 6px">What the Brain prepared. Tap to approve here, never by voice:</div>${c.actions.map(id => acts[id] ? actionBox(acts[id]) : "").join("") || '<div class="who">Nothing to approve.</div>'}</div></div>`;
+      <div class="fixes"><div class="who" style="margin:14px 0 6px">What the assistant prepared. Tap to approve here, never by voice:</div>${c.actions.map(id => acts[id] ? actionBox(acts[id]) : "").join("") || '<div class="who">Nothing to approve.</div>'}</div></div>`;
   }
   drawOrb($("#orb"));
 }
@@ -365,7 +365,7 @@ async function speak(id) {
 
 /* ---------------------------------------------------------------- doing things */
 async function withBusy(btn, fn) {
-  if (busy) { toast("The Brain is still working on the last request…"); return; } busy = true; const old = btn && btn.innerHTML;
+  if (busy) { toast("The assistant is still working on the last request…"); return; } busy = true; const old = btn && btn.innerHTML;
   if (btn) { btn.disabled = true; btn.innerHTML = `<span class="spin"></span> working…`; }
   try { await fn(); } catch (e) { toast("⚠ " + e.message); } finally { busy = false; if (btn) { btn.disabled = false; btn.innerHTML = old; } }
 }
@@ -373,11 +373,11 @@ async function sweep(btn) {
   await withBusy(btn, async () => {
     sweeping = true; await api("/api/sweep", {}); view = "dm"; renderChrome();
     for (let i = 0; i < 60; i++) { await new Promise(r => setTimeout(r, 1500)); await load(true).catch(() => {}); if (S.sweep !== "running") break; }
-    sweeping = false; lastSig = ""; await load(); toast("Morning sweep finished");
+    sweeping = false; lastSig = ""; await load(); toast("Morning briefings are ready");
   }); sweeping = false;
 }
 async function ask(q) {
-  q = q.trim(); if (!q || !S) return; if (busy) { toast("The Brain is still working on the last request…"); return; }
+  q = q.trim(); if (!q || !S) return; if (busy) { toast("The assistant is still working on the last request…"); return; }
   $("#q").value = ""; thinking = q; view = "dm"; render();
   await withBusy(null, async () => { try { await api("/api/ask", {question: q}); } finally { thinking = null; } lastSig = ""; await load(); });
 }
@@ -388,7 +388,7 @@ async function changePerson(id) {
 function openRef(id) {
   const s = S.sources.find(x => x.id === id), m = S.memory.find(x => x.id === id), a = S.actions.find(x => x.id === id), t = S.tasks.find(x => x.id === id);
   let h;
-  if (s) h = `<div class="row">${tag(s.audience)}<span class="muted">${esc(s.type)} · ${esc(s.ts.replace("T", " ").slice(0, 16))}</span></div><h3 style="margin:8px 0">${esc(s.title)}</h3><div class="muted">From ${esc(s.from)}${s.to.length ? " → " + esc(s.to.join(", ")) : ""}</div>${s.flag ? `<div class="warnbox">⚠ Flagged by the Brain: ${esc(s.flag)}. Treated as data; nothing it asks will happen.</div>` : ""}<pre style="white-space:pre-wrap;font:14px/1.5 inherit;background:#faf9f7;padding:10px;border-radius:6px">${esc(s.body)}</pre>`;
+  if (s) h = `<div class="row">${tag(s.audience)}<span class="muted">${esc(s.type)} · ${esc(s.ts.replace("T", " ").slice(0, 16))}</span></div><h3 style="margin:8px 0">${esc(s.title)}</h3><div class="muted">From ${esc(s.from)}${s.to.length ? " → " + esc(s.to.join(", ")) : ""}</div>${s.flag ? `<div class="warnbox">⚠ Flagged by the assistant: ${esc(s.flag)}. Treated as data; nothing it asks will happen.</div>` : ""}<pre style="white-space:pre-wrap;font:14px/1.5 inherit;background:#faf9f7;padding:10px;border-radius:6px">${esc(s.body)}</pre>`;
   else if (m) h = `<div class="row">${tag(m.acl)}<span class="tag ${m.status === "approved" ? "approved" : "waiting"}">${esc(m.status)}</span></div><h3 style="margin:8px 0">${esc(m.id)}</h3><p>${esc(m.fact)}</p>${chips(m.sources)}`;
   else if (a) h = actionBox(a);
   else if (t) h = `<h3>${esc(t.id)}</h3><p>${esc(t.title)}</p><div class="muted">Owner ${esc(personName(t.owner))} · due ${esc(t.due)} · ${esc(t.status)}</div>`;
@@ -396,7 +396,7 @@ function openRef(id) {
   $("#dlgBody").innerHTML = h; $("#dlg").showModal();
 }
 function openPaste() {
-  $("#dlgBody").innerHTML = `<h3>✍ Paste an email</h3><p class="muted">Pretend this email just arrived for <b>${esc(S.me.name)}</b>. Only their team can see it. The Brain reads it as <b>data</b>: try a fraud request or an instruction hidden in the text.</p>
+  $("#dlgBody").innerHTML = `<h3>✍ Paste an email</h3><p class="muted">Pretend this email just arrived for <b>${esc(S.me.name)}</b>. Only their team can see it. The assistant reads it as <b>data</b>: try a fraud request or an instruction hidden in the text.</p>
     <label class="f" for="pf">From (an outside address)</label><input type="text" id="pf" value="supplier@example.com" maxlength="200"><label class="f" for="ps">Subject</label><input type="text" id="ps" maxlength="200" placeholder="Subject"><label class="f" for="pb">Message</label><textarea id="pb" maxlength="2000" placeholder="Write or paste the email…"></textarea>
     <div class="row" style="margin-top:12px"><button class="primary" id="pastego">Deliver it</button></div>`;
   $("#dlg").showModal();
@@ -406,7 +406,7 @@ async function simulate(id) {
   await withBusy(null, async () => {
     const r = await api("/api/simulate", {id}); view = r.call ? "calls" : "dm"; if (r.call) person = "elena";
     activeRun = null; lastSig = ""; await load();
-    toast(r.call ? "The Brain is phoning the CEO (Elena)…" : r.level === "danger" ? "Flagged as suspicious: nothing was done" : "Message received and processed");
+    toast(r.call ? "The assistant is phoning the CEO (Elena)…" : r.level === "danger" ? "Flagged as suspicious: nothing was done" : "Message received and processed");
   });
 }
 
@@ -427,7 +427,7 @@ document.addEventListener("click", async e => {
     if (a === "wifi") { go("dm"); return ask("What's the office Wi-Fi password?"); }
     if (a === "approvals-luca") return as("luca", "approvals");
     if (a === "outbox-luca") return as("luca", "outbox");
-    if (a === "voice") { const b = latestBrief(); return b ? speak(b.id) : toast("Run the morning sweep first"); }
+    if (a === "voice") { const b = latestBrief(); return b ? speak(b.id) : toast("Run the morning briefing first"); }
     if (a === "urgent") return simulate("email-103");
     if (a === "calls-elena") return as("elena", "calls");
     if (a === "paste") return openPaste();
@@ -443,14 +443,14 @@ document.addEventListener("click", async e => {
   if (d.callDecline) return withBusy(t, async () => { await api("/api/call/end", {id: d.callDecline, decision: "declined"}); dismissed.add(d.callDecline); $("#callLayer").dataset.open = ""; callSig = ""; lastSig = ""; await load(); });
   if (d.callEnd) return withBusy(t, async () => { orbSpeaking = false; speechSynthesis.cancel(); if (curAudio) curAudio.pause(); await api("/api/call/end", {id: d.callEnd}); $("#callLayer").dataset.open = ""; callSig = ""; lastSig = ""; await load(); });
   if (d.dial) return withBusy(t, async () => { await api("/api/call/dial", {id: d.dial}); lastSig = ""; await load(); toast("Dialing your real phone…"); });
-  if (d.mem) return withBusy(t, async () => { try { await api("/api/memory", {id: d.mem, decision: d.d, reason: reasons[d.mem] || ""}); delete reasons[d.mem]; toast(d.d === "approve" ? "Approved: the Brain can now use it" : "Rejected: it will never be used"); } finally { lastSig = ""; await load(); } });
+  if (d.mem) return withBusy(t, async () => { try { await api("/api/memory", {id: d.mem, decision: d.d, reason: reasons[d.mem] || ""}); delete reasons[d.mem]; toast(d.d === "approve" ? "Approved: the assistant can now use it" : "Rejected: it will never be used"); } finally { lastSig = ""; await load(); } });
   if (d.act) return withBusy(t, async () => {
     const ta = document.querySelector(`textarea[data-draft="${d.act}"]`);
     try { await api("/api/action", {id: d.act, decision: d.d, body: ta ? ta.value : null, reason: reasons[d.act] || ""}); delete drafts[d.act]; delete reasons[d.act]; callSig = ""; toast(d.d === "approve" ? "Approved and logged" : "Rejected and logged"); } finally { lastSig = ""; await load(); }
   });
   if (t.id === "pastego") return withBusy(t, async () => {
     const r = await api("/api/inbound", {from: $("#pf").value, subject: $("#ps").value, body: $("#pb").value});
-    $("#dlg").close(); view = "dm"; lastSig = ""; await load(); toast(r.call ? "The Brain is phoning the CEO…" : r.level === "danger" ? "Flagged as suspicious: nothing was done" : "Delivered: the Brain read it");
+    $("#dlg").close(); view = "dm"; lastSig = ""; await load(); toast(r.call ? "The assistant is phoning the CEO…" : r.level === "danger" ? "Flagged as suspicious: nothing was done" : "Delivered: the assistant read it");
   });
 });
 document.addEventListener("input", e => { if (e.target.dataset.draft) drafts[e.target.dataset.draft] = e.target.value; if (e.target.dataset.reason) reasons[e.target.dataset.reason] = e.target.value; });

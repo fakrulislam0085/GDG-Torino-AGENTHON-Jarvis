@@ -13,7 +13,7 @@ from datetime import datetime
 from pathlib import Path
 
 os.environ["BRAIN_PERSIST"] = "off"
-os.environ.pop("JARVIS_AUTO_DIAL", None)
+os.environ.pop("AUTO_DIAL_CEO", None)
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import app  # noqa: E402
 import brain as B  # noqa: E402
@@ -98,7 +98,7 @@ class CallToTheCEO(unittest.TestCase):
             self.b.dial_real("elena", r["call"])
 
     def test_real_phone_is_off_without_keys(self):
-        for k in ("TWILIO_ACCOUNT_SID", "JARVIS_CALL_TO"):
+        for k in ("TWILIO_ACCOUNT_SID", "CEO_PHONE_NUMBER"):
             os.environ.pop(k, None)
         self.assertFalse(phone.configured())
         self.b.ingest("email-103")
@@ -125,7 +125,7 @@ class TheCallWithAMisbehavingModel(unittest.TestCase):
     def test_invented_numbers_never_reach_the_phone_or_the_fix(self):
         b = self.run_with({**GOOD, "script": "Elena, 9,000 euros are lost.", "fix": "Davide, pay 9,000 euros."})
         self.assertNotIn("9,000", b.calls[0]["script"])
-        self.assertTrue(b.calls[0]["script"].startswith("Elena, this is the Brain"))
+        self.assertTrue(b.calls[0]["script"].startswith("Elena, this is the Team Assistant"))
         self.assertNotIn("9,000", b.actions[b.calls[0]["actions"][0]]["body"])
 
     def test_the_fix_must_go_to_a_colleague_who_may_see_the_email(self):
@@ -281,7 +281,7 @@ class HttpRoutes(unittest.TestCase):
     def test_the_new_page_is_served_and_the_voice_falls_back(self):
         status, body = self.call("/", None, "GET")
         self.assertEqual(status, 200)
-        for s in (b"Company Brain", b"callLayer", b"Agent trace", b"Jury checklist"):
+        for s in (b"Team Assistant", b"callLayer", b"Agent trace", b"Jury checklist"):
             self.assertIn(s, body)
         self.brain.sweep()
         bid = next(m["id"] for m in self.brain.dms["paolo"] if m["kind"] == "brief")

@@ -1,4 +1,4 @@
-"""Filare Brain: the colleague who knows, speaks first, and never acts without a person's yes.
+"""Team Assistant: the colleague who knows, speaks first, and never acts without a person's yes.
 
 Everything that keeps people in control is plain code in this file, not a prompt:
   * who can see what   -> can_see(), applied BEFORE any data reaches the model
@@ -673,7 +673,7 @@ class Brain:
                    if m["status"] == "approved" and self.can_see(pid, m["acl"])]
             people = {i: f"{p['name']} ({p['role']})" for i, p in self.people.items()}
         system = (
-            "You are the Brain of a small company. Propose at most 1 concrete action that would help this person "
+            "You are the assistant of a small company. Propose at most 1 concrete action that would help this person "
             "today, only where something is clearly overdue, due within 2 days, or an outside customer or supplier "
             "is waiting for a reply from them. Rules: only for something this person is the owner of; to answer an "
             "outside sender use kind email with \"to\" = that sender's address; never email a colleague to ask for "
@@ -1341,7 +1341,7 @@ class Brain:
             clean = lambda v, n: " ".join(str(v or "").split())[:n]  # noqa: E731
             script = clean(decision.get("script"), 600)
             if not script or not numbers_ok(script, [text]):  # the model may not invent a number on the phone
-                script = (f"{first}, this is the Brain. Urgent: {src['title']}. {src['text'][:200]} "
+                script = (f"{first}, this is the Team Assistant. Urgent: {src['title']}. {src['text'][:200]} "
                           "Nothing happens until you approve the fix I prepared.")
             why = clean(decision.get("why"), 200) or "Urgent words in an incoming email."
             made = []
@@ -1352,7 +1352,7 @@ class Brain:
                 a = self.add_proposal({"kind": "email", "approver": owner, "to": fix_to,
                                        "subject": (src["title"] if src["title"].lower().startswith("urgent") else f"Urgent: {src['title']}")[:70],
                                        "body": fix_body,
-                                       "why": f"The Brain escalated {sid} by phone.", "sources": [sid]},
+                                       "why": f"The assistant escalated {sid} by phone.", "sources": [sid]},
                                       owner, f"urgent call ({info.get('mode')})")
                 if a:
                     made.append(a["id"])
@@ -1372,11 +1372,11 @@ class Brain:
                 {"kind": "guard", "note": "The script may only use numbers from the email; the fix and the meeting are "
                                           "proposals that wait for the CEO's approval"},
                 {"kind": "final", "note": f"Phoning {self.name(owner)}; {len(made)} proposal(s) waiting"}], readers)
-            self.audit("brain", "call placed", f"The Brain is phoning {self.name(owner)} about {sid} without being asked. "
+            self.audit("brain", "call placed", f"The assistant is phoning {self.name(owner)} about {sid} without being asked. "
                        f"{len(made)} proposal(s) wait for approval.", visible_to=readers, refs=[sid] + made)
             self.post(owner, {"kind": "alert", "level": "danger", "cites": [sid], "headline":
                               f"📞 I am calling you about \"{src['title']}\". Pick up in the Calls screen."})
-        if (phone.configured() and os.getenv("JARVIS_AUTO_DIAL", "0") == "1" and info.get("mode") == "gemini"
+        if (phone.configured() and os.getenv("AUTO_DIAL_CEO", "0") == "1" and info.get("mode") == "gemini"
                 and not src.get("pasted_by")):
             try:
                 self.dial_real(owner, call["id"])
