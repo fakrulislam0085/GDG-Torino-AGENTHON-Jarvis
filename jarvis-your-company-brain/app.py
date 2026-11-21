@@ -15,6 +15,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import streamlit as st  # noqa: E402
+import streamlit.components.v1 as components  # noqa: E402
 
 from brain import access, answer, audit, brief, call, hold, llm, memory, phone, propose, store, stripe_sync, voice, watch  # noqa: E402
 from ui import counts as tally  # noqa: E402
@@ -134,6 +135,26 @@ def do_play_brief(user: str) -> None:
 
 def do_hide_brief() -> None:
     ss.pop("brief_voice", None)
+    try:   # stop a browser-voice reading too
+        components.html("<script>try{(window.parent||window).speechSynthesis.cancel()}catch(e){}</script>", height=0)
+    except Exception:
+        pass
+
+
+def browser_voice(text: str, nonce: str) -> None:
+    """Read text aloud with the browser's built-in speech (no API key). Speaks once per nonce; a Play button is the fallback
+    if the browser blocks autoplay."""
+    import json as _json
+    components.html(f"""<div style="font-family:sans-serif">
+<button id="b" style="border:1px solid #0E7C86;color:#0E7C86;background:#fff;border-radius:999px;padding:6px 14px;cursor:pointer">&#9654; Play / &#9632; Stop</button>
+<script>
+const T = {_json.dumps(text)}, N = {_json.dumps(nonce)};
+const W = (function(){{ try {{ return window.parent.speechSynthesis ? window.parent : window; }} catch(e) {{ return window; }} }})();
+function say(){{ const s = W.speechSynthesis; if (!s) return; s.cancel(); const u = new W.SpeechSynthesisUtterance(T); u.lang = 'en-GB'; u.rate = 1.0;
+  const v = s.getVoices().find(x => /en-GB/i.test(x.lang)); if (v) u.voice = v; s.speak(u); }}
+document.getElementById('b').onclick = () => {{ const s = W.speechSynthesis; if (s && s.speaking) s.cancel(); else say(); }};
+try {{ if (W.__jv !== N) {{ W.__jv = N; say(); }} }} catch(e) {{}}
+</script></div>""", height=44)
 
 
 def do_talk(user: str) -> None:
@@ -732,7 +753,7 @@ if ss.page == PAGES[0]:
             st.button("Talk to Jarvis", key="ask-talk", icon=":material/mic:", on_click=do_talk, args=(user,),
                       width="stretch", help="A live voice chat with Jarvis about your own brief. Approvals stay in the app.")
         with pc:
-            if voice.available() and b["items"]:
+            if b["items"]:   # always shown: ElevenLabs voice when the key is set, otherwise the browser's own voice
                 st.button("Play my brief", key="brief-play", icon=":material/volume_up:", on_click=do_play_brief, args=(user,),
                           width="stretch", help="Jarvis reads your 08:00 brief aloud")
         chips = tally.chip_questions(DEMO)
@@ -779,6 +800,13 @@ if ss.page == PAGES[0]:
                 section("Your 08:00 brief", first_in_panel=not b.get("alerts"))
                 md(f"<div class='who brief-note'>Posted by Jarvis {esc(b.get('posted_at', ''))}. Nobody asked for it.</div>")
                 bv = ss.get("brief_voice")
+                if bv and bv.get("user") == user and not voice.available() and b["items"]:
+                    # no ElevenLabs key (e.g. a judge running it locally): read the brief with the browser's own voice
+                    text = f"Good morning {first(user)}. " + " ".join(i["text"] for i in b["items"])
+                    browser_voice(text, f"brief-{user}-{bv['n']}")
+                    md("<div class='script-label'>Your brief, read aloud</div>"
+                       f"<div class='who'>{len(b['items'])} items, read by your browser's voice (Jarvis's own voice needs an ElevenLabs key).</div>")
+                    st.button("Close the player", key="brief-hide", icon=":material/close:", on_click=do_hide_brief)
                 if bv and bv.get("user") == user and voice.available() and b["items"]:
                     text = f"Good morning {first(user)}. " + " ".join(i["text"] for i in b["items"])
                     try:
