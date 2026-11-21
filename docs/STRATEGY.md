@@ -18,10 +18,11 @@ The jury marks **7 checks yes or no**. One "no" can drop us out of the 8–12 fi
 5. **Honest about what it can't do:** "I don't know", pending memory, rejecting the model's wrong guess live.
 
 ## 2. How we work today: three builds, one winner
-1. **Solo builds (10:50–13:45).** Arif (Fakhrul), Hamid and Uluhan each build their own full version of Challenge A. Different ideas are good: that's the point.
-2. **Red team + show-off (13:45–14:20).** The `red-team` workflow in `compare` mode attacks all three builds and ranks them. In parallel, each of us demos our build to the others in 5 minutes, because the agents read code and can't see the screens.
-3. **Pick (14:20).** We choose the base build, plus the 1–2 best parts of the others worth grafting in.
-4. **One team (14:20–17:00).** Everyone works on the winner: graft, fix the red team's findings, 7/7, then the deck, video and submission are made on that build.
+1. **Solo builds (until 13:00 sharp).** Arif (Fakhrul), Hamid and Uluhan each build their own full version of Challenge A. Different ideas are good: that's the point. **Last push at 13:00, whatever state your build is in.**
+2. **Red team during lunch (13:00–14:00).** The `red-team` workflow in `compare` mode attacks all three builds (about an hour). It runs while we eat, so we lose no build time.
+3. **Show-off (13:35–13:55).** After eating, each of us demos our build to the others in 5 minutes, walking through the 7 checks, because the agents read code and can't see the screens.
+4. **Pick (14:00).** We choose the base build, plus the 1–2 best parts of the others worth grafting in.
+5. **One team (14:00–17:00).** Everyone works on the winner: graft, fix the red team's findings, 7/7, then the deck, video and submission are made on that build.
 
 ## 3. Rules every build follows (so the comparison is fair)
 - **Your own folder:** `builds/arif/`, `builds/hamid/`, `builds/uluhan/`. Never edit someone else's folder. Commit and push to `main` at least every 45 minutes.
@@ -36,21 +37,22 @@ The jury marks **7 checks yes or no**. One "no" can drop us out of the 8–12 fi
 | Time | Everyone |
 |---|---|
 | **10:50–11:00** | Pull the repo, create your `builds/<name>/` folder, read `PLAN-A.md` and `data/` |
-| **11:00–13:00** | Build. Aim for checks 3, 4, 5 working with real Gemini calls by 12:30 |
-| 13:00–13:30 | Lunch (keep it short) |
-| **13:30–13:45** | Finish, write `CHECKS.md`, **last push of the solo builds at 13:45** |
-| **13:45–14:20** | Fakhrul starts `red-team` in `compare` mode. Meanwhile: 3 × 5-minute live demos to each other, each one walking through the 7 checks |
-| **14:20 🏁** | **Pick the base build** (see section 5). Its builder becomes the lead for the afternoon |
-| 14:20–15:30 | Graft the best parts in, fix the red team's top holes, reach 7/7. Pick the project name by 14:30 |
+| **11:00–12:45** | Build. Aim for checks 3, 4, 5 working with real Gemini calls by 12:15 |
+| **12:45–13:00** | Write `CHECKS.md` and the run command in your README. **Last push of the solo builds at 13:00 sharp** |
+| **13:00** | Fakhrul starts `red-team` in `compare` mode (it runs about an hour) |
+| 13:00–13:35 | Lunch, while the red team runs |
+| **13:35–13:55** | Show-off: 3 × 5-minute live demos to each other, each one walking through the 7 checks |
+| **14:00 🏁** | **Pick the base build** (see section 5). Its builder becomes the lead for the afternoon |
+| 14:00–15:30 | Graft the best parts in, fix the red team's top holes, reach 7/7. Pick the project name by 14:30 |
 | **15:30 🧊** | **Feature freeze.** Bug fixes only |
 | 15:30–16:15 | Deck, README, description, a 60–90 s demo video, the voice brief if it's ready |
 | **16:15** | `red-team` in `final` mode; save the submission on the portal |
 | **16:45** | **Last commit. Nobody pushes after 16:50** |
 | 17:00–17:15 | Rehearse the 3 minutes twice with a timer |
 
-Fakhrul keeps the clock and calls each checkpoint. Solo builds stop at 13:45 whatever state they're in.
+Fakhrul keeps the clock and calls each checkpoint. Solo builds stop at 13:00 whatever state they're in.
 
-## 5. How we pick at 14:20
+## 5. How we pick at 14:00
 In this order:
 1. **Checks passed** (out of 7), from the red-team scores *and* the live show-off. A check passes only if we saw it work.
 2. **Hard to break:** the failure-hunter's demo killers and role or injection holes.
@@ -66,7 +68,7 @@ Then list what to graft from the other two builds: only parts that take under 30
 | **Grafter + breaker** | Second builder | Brings their best part into the winner, then attacks the result (role tricks, injection, "I'm the CFO") |
 | **Story + ship** | Fakhrul (or the third builder if Fakhrul's build wins) | README, description, deck, demo video, voice brief, submission form, the clock |
 
-The winning build moves to `app/` at 14:20 (or stays in its folder, with the README pointing to it). The other builds stay in `builds/` as evidence of our process.
+The winning build moves to `app/` at 14:00 (or stays in its folder, with the README pointing to it). The other builds stay in `builds/` as evidence of our process.
 
 ## 7. Defending it ("rival teams trying to break it")
 | Attack | What must happen |
