@@ -1,8 +1,30 @@
-# The 7 jury checks: where to see them (Filare Labs data)
+# Jury walkthrough
 
-Start: http://localhost:8504, signed in as the CEO. Press **Reset the demo** first (CEO only; instant).
-The steps below use the default Filare Labs data (CEO: Elena). On stage we run the Ariete scenario (`JARVIS_DATA=data_ariete`,
-CEO: Francesca); the same steps work with its people, and the one-tap question chips above the ask box hold its questions.
+## Ariete click sequence (for judges)
+
+This is the stage demo. Start the app with **`JARVIS_DATA=data_ariete`** and `JARVIS_AUTO_DIAL=0` (commands in [`README.md`](README.md)). Without `JARVIS_DATA`, the app runs on Filare Labs and these names won't exist.
+
+**Setup:**
+- Open http://localhost:8504.
+- In the sidebar, pick **Signed in as** → **Francesca Morello (CEO)**.
+- Press **Reset the demo** (CEO only; instant).
+
+The picker stands in for company sign-in.
+
+| # | Do this | You should see |
+|---|---|---|
+| 1 | **Today**, as Francesca | Francesca's prepared 08:00 brief: posted by Jarvis, nobody asked, every line with sources |
+| 2 | Sidebar: **An URGENT email arrives** (Studio Rinaldi, `email-011`, to Silvia with Lorenzo CC'd) | Francesca gets an **in-app call card**; **Answer here** plays the briefing in the app. **Approvals** shows two proposals, both waiting: a message to Lorenzo and a Zoom meeting with Lorenzo. **Team outbox** is empty. With `JARVIS_AUTO_DIAL=0`, no real phone rings |
+| 3 | **Approvals**, as Francesca: **Approve and send** only the message to Lorenzo | Exactly one **mock outbox** item to Lorenzo in **Team outbox**. The Zoom proposal is still waiting. Nothing leaves the app |
+| 4 | **Signed in as** Lorenzo → **Memory**: **Approve** `mem-p01`, **Reject** `mem-p02` (give a reason). Then **Today** → Ask Jarvis "When does the Rinaldi fix go live?" → open **Sources** | The answer cites `mem-p01`, and **Sources** opens the original chat message. The rejected fact is never used |
+| 5 | Ask "Has Bellini & Co. paid the pilot invoice?" as **Marta** (CFO), then as **Andrea** (CTO) | Marta gets the cited answer (`mem-002`). Andrea is refused. The finance group and the CEO can read the finance fact; Stefano (accountant, finance group) can too |
+| 6 | Ask "What is the office Wi-Fi password?" | "I don't know…" |
+
+**Not verified:** date precision. Offline, Jarvis answered a question about a 2032 Bellini invoice with the 2026 invoice. It is on our red-team list until a fix and a test exist.
+
+## The 7 jury checks on the default data (Filare Labs)
+
+Start: http://localhost:8504 without `JARVIS_DATA`, signed in as the CEO (Elena). Press **Reset the demo** first.
 
 | # | Check | How to show it | What you should see |
 |---|---|---|---|
@@ -18,10 +40,11 @@ CEO: Francesca); the same steps work with its people, and the one-tap question c
 
 - **Conflict + older source (Uluhan):** as **Giulia**, Memory: `mem-p03` (an August estimate) conflicts with the approved
   budget `mem-001`; "Approve and replace" is blocked because the source is older. Reject it → a **decision receipt**.
-- **Stripe (CFO or CEO):** "Sync Stripe to the revenue page" → a pending revenue fact that conflicts with `mem-011`
+- **Stripe (Filare only; not connected in the Ariete dataset), CFO or CEO:** "Sync Stripe to the revenue page" → a pending revenue fact that conflicts with `mem-011`
   (newer source, so it may replace it, with a reason) and a page update to `doc-004` waiting in Approvals.
-- **Urgent email:** "An URGENT email arrives" → Elena's call card rings → **Answer here**: the orb speaks the briefing;
-  a message to Davide and a Zoom proposal wait in Approvals. `JARVIS_AUTO_DIAL=0`: no real phone is rung.
+- **Urgent email:** **An URGENT email arrives** → Elena's in-app call card rings → **Answer here**: the orb speaks the
+  briefing; a message to Davide and a Zoom proposal wait in Approvals. A real phone rings only with phone keys set,
+  Gemini mode and `JARVIS_AUTO_DIAL=1`.
 - **Edit and history:** edit an approved fact → saved as a new version; the old one goes to History. A draft that relied
   on a replaced fact needs review before it can be sent.
 - **Export:** Memory → Prepare export → Markdown or JSON, only what your role may see.
@@ -43,7 +66,7 @@ CEO: Francesca); the same steps work with its people, and the one-tap question c
 
 ## Tests
 
-`..\arif\.venv\Scripts\python -m pytest tests -q` (offline): the 7 checks, attacks, conflicts/edit/history, approval
+From `jarvis-your-company-brain/`: `.venv\Scripts\python -m pytest tests -q` (macOS/Linux: `.venv/bin/python -m pytest tests -q`). Offline, on the default Filare Labs data: **76 passing**. The Ariete click sequence above is a separate, hand-run rehearsal. The tests cover the 7 checks, attacks, conflicts/edit/history, approval
 rights, manual notes, Stripe, urgent call + harvest + Zoom, paste attacks, stale drafts, the number check, three kinds of
 "I don't know", export, the circuit breaker, and the second-round grafts (self-check, quote check, outbox privacy,
 timer, strict matching, data-folder switch).

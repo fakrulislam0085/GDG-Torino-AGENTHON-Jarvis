@@ -22,7 +22,7 @@ def key():
 LINES = [
     ("v1", "onwK4e9ZLuTAKqWW03F9", "Good morning, Francesca. Here's what needs you today.", 0.7, 0.0),
     ("v2", "onwK4e9ZLuTAKqWW03F9", "Francesca, this is Jarvis. Studio Rinaldi's document intake has stopped, and sixty client files are stuck before the tax deadline.", 0.55, 0.0),
-    ("v3", "onwK4e9ZLuTAKqWW03F9", "The fix is ready. I'll wait for your yes.", 0.7, 0.0),
+    ("v3", "onwK4e9ZLuTAKqWW03F9", "I've prepared the next steps. I'll wait for your approval.", 0.7, 0.0),
 ]
 
 

@@ -3,7 +3,7 @@
 - **Film:** `out/jarvis-film.mp4`. 1920×1080, 30 fps, H.264 + AAC, **21.00 s** (hard cap 21), about −16 LUFS, −1.5 dBTP peak.
 - **Clean (no voice, keeps UI ticks and the closing tone):** `out/jarvis-film_clean-no-voice.mp4`.
 - **Audio:** voiced with ElevenLabs stock voice **Daniel** (`onwK4e9ZLuTAKqWW03F9`, eleven_multilingual_v2), 3 lines. The SFX are synthesized in `tools/mix.py`.
-- **Presenter cut point:** the final frame (orb + closing line + credit + caption) is complete at **0:19.45**. It holds to **0:20.97**.
+- **Presenter cut point:** the final frame (orb + closing line + credit + caption) is complete at **0:19.65**. It holds to **0:20.97**.
 - **Data:** `jarvis-your-company-brain/data_ariete`, updated demo date **Sat 21 Nov 2026**.
 
 ## Picture
@@ -14,11 +14,11 @@
 | 0:03.05–0:06.3 | Kicker SAT 21 NOV · 08:00 · NOBODY ASKED. "Good morning, Francesca." / Saturday 21 November. Three rows: Rinaldi PEC attachments, 18 files since 16 Nov `mem-003` · EuroGPU CLD-2026-0412 EUR 3,660 due Sun 22 Nov, second notice `mem-005` · "Action needed" flagged, not acted on `email-008` |
 | 0:06.3 | SAT 21 NOV · 09:05 · AN URGENT EMAIL. `email-011` from Roberto Rinaldi to Silvia Ferraris, cc Lorenzo Bertola: "URGENT: document intake stopped, 60 client files stuck" · stopped Wednesday night · deadline 28 November |
 | 0:06.55 | Amber flag: FLAGGED URGENT · 60 client files stuck · deadline 28 Nov |
-| 0:06.7 | Call card "Jarvis → Francesca" rings. The orb moves into it and pulses with the voice. Captions at 7.3 and 9.0 |
-| 0:12.3–0:12.55 | ASKS BEFORE IT ACTS: "Fix message to Lorenzo" and "Zoom with Lorenzo", both WAITING FOR YOUR TAP (amber). "Nothing happens until Francesca taps Approve in the app." at 13.1 |
+| 0:06.7 | In-app call card "Jarvis → Francesca" (caption: "In-app call card. It never approves by voice."). The orb moves into it and pulses with the voice. Captions at 7.3 and 9.0 |
+| 0:12.3–0:12.55 | ASKS BEFORE IT ACTS: "Fix message to Lorenzo" (internal message) and "Zoom with Lorenzo" (proposal), both WAITING FOR YOUR TAP. Caption at 13.1: "Jarvis can alert Francesca immediately. The internal message and Zoom proposal wait for her approval." |
 | 0:15.4 | BLOCKED (red): a fake CEO email asking Marta to wire EUR 9,800 today |
-| 0:17.55 / 0:17.85 | Taps on Approve. APPROVED BY FRANCESCA (green) at 17.73 and 18.03 |
-| 0:18.55–0:19.45 | Close: orb centre, teal "A colleague you trust says \"I don't know\", and \"May I?\"", Token Mafia · AGENTHON, caption |
+| 0:18.0 | One tap on Approve for the internal message only: APPROVED · MOCK OUTBOX (green) at 18.18. The Zoom proposal stays WAITING FOR YOUR TAP |
+| 0:18.75–0:19.65 | Close: orb centre, teal "A colleague you trust says \"I don't know\", and \"May I?\"", Token Mafia · AGENTHON, caption |
 
 ## Voice (Jarvis)
 
@@ -26,9 +26,9 @@
 |---|---|---|
 | 3.30 | 6.27 | "Good morning, Francesca. Here's what needs you today." |
 | 7.30 | 14.79 | "Francesca, this is Jarvis. Studio Rinaldi's document intake has stopped, and sixty client files are stuck before the tax deadline." |
-| 14.95 | 17.57 | "The fix is ready. I'll wait for your yes." |
+| 14.95 | 18.05 | "I've prepared the next steps. I'll wait for your approval." |
 
-The call line runs at 1.04× with the pauses between sentences shortened. No other processing.
+The call line runs at 1.04× with the pauses between sentences shortened.
 
 ## Sound effects
 
@@ -45,11 +45,9 @@ The call line runs at 1.04× with the pauses between sentences shortened. No oth
 | 12.30 | fix message card |
 | 12.55 | zoom card |
 | 15.40 | fake CEO email blocked |
-| 17.70 | tap approve (fix) |
-| 17.75 | approved |
-| 18.00 | tap approve (zoom) |
-| 18.05 | approved |
-| 18.60 | close tone |
+| 18.15 | tap approve (internal message) |
+| 18.20 | approved |
+| 18.75 | close tone |
 
 ## Facts checked against data_ariete (Sat 21 Nov 2026)
 - **People:** Francesca Morello (CEO), Marta Ghiglione (CFO), Silvia Ferraris (Account manager), Lorenzo Bertola (Automation engineer).

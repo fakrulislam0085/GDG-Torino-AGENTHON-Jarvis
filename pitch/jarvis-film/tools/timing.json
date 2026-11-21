@@ -15,7 +15,7 @@
   {
    "id": "v3",
    "at": 14.95,
-   "line": "The fix is ready. I'll wait for your yes."
+   "line": "I've prepared the next steps. I'll wait for your approval."
   }
  ],
  "sfx": [
@@ -86,31 +86,19 @@
    1.0
   ],
   [
-   17.7,
-   "tap approve (fix)",
+   18.15,
+   "tap approve (internal message)",
    "tap",
    1.0
   ],
   [
-   17.75,
+   18.2,
    "approved",
    "approved",
    1.0
   ],
   [
-   18.0,
-   "tap approve (zoom)",
-   "tap",
-   1.0
-  ],
-  [
-   18.05,
-   "approved",
-   "approved",
-   0.9
-  ],
-  [
-   18.6,
+   18.75,
    "close tone",
    "tone",
    1.0

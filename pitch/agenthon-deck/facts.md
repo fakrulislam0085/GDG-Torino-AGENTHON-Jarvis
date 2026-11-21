@@ -16,7 +16,7 @@ Founder decisions that override rules: two versions. A = Filare Labs story + Fil
 | F10 | Jarvis phoned the founder's real phone (ElevenLabs voice agent over Twilio); 101-second test call; it refused "execute the nuclear missiles" and said approvals are tapped in the app, never on the phone | ElevenLabs transcript | 2026-11-21 |
 | F11 | Morning briefs for a 6-7 person team in about 7 seconds; about $0.003 per brief (Gemini 3.8 Flash on Vertex AI, measured token use) | live sweep, llm.USAGE | 2026-11-21 |
 | F12 | Built today: Stripe sync (proposes revenue fact + Notion update, flags the conflict), Zoom meetings created only after approval, memory export, conflict view with edit and history | builds/arif, tests | 2026-11-21 |
-| F13 | Finance-only facts never go to the voice provider; identity comes from the person picker (a stand-in for a company login), never from what is typed | builds/arif/brain/call.py, access.py | 2026-11-21 |
+| F13 | REMOVED 21 Nov audit: the blanket claim "finance-only facts never go to the voice provider" is not verified (Play my brief sent the synthetic EUR 3,660 invoice text to a stubbed provider). Identity comes from the person picker (a stand-in for a company login), never from what is typed | audit 21 Nov | 2026-11-21 |
 | F14 | Ariete Tech Solutions: Torino, part of Ariete Capital; sells AI training, automations and AI agents to professional firms and SMEs; its site names the pain "files to open, documents to fill in, deadlines to chase" | docs/sponsor-research.md (other session; not re-verified here) | 2026-11-21 |
 | F15 | Filare Labs is a fictional company (repo demo data): vineyard sensor subscriptions in Piedmont; the outage email reached sales, the renewal is at risk | data/ (repo) | 2026-11-21 |
 | F16 | PoliPrep (founder's company): cohort courses for Italian admission tests; max 20 students per cohort; 1 founder + tutors + 1 media person; the founder answers about 10 sales DMs a week himself | LifeAtPoliTO/PoliPrep/context/business.md | 2026-10-22 |
@@ -27,7 +27,7 @@ Founder decisions that override rules: two versions. A = Filare Labs story + Fil
 | F21 | Demo data (Ariete scenario): client Studio Rinaldi's document-intake automation stopped Wednesday night; 60 client files stuck before the 28 Nov tax deadline; the email went to the account manager (Silvia), cc the automation engineer; the CFO-only fact is Bellini & Co.'s unpaid pilot invoice INV-2026-014 (EUR 4,800) | jarvis-your-company-brain/data_ariete/emails.json email-011, memory_seed.json mem-002 | 2026-11-21 |
 
 | F22 | Demo company = a fictional scenario built on Ariete Tech Solutions' PUBLIC services (AI training, mentoring, custom automations, AI agents for professional firms and SMEs; Turin; Ariete Capital group). People, events, clients and numbers are invented; no Ariete finances | founder decision 21 Nov 14:40; docs/sponsor-research.md (arietetech.com, read 21 Nov) | 2026-11-21 |
-| F23 | jarvis-your-company-brain: 63 automated tests pass offline (builds/arif: 33) | pytest, 21 Nov ~15:00 | 2026-11-21 |
+| F23 | jarvis-your-company-brain: 76 automated tests pass offline on Filare data; the Ariete demo is rehearsed separately | pytest on the final commit | 2026-11-21 |
 
 ## Missing (NEED)
 - Cost per brief for jarvis-your-company-brain (slides keep the builds/arif figure, labelled)

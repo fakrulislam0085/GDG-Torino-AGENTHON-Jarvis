@@ -1,5 +1,7 @@
 # Jarvis – your company brain
 
+> **Judges: set `JARVIS_DATA=data_ariete`** to run the stage demo (Ariete scenario). If it is unset, the app runs on **Filare Labs** (`data_filare/`). Then follow the **Ariete click sequence** in [`CHECKS.md`](CHECKS.md).
+
 **On stage today:** a fictional scenario built on **Ariete Tech Solutions'** public services (AI agents and automations for professional firms, Turin). People, clients, events and numbers are invented; no Ariete data (`data_ariete/`, set with `JARVIS_DATA=data_ariete`). The same app also runs on **Filare Labs**, the team's shared fictional vineyard-sensor company (`data_filare/`, the default). Swapping company is a data swap.
 Jarvis watches the team's email, chat, tasks and docs, keeps a shared memory that people curate, speaks first with a
 morning brief and alerts, answers only from approved memory the asker may see, and **only proposes**: nothing is sent
@@ -14,14 +16,21 @@ All data is synthetic. No real client or personal data.
 
 From this folder (`jarvis-your-company-brain`), with Python 3.11+:
 
-```
+Windows PowerShell:
+```powershell
 python -m venv .venv
 .venv\Scripts\pip install -r requirements.txt
-set JARVIS_DATA=data_ariete
+$env:JARVIS_DATA = "data_ariete"; $env:JARVIS_AUTO_DIAL = "0"
 .venv\Scripts\python -m streamlit run app.py --server.port 8504
 ```
 
-`JARVIS_DATA=data_ariete` is the stage demo; leave it out to run on Filare Labs (the default).
+macOS / Linux:
+```bash
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+JARVIS_DATA=data_ariete JARVIS_AUTO_DIAL=0 .venv/bin/python -m streamlit run app.py --server.port 8504
+```
+
+`JARVIS_DATA=data_ariete` is the stage demo. If you leave it out, the app runs on Filare Labs (the default).
 
 Open http://localhost:8504. With Google Application Default Credentials (or `GOOGLE_API_KEY`), Jarvis uses
 `gemini-3.8-flash` on Vertex AI (location `global`); without them it runs a deterministic offline fallback.
@@ -32,20 +41,33 @@ Tests (offline, no network):
 .venv\Scripts\python -m pytest tests -q
 ```
 
-76 tests. New today: **Talk to Jarvis** (a live voice chat about your own brief in the browser; finance-only facts never go to the voice provider; it cannot approve anything), question chips, header counters and menu counts, and the demo dated to the hackathon day (Sat 21 Nov 2026).
+76 tests pass. They run on the default Filare Labs data. The Ariete demo is a separate, hand-run rehearsal (see `CHECKS.md`).
+
+Also new today:
+- **Talk to Jarvis**, a live voice chat about your own brief in the browser. It cannot approve anything.
+- Question chips, header counters and menu counts.
+- The demo is dated to the hackathon day (Sat 21 Nov 2026).
+
+We make no general voice-privacy claim. **Play my brief** sends the listener's own brief text, which can include finance items (seen in a stubbed test), to the voice provider. The voice chat's filter is not complete either. On stage we show the brief on screen.
 
 ## Settings (`.env`, git-ignored; see `.env.example`)
 
 | Key | What it does |
 |---|---|
 | `JARVIS_DATA` | Which company to run on: a data folder in `jarvis-your-company-brain` (default `data_filare`). Swapping company is a data swap. |
-| `JARVIS_AUTO_DIAL` | `0` (default). Jarvis never rings a real phone by itself. The in-app call card always works. |
+| `JARVIS_AUTO_DIAL` | `0` (default): Jarvis never rings a real phone by itself; the in-app call card always works. A real outbound call needs all three: `1` here, the phone keys set, and Gemini mode (not offline). |
 | `JARVIS_CALL_NAME` | Optional name Jarvis says on the phone. Default: the CEO's first name from the data. |
 | `JARVIS_SWEEP_MINUTES` | Minutes between automatic morning sweeps while the app is open (default 30, `0` = off). |
-| `ELEVENLABS_*`, `TWILIO_*`, `ZOOM_*`, `STRIPE_API_KEY` | Optional: voice, real phone call, real Zoom meetings, live Stripe (read-only test key). |
+| `ELEVENLABS_*`, `TWILIO_*`, `ZOOM_*`, `STRIPE_API_KEY` | Optional: voice, real phone call, real Zoom meetings, live Stripe (read-only test key). Stripe is not connected in the Ariete dataset. |
 
 Runtime state is in `state/<data folder>/` (git-ignored). `demo_snapshot/<data folder>/` holds the 08:00 briefs Jarvis
 wrote earlier with Gemini, so **Reset the demo** (CEO only) is instant.
+
+## Known limits
+
+- Date precision is unverified. Offline, Jarvis answered a question about a 2032 Bellini invoice with the 2026 invoice. This is on our red-team list until a fix and a test exist.
+- Identity is a picker standing in for company sign-in.
+- Offline, before `mem-p01` is approved, the v2.5 go-live question returns an unrelated approved Rinaldi fact instead of "I don't know". On stage, ask it only after approving.
 
 ## The data (`data_filare/`)
 
@@ -79,6 +101,8 @@ Optional sources (calendar, Canva, Instagram) are simply absent for Filare; the 
   the audit log or the outbox of someone who may not see it.
 - Every source is wrapped as data; injection patterns (including disguised ones) are flagged and never acted on.
 - Jarvis has no tool that sends. Only the person an action was proposed to can approve it; approvals go to a mock outbox.
-- A suspicious or pasted email never rings a real phone. Finance-only facts never go to the voice provider.
+- A suspicious or pasted email never rings a real phone.
+- Finance facts: the finance group and the CEO can read the finance fact. In the Ariete demo, Stefano (accountant, finance group) can read the Bellini invoice; Andrea (CTO) is refused.
+- Money moves only through a **payment approval request** that a named person approves. Approved messages go to a mock outbox.
 
 See `CHECKS.md` for the jury walkthrough.

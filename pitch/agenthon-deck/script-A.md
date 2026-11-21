@@ -16,43 +16,43 @@ Ideas to remember (5): 1. Jarvis speaks first. 2. It only uses what people appro
 - **Kicker:** The problem
 - **Headline:** Every company already has the answer. / It's in someone else's inbox.
 - **On slide:**
-  - A client firm: 60 files stuck before the 28 November tax deadline
-  - The email reached the account manager, not the engineer
+  - Studio Rinaldi: 60 client files stuck before the 28 November deadline
+  - Silvia and Lorenzo receive the urgent email. Jarvis alerts Francesca, the CEO, and prepares two proposals for her approval
   - Each person needs to know something different
   - Our demo: a fictional scenario on Ariete's public services
-- **Visual:** one email card landing in the wrong inbox
+- **Visual:** one email card landing with Silvia (to) and Lorenzo (cc)
 - **Sources:** F21, F22 (footer: "Fictional scenario built on Ariete Tech Solutions' public services. Not Ariete's data.")
-- **Say:** Our demo company does what Ariete does: AI automations for professional firms. A client writes: the document intake stopped, and sixty client files are stuck before the twenty-eighth of November tax deadline. The email reaches the account manager, not the engineer. Each person needs to know something different, today.
+- **Say:** Our demo company does what Ariete does: AI automations for professional firms. Studio Rinaldi has 60 client files stuck before the 28 November deadline. Silvia and Lorenzo receive the urgent email. Jarvis alerts Francesca, the CEO, and prepares two proposals for her approval. Each person needs to know something different, today.
 
 ## 03 · Solution
 - **Kicker:** How it works
 - **Headline:** It reads everything. / People decide what it remembers.
 - **On slide:**
-  - Reads email, chat, tasks and docs (demo copies today), and Stripe
+  - Reads email, chat, tasks and docs (demo copies today)
   - Proposes facts. A person approves.
   - Answers only from approved facts, with sources
-  - Drafts actions and Zoom meetings. Nothing happens without a yes.
+  - Drafts messages and Zoom meetings. They wait for a yes.
 - **Visual:** the How-it-works diagram (Reads → Guard → A person approves → Answers & proposes)
 - **Sources:** F05, F12
-- **Say:** Jarvis reads the team's tools and proposes facts. A person approves them. It answers only from those, with sources. Nothing leaves without a yes.
+- **Say:** Jarvis reads the team's tools and proposes facts. A person approves them. It answers only from those, with sources. Messages and meetings wait for a yes.
 
 ## 04 · Live demo
 - **Kicker:** Live demo
-- **Headline:** Watch it speak first, say "I don't know", and call me.
+- **Headline:** Watch it speak first, say "I don't know", and alert me.
 - **On slide:**
   - 08:00 · the brief nobody asked for
   - "I don't know"
-  - An urgent email · my phone rings
-- **Visual:** the app on screen; this slide is only the bridge into the demo
+  - An urgent email · Jarvis alerts Francesca
+- **Visual:** the app on screen (caption: "Synthetic Ariete-inspired demo"); this slide is only the bridge into the demo
 - **Sources:** F03, F10
-- **Say:** Let me show you. It's eight in the morning. Nobody asked, but each person already has a morning brief. Here, it proposed two facts. One is right, one has the wrong number. I approve one and reject the other. Now it answers, with the source. Same question about a client's unpaid invoice: the CFO gets the answer, the CTO gets "not for your role". The Wi-Fi password is nowhere, so Jarvis says "I don't know". Now a rival's attack: a fake CEO asks for an urgent payment. Blocked. And now something urgent arrives. My phone is ringing. That's Jarvis. (Answer on speaker, ask "What happened?", then say "Approve it.") It won't approve by phone. Back in the app, the action waits for one tap. I tap it. Only now does it happen.
+- **Say:** Let me show you. It's eight in the morning. Nobody asked, but Francesca already has her brief. Now the urgent email from Studio Rinaldi arrives. Jarvis can alert Francesca immediately: here is the call card. It has prepared two proposals for Lorenzo, an internal message and a Zoom meeting. They wait for her approval, and the outbox is empty. I approve only the internal message: one item lands in the mock outbox, and the Zoom proposal is still waiting. Memory: it proposed two facts. I approve one and reject the other, and the answer cites its source. Same question, "Has Bellini & Co. paid the pilot invoice?": the finance group and the CEO can read that fact, so Marta gets the answer with its source; Andrea, the CTO, is refused. The Wi-Fi password is nowhere, so Jarvis says "I don't know". (A real phone call is only part of the pitch if it was rehearsed on the stage laptop with setup and opt-in auto-dial.)
 
 ## 05 · What we built and tested
 - **Kicker:** Built and tested today
 - **Headline:** Rival teams will try to break it. / The rules live in code.
 - **On slide:**
   - 7 of 7 jury checks, enforced in code
-  - 63 automated tests
+  - 76 automated tests pass (Filare data) + a separate Ariete rehearsal
   - Fake CEO payment: blocked
   - A reworded attack: caught by a second AI check
   - On the phone: no approvals. "Tap it in the app."
@@ -65,15 +65,15 @@ Ideas to remember (5): 1. Jarvis speaks first. 2. It only uses what people appro
 - **Kicker:** Beyond the prototype
 - **Headline:** Built for one company. / Ready for any firm.
 - **On slide:**
-  - Already connected: Stripe, Zoom, a real phone line
+  - In this demo: in-app call card, Zoom proposals, phone call (opt-in, needs setup). Stripe is off in the Ariete dataset.
   - Next: Gmail, Slack, Notion, with the same rules
-  - AI runs on Google Vertex AI; finance facts never go to the voice provider
-  - About $0.003 per morning brief
+  - AI runs on Google Vertex AI; the demo uses synthetic data only
+  - About $0.003 per morning brief (measured on the earlier Arif build)
   - First buyers: small firms, through partners like Ariete (pilot)
   - Market size: not estimated yet
 - **Visual:** connector row, "today" vs "next"
 - **Sources:** F11, F12, F13, F14 (footer: "Demo data; live connectors: phone, and Stripe and Zoom with keys · cost measured on build arif, 21 Nov 2026")
-- **Say:** Stripe, Zoom and a real phone line already work. Today, a morning brief costs a third of a cent. The first buyers are small firms, through partners like Ariete. We haven't sized the market yet.
+- **Say:** In this demo, Jarvis alerts the CEO with an in-app call card, and proposes messages and Zoom meetings that wait for approval. A real phone call needs setup and opt-in. On our earlier build, a morning brief cost about a third of a cent. The first buyers are small firms, through partners like Ariete. We haven't sized the market yet.
 
 ## 07 · Team, ask and close
 - **Kicker:** The ask
