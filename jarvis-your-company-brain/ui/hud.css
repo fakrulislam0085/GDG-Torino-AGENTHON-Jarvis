@@ -525,3 +525,6 @@ div[role="dialog"] h2, div[role="dialog"] [data-testid="stDialogHeader"] { font-
 [data-testid="stTextInput"] input:focus, [data-testid="stTextInput"] input:focus-visible { outline: none !important; box-shadow: none !important; }
 [data-testid="stTextArea"] div:focus-within, [data-testid="stTextInput"] div:focus-within { outline: none !important; box-shadow: none !important; }
 [data-testid="stTextArea"] [data-baseweb="textarea"]:focus-within, [data-testid="stTextArea"] [data-baseweb="base-input"]:focus-within { border-color: var(--cyan) !important; }
+
+/* hide Streamlit's built-in "Press Ctrl+Enter to submit form · 0/500" hint inside text boxes */
+[data-testid="InputInstructions"] { display: none !important; }
