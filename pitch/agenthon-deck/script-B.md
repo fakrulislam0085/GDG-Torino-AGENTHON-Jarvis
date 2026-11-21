@@ -51,7 +51,7 @@ Ideas to remember (5): 1. Jarvis speaks first. 2. It only uses what people appro
 - **Headline:** Rival teams will try to break it. / The rules live in code.
 - **On slide:**
   - 7 of 7 jury checks, enforced in code
-  - 63 automated tests
+  - 87 automated tests
   - Fake CEO payment: blocked
   - A reworded attack: caught by a second AI check
   - On the phone: no approvals. "Tap it in the app."
@@ -66,13 +66,13 @@ Ideas to remember (5): 1. Jarvis speaks first. 2. It only uses what people appro
 - **On slide:**
   - Already connected: Stripe, Zoom, a real phone line
   - Next: Gmail, Slack, Notion, with the same rules
-  - AI runs on Google Vertex AI; finance facts never go to the voice provider
+  - AI runs on Google Vertex AI; demo data only
   - About $0.003 per morning brief
   - First buyers: small firms, through partners like Ariete (pilot)
   - Market size: not estimated yet
 - **Visual:** connector row, "today" vs "next"
 - **Sources:** F11, F12, F13, F14 (footer: "Demo data; live connectors: phone, and Stripe and Zoom with keys · cost measured on build arif, 21 Nov 2026")
-- **Say:** Stripe, Zoom and a real phone line already work. Today, a morning brief costs a third of a cent. The first buyers are small firms, through partners like Ariete. We haven't sized the market yet.
+- **Say:** Phone and Zoom work with keys; Stripe is a demo copy. Today, a morning brief costs a third of a cent. The first buyers are small firms, through partners like Ariete. We haven't sized the market yet.
 
 ## 07 · Team, ask and close
 - **Kicker:** The ask

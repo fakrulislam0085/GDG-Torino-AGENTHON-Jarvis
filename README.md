@@ -3,7 +3,7 @@
 **GDG Torino AGENTHON 2026 · Track: Agentic AI for business · Challenge A (Company Brain)**
 **Team:** Fakrul (Arif) Islam · Hamid Sajjadi · Uluhan Simsek
 
-An AI colleague for a small company. It reads the team's email, chat, tasks and docs; tells each person what needs their attention **before they ask**; answers **only from memory that people approved**, with sources, or says **"I don't know"**; and **never acts without a person's approval**. Every safety rule lives in **code, not in the prompt**, so a rival team can't talk it out of them.
+An AI colleague for a small company. It reads the team's email, chat, tasks and docs; tells each person what needs their attention **before they ask**; answers **only from memory that people approved**, with sources, or says **"I don't know"**; and **never acts without a person's approval**. The role filter, approvals, source ids and number check are enforced **in code, not in the prompt**, so a rival team can't talk them out; answer relevance and the phone agent's refusal still rely on the model's prompt.
 
 ![How Jarvis works: it reads, guards, a person approves, then it answers and proposes](pitch/agenthon-deck/assets/how-it-works.png)
 
