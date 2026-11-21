@@ -562,19 +562,6 @@ with st.sidebar:
                        + "The page update waits in Approvals.", icon=":material/check_circle:")
             st.button("Review in Memory", key="stripe-go-memory", on_click=goto, args=(PAGES[1],), width="stretch")
 
-    status = check_status()
-    md(f"<div class='side-h'>Jury checklist <span class='n'>{sum(status.values())}/7</span></div>")
-    for c in DEMO.get("checks", []):
-        n, page = c["n"], PAGE_KEYS.get(c.get("page", "today"), PAGES[0])
-        user_c = c.get("user") if c.get("user") in PEOPLE else ss.user
-        st.button(f"{n}. {c['label']}", key=f"chk{n}", on_click=goto, args=(page, user_c, c.get("question", "")), width="stretch",
-                  icon=":material/check_circle:" if status.get(n) else ":material/radio_button_unchecked:",
-                  help=f"As {PEOPLE[user_c]['name']}" + (f": “{c['question']}”" if c.get("question") else ""))
-    done = ", ".join(f".st-key-chk{n} [data-testid='stIconMaterial']" for n in status if status[n])
-    st.html("<style>[class*='st-key-chk'] [data-testid='stIconMaterial']{color:var(--text-3)}"
-            + (f"{done}{{color:var(--green)}}" if done else "") + "</style>")
-    if DEMO.get("hint"):
-        md(f"<div class='chk'>{esc(DEMO['hint'])}</div>")
 
 user = ss.user
 me = PEOPLE[user]

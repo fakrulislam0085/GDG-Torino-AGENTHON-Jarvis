@@ -1,8 +1,8 @@
 # The 7 jury checks: where to see them (Filare Labs data)
 
-Start: http://localhost:8504, signed in as Elena (CEO). Press **Reset the demo** first (CEO only; instant).
-The sidebar **Jury checklist** has a button per check that switches to the right person, page and question, and turns
-green when the check has been shown.
+Start: http://localhost:8504, signed in as the CEO. Press **Reset the demo** first (CEO only; instant).
+The steps below use the default Filare Labs data (CEO: Elena). On stage we run the Ariete scenario (`JARVIS_DATA=data_ariete`,
+CEO: Francesca); the same steps work with its people, and the one-tap question chips above the ask box hold its questions.
 
 | # | Check | How to show it | What you should see |
 |---|---|---|---|
