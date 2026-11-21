@@ -248,3 +248,20 @@ def test_tutors_see_tutor_items_but_never_finance():
     r = answer.ask("maria", "When is the TOLC-I live this week?")
     assert r["known"] and r["citations"][0]["mem_id"] == "mem-p01"
     assert not answer.ask("sara", "When is the TOLC-I live this week?")["known"]   # tutor-only fact
+
+
+def test_urgent_email_proposes_a_zoom_that_is_created_only_after_approval():
+    watch.new_email_arrives(store.demo_events()["urgent_email"])
+    z = [a for a in propose.for_user("arif") if a["type"] == "zoom_meeting"]
+    assert z and z[0]["status"] == "awaiting_approval" and z[0]["meeting"]["with"] == ["anna"]
+    assert "join_url" not in z[0]["meeting"]                  # nothing created yet
+    propose.approve_action(z[0]["id"], "arif")
+    done = next(a for a in store.actions() if a["id"] == z[0]["id"])
+    assert done["meeting"]["join_url"].startswith("https://zoom.us/j/demo-") and done["meeting"]["real"] is False
+
+
+def test_zoom_asked_for_on_the_call_becomes_a_proposal():
+    watch.new_email_arrives(store.demo_events()["urgent_email"])
+    c = call.calls_for("arif")[0]
+    made = call.harvest(c["id"], "arif", lines=[("user", "Schedule a Zoom with Maria and Anna this evening.")])
+    assert any(a["type"] == "zoom_meeting" and set(a["meeting"]["with"]) == {"maria", "anna"} for a in made)

@@ -103,6 +103,8 @@ def _recipient_allowed(kind: str, to: str, cites: list) -> bool:
         return to in store.team()
     if kind == "announcement":
         return to in store.audiences()
+    if kind == "zoom_meeting":
+        return to in store.team()
     if kind == "notion_update":
         return store.source_by_id().get(to, {}).get("kind") == "notion"
     if kind == "reply_draft":
@@ -151,8 +153,20 @@ def _decide(action_id: str, user_id: str, approve: bool) -> dict:
         a["decided_at"] = datetime.now().isoformat(timespec="seconds")
         store.save_actions(acts)
         if approve:
+            sent = "mock: written to the outbox, no real email or message leaves this demo"
+            if a["type"] == "zoom_meeting" and a.get("meeting"):
+                from . import zoom
+                try:
+                    z = zoom.create(a["meeting"])
+                    a["meeting"].update(z)
+                    sent = ("real Zoom meeting created: " if z.get("real") else "demo Zoom link: ") + str(z.get("join_url"))
+                except Exception as e:  # approval stands; the failure is visible, never a crash
+                    a["meeting"]["error"] = str(e)[:200]
+                    sent = f"Zoom failed: {str(e)[:120]}"
+                store.save_actions(acts)
+                audit.log("zoom_meeting", user_id, action_id=action_id, result=sent)
             box = store.outbox()
-            box.append({**a, "sent": "mock: written to the outbox, no real email or message leaves this demo"})
+            box.append({**a, "sent": sent})
             store.save_outbox(box)
         audit.log("action_approved" if approve else "action_rejected", user_id, action_id=action_id, to=a["to"])
         return a
@@ -167,7 +181,7 @@ def reject_action(action_id: str, user_id: str) -> dict:
     return _decide(action_id, user_id, False)
 
 
-def add(user_id: str, kind: str, to: str, subject: str, body: str, reason: str, cites: list):
+def add(user_id: str, kind: str, to: str, subject: str, body: str, reason: str, cites: list, extra: dict | None = None):
     """Add one proposal (used by call escalation). Same recipient rules; it only waits for approval."""
     if not _recipient_allowed(kind, to, cites):
         audit.log("action_blocked", user_id, kind=kind, to=to, reason="recipient not allowed")
@@ -175,7 +189,8 @@ def add(user_id: str, kind: str, to: str, subject: str, body: str, reason: str, 
     acts = store.actions()
     n = sum(1 for a in acts if a["proposed_to"] == user_id) + 1
     a = {"id": f"act-{user_id}-u{n}", "type": kind, "proposed_to": user_id, "to": to, "subject": subject, "body": body,
-         "reason": reason, "cites": cites, "status": "awaiting_approval", "created": datetime.now().isoformat(timespec="seconds")}
+         "reason": reason, "cites": cites, "status": "awaiting_approval", "created": datetime.now().isoformat(timespec="seconds"),
+         **(extra or {})}
     store.save_actions(acts + [a])
     audit.log("action_proposed", user_id, action_id=a["id"], kind=kind, to=to, cites=cites)
     return a

@@ -192,6 +192,9 @@ def kind_label(a: dict) -> str:
     """Who an action goes to, in words: 'message colleague to Anna', 'announcement to students: CEnT-S Cohort 1 students (14)'."""
     if a["type"] == "announcement":
         return f"announcement to students: {store.label(a['to'])}"
+    if a["type"] == "zoom_meeting":
+        m = a.get("meeting", {})
+        return "Zoom meeting with " + ", ".join(store.label(i) for i in m.get("with", [a["to"]]))
     return f"{a['type'].replace('_', ' ')} to {store.label(a['to'])}"
 
 
@@ -640,7 +643,11 @@ elif ss.page == PAGES[2]:
             with rise("ac", i):
                 md(f"<div class='row'><div class='when {label[1]}'>{label[0]}</div><div class='txt'><b>{html.escape(a['subject'])}</b>"
                    f"<div class='who'>{html.escape(kind_label(a))} · why: {html.escape(a['reason'])}</div>"
-                   f"<div style='margin-top:.5rem; white-space:pre-line'>{html.escape(a['body'])}</div></div></div>")
+                   f"<div style='margin-top:.5rem; white-space:pre-line'>{html.escape(a['body'])}</div>"
+                   + (f"<div class='who' style='margin-top:.4rem'>Join: <span class='ids'>{html.escape(str(a['meeting']['join_url']))}</span>"
+                      + ("" if a["meeting"].get("real") else " (demo link)") + "</div>"
+                      if a.get("meeting", {}).get("join_url") else "")
+                   + "</div></div>")
                 sources_block(a["cites"], user)
                 if a["status"] == "awaiting_approval":
                     c1, c2, _ = st.columns([1.4, 1, 2.6])
@@ -653,7 +660,8 @@ elif ss.page == PAGES[2]:
         for i, o in enumerate(box):
             with rise("ob", i):
                 md(f"<div class='msgline'><div class='txt'><b>{html.escape(o['subject'])}</b> to {html.escape(store.label(o['to']))}</div>"
-                   f"<span class='ids'>approved by {html.escape(name(o['decided_by']))} at {o['decided_at'][11:16]}</span></div>")
+                   f"<span class='ids'>approved by {html.escape(name(o['decided_by']))} at {o['decided_at'][11:16]}"
+                   + (f" · {html.escape(o['sent'])}" if o.get("type") == "zoom_meeting" else "") + "</span></div>")
 
 elif ss.page == PAGES[3]:
     mark_viewed("email")
