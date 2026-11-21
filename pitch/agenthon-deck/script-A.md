@@ -71,10 +71,10 @@ Ideas to remember (5): 1. Jarvis speaks first. 2. It only uses what people appro
   - Set roles · who sees what
   - Pilot · one team, a few weeks
   - Grow · more tools, same rules
-  - Fact row: About $0.003 per brief (earlier build) · AI on Google Vertex AI · Market not estimated yet
+  - Fact row: About $0.003 per brief (this build) · Ariete pays and resells · Market not estimated yet
 - **Visual:** horizontal 4-step workflow + one fact row
 - **Sources:** F11, F12, F14 (footer: "Today: demo copies of these tools; in-app call card; a real phone call needs setup · cost measured 21 Nov 2026")
-- **Say:** A company connects its tools read-only and sets who sees what. Ariete pilots it with one client team for a few weeks, then more tools with the same rules. On our earlier build, a morning brief cost about a third of a cent. We haven't sized the market yet.
+- **Say:** A company connects its tools read-only and sets who sees what. Ariete pays for it and resells it inside its AI-agent service. The pilot is one client team for a few weeks, and we measure urgent emails caught, answers with sources, and approvals per day; the app already logs all of that. On this build, a morning brief costs about a third of a cent. In the pilot, data stays in an EU region or on the client's own servers. We haven't sized the market yet.
 
 ## 07 · Team, ask and close
 - **Kicker:** The ask

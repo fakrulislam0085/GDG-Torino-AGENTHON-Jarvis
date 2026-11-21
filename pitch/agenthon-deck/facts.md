@@ -28,6 +28,7 @@ Founder decisions that override rules: two versions. A = Filare Labs story + Fil
 
 | F22 | Demo company = a fictional scenario built on Ariete Tech Solutions' PUBLIC services (AI training, mentoring, custom automations, AI agents for professional firms and SMEs; Turin; Ariete Capital group). People, events, clients and numbers are invented; no Ariete finances | founder decision 21 Nov 14:40; docs/sponsor-research.md (arietetech.com, read 21 Nov) | 2026-11-21 |
 | F23 | jarvis-your-company-brain: 87 automated tests pass offline on the default Filare data (builds/arif: 33) | pytest, 21 Nov 16:15 | 2026-11-21 |
+| F24 | Cost on the presented build (jarvis-your-company-brain, Ariete data): one live 08:00 sweep for 7 people = 10 Gemini 3.8 Flash calls, 17,356 tokens in, 2,511 out, about $0.022 in total = about $0.0032 per brief (portal list price $0.75/1M in, $3.75/1M out) | live sweep in a temporary state folder, brain/llm.py USAGE | 2026-11-21 16:30 |
 
 ## Missing (NEED)
 - Cost per brief for jarvis-your-company-brain (slides keep the builds/arif figure, labelled)
