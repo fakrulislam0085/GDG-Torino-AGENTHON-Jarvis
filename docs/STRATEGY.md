@@ -18,13 +18,13 @@ The jury marks **7 checks yes or no**. One "no" can drop us out of the 8–12 fi
 5. **Honest about what it can't do:** "I don't know", pending memory, rejecting the model's wrong guess live.
 
 ## 2. How we work today: three builds, one winner
-1. **Solo builds (10:50–13:45).** Ari (Fakhrul), Hamid and Uluhan each build their own full version of Challenge A. Different ideas are good: that's the point.
+1. **Solo builds (10:50–13:45).** Arif (Fakhrul), Hamid and Uluhan each build their own full version of Challenge A. Different ideas are good: that's the point.
 2. **Red team + show-off (13:45–14:20).** The `red-team` workflow in `compare` mode attacks all three builds and ranks them. In parallel, each of us demos our build to the others in 5 minutes, because the agents read code and can't see the screens.
 3. **Pick (14:20).** We choose the base build, plus the 1–2 best parts of the others worth grafting in.
 4. **One team (14:20–17:00).** Everyone works on the winner: graft, fix the red team's findings, 7/7, then the deck, video and submission are made on that build.
 
 ## 3. Rules every build follows (so the comparison is fair)
-- **Your own folder:** `builds/ari/`, `builds/hamid/`, `builds/uluhan/`. Never edit someone else's folder. Commit and push to `main` at least every 45 minutes.
+- **Your own folder:** `builds/arif/`, `builds/hamid/`, `builds/uluhan/`. Never edit someone else's folder. Commit and push to `main` at least every 45 minutes.
 - **Same data:** read the company from the shared `data/` folder (don't copy and edit it). Same people, same emails, same planted tests.
 - **Same model:** Gemini on Vertex AI, project `token-mafia-agenthon`, region `europe-west1`, model `gemini-3.8-flash`. No API keys in the repo (it's public): use `.env` (git-ignored).
 - **Stack is your choice.** Python + Streamlit is the fastest path (our Reply project), and it makes grafting easier if we all use it.
