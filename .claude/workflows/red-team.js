@@ -1,7 +1,7 @@
 export const meta = {
   name: 'red-team',
   description: 'Token Mafia at the GDG Torino AGENTHON: attack the ideas, the build or the final submission with the jury-scorer, devils-advocate and failure-hunter agents, referee the attacks, then rank and recommend',
-  whenToUse: 'At 13:45 on the three solo builds (mode "compare": ranks them on the 7 Challenge A checks and picks a base), before the 15:30 freeze on the chosen build (mode "build", default), at 16:15 on the submission (mode "final"). Mode "ideas" ranks idea texts. Args: { mode?: "compare" | "build" | "final" | "ideas", builds?: ["D:\\\\...\\\\builds\\\\hamid", ...], ideas?: ["idea text", ...], files?: ["D:\\\\...\\\\folder"], note?: "..." }',
+  whenToUse: 'At 13:00 on the three solo builds (mode "compare": ranks them on the 7 Challenge A checks and picks a base), before the 15:30 freeze on the chosen build (mode "build", default), at 16:15 on the submission (mode "final"). Mode "ideas" ranks idea texts. Args: { mode?: "compare" | "build" | "final" | "ideas", builds?: ["D:\\\\...\\\\builds\\\\hamid", ...], ideas?: ["idea text", ...], files?: ["D:\\\\...\\\\folder"], note?: "..." }',
   phases: [
     { title: 'Find', detail: 'collect the ideas or files to attack' },
     { title: 'Attack', detail: 'red team agents in parallel' },
@@ -192,7 +192,7 @@ const summary = await agent(
 ${JSON.stringify(ok, null, 2)}
 
 ${mode === 'compare'
-    ? `Write the decision sheet for the 14:20 pick of the base build (Challenge A, Company Brain). The team's pick rules, in order: (1) checks passed out of 7, (2) hard to break, (3) jury score /50, (4) tie-break: easiest to finish by 15:30.
+    ? `Write the decision sheet for the 14:00 pick of the base build (Challenge A, Company Brain). The team's pick rules, in order: (1) checks passed out of 7, (2) hard to break, (3) jury score /50, (4) tie-break: easiest to finish by 15:30.
 1. **Checks matrix:** one row per build, columns 1-7 with ✅ yes / ❌ no / ❓ unclear (add 🔒 when enforced in code), then total ✅ and score /50.
 2. **Recommended base build** and why, in 2-3 sentences, following the pick rules. Say how sure you are.
 3. **Graft list:** the best parts of the other builds worth moving into the base, each with: from which build, which file, which check it fixes, minutes to graft. Only parts under 30 minutes.
