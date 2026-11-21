@@ -121,5 +121,38 @@ class FrostDeadlineControl(unittest.TestCase):
             self.assertIn("The firmware 2.3 rollout is planned for Thursday 07:00", draft["body"])
 
 
+class CaseContextGating(unittest.TestCase):
+    """The film's supporting messages are presentation only, and they only surface once the frost email arrives."""
+
+    def test_the_context_appears_only_after_the_wednesday_email(self):
+        b = clean_state()
+        self.assertEqual(b.view("paolo")["case_context"], [], "nothing before the customer's warning arrives")
+        b.ingest(WEDNESDAY)
+        ctx = b.view("paolo")["case_context"]
+        self.assertTrue(ctx, "the film context is surfaced with the Wednesday case")
+        self.assertTrue(any(c.get("cites") == [WEDNESDAY] and c.get("simulated") is False for c in ctx),
+                        "the customer email is a real, clickable record")
+        simulated_sources = {c["source"] for c in ctx if c.get("simulated")}
+        for channel in ("Slack", "Discord", "Text message", "Drive"):
+            self.assertTrue(any(channel in s for s in simulated_sources), channel)
+        self.assertTrue(all(c["simulated"] is False for c in ctx
+                            if c["source"] in ("Customer email", "Unsent customer reply")))
+
+    def test_finance_and_outsiders_do_not_see_the_case_context(self):
+        b = clean_state()
+        b.ingest(WEDNESDAY)
+        self.assertEqual(b.view("luca")["case_context"], [], "finance is not part of this case")
+        self.assertEqual(b.view("giulia")["case_context"], [])
+
+    def test_the_page_carries_the_two_source_timeline_and_context_labels(self):
+        html = (B.HERE / "web" / "index.html").read_text(encoding="utf-8")
+        for s in ("Simulated case context", "Held for review",
+                  "Rollout is scheduled after coverage is needed",
+                  "the customer email and the engineering chat are real records"):
+            self.assertIn(s, html, s)
+        self.assertIn('"📤 Outbox", S.outbox.length', html,
+                      "the outbox badge is wired to the real count, never hard-coded")
+
+
 if __name__ == "__main__":
     unittest.main()

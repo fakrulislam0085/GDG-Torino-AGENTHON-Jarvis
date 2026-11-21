@@ -19,6 +19,17 @@ aside{display:none;position:absolute;right:0;top:0;bottom:0;width:340px;backgrou
 /* ---- additions for the mix: warnings, call screen, orb ---- */
 .warnbox{background:var(--bad-soft);border:1px solid #eac7c1;color:#7f2f29;border-radius:10px;padding:10px 14px;margin:12px 0;font-size:14px}.warnbox ul{margin:4px 0 0;padding-left:18px}
 .tag.waiting{background:var(--warn-soft);color:var(--warn)}.tag.danger{background:var(--bad-soft);color:var(--bad)}.tag.held{background:#fff3d6;color:#8a5a00;border:1px solid #ecd9a8}.tag.outsider{background:#f3ecff;color:#6a45b3}.tag.sample{background:#eef2f6;color:#66758c}
+.case-timeline{margin:12px 0 2px;border:1px solid #e8d5ad;border-radius:10px;padding:12px 14px;background:#fffdf4}
+.case-timeline .tl-step{display:flex;gap:9px;align-items:flex-start;font-size:14px}
+.case-timeline .tl-dot{width:8px;height:8px;border-radius:50%;background:#d6a637;margin-top:8px;flex:none}
+.case-timeline .tl-arrow{text-align:center;color:#b98f2f;font-weight:700;line-height:1;margin:3px 0}
+.case-timeline .tl-conclusion{font-weight:650;color:#8a5a00;font-size:14px}
+.case-timeline .tl-outcome{font-weight:650;font-size:14px}
+.case-context{margin-top:14px;border:1px solid var(--line);border-radius:10px;background:#f8fafc;padding:12px 14px}
+.case-context .cc-head{font-size:13px;margin-bottom:8px;line-height:1.5}
+.case-context table{font-size:13px;background:transparent}
+.case-context th,.case-context td{padding:6px 10px;border-bottom:1px solid var(--line)}
+.case-context tr:last-child td{border-bottom:none}
 .pill.paused{background:var(--warn-soft);color:#885b20}
 textarea{width:100%;font:inherit;font-size:14px;border:1px solid #d9e0ec;border-radius:9px;padding:10px 12px;min-height:96px;background:#fff;color:var(--ink)}
 input[type=text]{min-width:0;flex:1;background:#f7f9fc;border:1px solid #e1e7f0;border-radius:9px;padding:9px 12px;font-size:14px;color:var(--ink)}
@@ -130,7 +141,7 @@ function renderChrome() {
   const pendMem = S.memory.filter(m => m.can_review).length, decide = S.actions.filter(a => a.can_decide).length;
   const ring = S.calls.filter(c => c.status === "ringing").length;
   const nav = [["dm", "💬 Assistant", 0], ["email", "📧 Morning email", S.dms.some(m => m.kind === "brief") ? 1 : 0], ["calls", "📞 Calls", ring],
-    ["memory", "📚 Memory review", pendMem], ["approvals", "✅ Approvals", decide], ["outbox", "📤 Outbox", 0], ["sources", "🗂 Sources", 0],
+    ["memory", "📚 Memory review", pendMem], ["approvals", "✅ Approvals", decide], ["outbox", "📤 Outbox", S.outbox.length], ["sources", "🗂 Sources", 0],
     ["audit", "🧾 Audit log", 0], ["jury", "🏁 Jury checklist", 0]];
   const iconPaths = {dm:'M4 4h16v12H9l-5 4V4Z',email:'M3 5h18v14H3V5Zm0 1 9 7 9-7',calls:'M6 3h4l2 5-2.5 1.5a11 11 0 0 0 5 5L16 12l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2',memory:'M4 4h7v16H4V4Zm9 0h7v16h-7V4Z',approvals:'m7 12 3 3 7-7 M5 3h14v18H5V3Z',outbox:'M4 14h4l2 3h4l2-3h4 M4 14l3-9h10l3 9v6H4v-6Z',sources:'M3 6h7l2 3h9v11H3V6Z',audit:'M6 3h12v18H6V3Zm3 5h6m-6 4h6m-6 4h4',jury:'M5 3v18m0-16h14l-3 4 3 4H5'};
   $("#nav").innerHTML = `<div class="ws">${esc(S.company.split(" S.r.l.")[0])}</div><div class="who">Your company, in context.</div><div class="sec">Workspace</div>` + nav.map(([k, l, n], i) =>
@@ -154,6 +165,25 @@ function setView(html, toBottom) {
 }
 
 /* ---------------------------------------------------------------- actions (drafts, meetings, tasks) */
+/* The film handoff: a held reply shows the two real sources side by side and the conclusion they force. */
+const SRC_LABEL = {chat: "Engineering chat", email: "Customer email", doc: "Drive document", task: "Task"};
+const srcLabel = id => { const s = S.sources.find(x => x.id === id) || {}; return SRC_LABEL[s.type] || (s.type || "source"); };
+function caseTimeline(a) {
+  const steps = (a.evidence || []).map(e => `<div class="tl-step"><span class="tl-dot"></span><div><b>${esc(e.text)}</b> <span class="muted">· ${esc(srcLabel((e.cites || [])[0]))}</span>${chips(e.cites)}</div></div>`).join(`<div class="tl-arrow">↓</div>`);
+  const internal = S.actions.find(x => x.status === "waiting" && x.approver === a.approver && S.people.some(p => p.id === x.to));
+  const outcome = `Customer reply held${internal ? ` · Internal request to ${esc(personName(internal.to))} waiting on ${esc(personName(a.approver).split(" ")[0])}` : ""}`;
+  return `<div class="case-timeline">${steps}<div class="tl-arrow">↓</div>
+    <div class="tl-conclusion">Rollout is scheduled after coverage is needed</div><div class="tl-arrow">↓</div>
+    <div class="tl-outcome">${outcome}</div></div>`;
+}
+function caseContext() {
+  const rows = (S.case_context || []).map(c => `<tr><td>${esc(c.who)}<div class="muted">${esc(c.role)}</div></td>
+    <td>${esc(c.source)}${c.simulated ? ` <span class="tag sample" title="A channel the film shows, not a live connector">simulated source</span>` : ""}</td>
+    <td>${esc(c.text)}${(c.cites || []).length ? chips(c.cites) : ""}</td></tr>`).join("");
+  if (!rows) return "";
+  return `<div class="case-context"><div class="cc-head"><b>Simulated case context</b> — the same messages the cold open shows arriving from different tools. Slack, Discord, text and Drive are simulated sources, not live connectors; the customer email and the engineering chat are real records in this demo.</div>
+    <table><tr><th>Stakeholder</th><th>Source</th><th>Message</th></tr>${rows}</table></div>`;
+}
 function actionBox(a) {
   if (!a) return "";
   const kind = {email: "Draft email", task: "Task change", meeting: "Meeting"}[a.kind] || a.kind;
@@ -165,9 +195,8 @@ function actionBox(a) {
   else if (a.kind === "task" && a.task_id) body = `<div class="muted" style="margin:8px 0">On approval ${chips([a.task_id])} is unblocked for ${esc(personName(a.owner))}.</div>`;
   let foot, extra = "";
   if (a.status === "held") {
-    extra = `<div class="warnbox"><b>🟡 Customer reply needs review</b><div style="margin-top:6px">${esc(a.hold_reason || "New evidence needs a person to look at this before it is sent.")}</div>
-      ${(a.evidence || []).map(ev => `<div class="row" style="align-items:flex-start;margin-top:8px;gap:8px"><span>• ${esc(ev.text)}</span>${chips(ev.cites)}</div>`).join("")}</div>`;
-    foot = `<div class="row"><span class="tag held">⏸ held for review</span><span class="muted" style="font-size:12px">New evidence changed what the customer needs. The Brain can't send it until a person reviews it. It was not rejected.</span></div>`;
+    extra = `<div class="warnbox"><b>🟡 Customer reply · Held for review</b><div style="margin-top:6px">${esc(a.hold_reason || "New evidence needs a person to look at this before it is sent.")}</div>${caseTimeline(a)}</div>` + caseContext();
+    foot = `<div class="row"><span class="tag held">⏸ Held for review</span><span class="muted" style="font-size:12px">New evidence changed what the customer needs. The assistant can't send it until a person reviews it. It was not rejected.</span></div>`;
   } else if (a.status === "waiting" && a.can_decide) {
     const label = a.kind === "email" ? "Approve (mock send)" : a.kind === "meeting" ? "Approve and create meeting" : "Approve";
     foot = `<div class="row"><button class="ok" data-act="${a.id}" data-d="approve">${label}</button><input type="text" data-reason="${a.id}" placeholder="Reason (optional, saved in the log)"><button data-act="${a.id}" data-d="reject">Reject</button></div><div class="muted" style="font-size:12px;margin-top:6px">Nothing moves until you approve.</div>`;

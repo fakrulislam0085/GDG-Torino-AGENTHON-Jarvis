@@ -238,6 +238,34 @@ WEEKDAY = re.compile(r"\b(monday|tuesday|wednesday|thursday|friday|saturday|sund
 TIMING_OK = "Rollout is scheduled before the forecast. Restoration is unconfirmed."
 TIMING_UNKNOWN = "Timing needs confirmation."
 
+# The messages the cold open shows arriving from different tools before the hold: each person holds a fragment of
+# the same case. This is presentation only - it is shown once the Wednesday frost email has actually arrived, so the
+# customer's warning never appears before it does. It adds no people, permissions, notifications, actions or
+# decisions, and it augments nothing but the display. "cites" points at the real backing record where one exists
+# (the customer email and the engineering chat are the only two clickable sources); Slack, Discord, text and Drive
+# are simulated sources, not verified connectors.
+CASE_CONTEXT = [
+    {"who": "Davide Greco", "role": "Engineering", "source": "Slack · engineering chat",
+     "text": "GW-07 rollout. Thursday 26 November, 07:00.", "simulated": True},
+    {"who": "Stefano, Cantina Langhe Viva", "role": "Vineyard customer", "source": "Customer email",
+     "text": "Frost is forecast Wednesday night, 25 November. Can you confirm coverage?",
+     "cites": ["email-101"], "simulated": False},
+    {"who": "Paolo Gallo", "role": "Sales", "source": "Unsent customer reply",
+     "text": "Drafted an update using Thursday's plan. It is waiting for approval.", "simulated": False},
+    {"who": "Sara Conti", "role": "Technical support", "source": "Slack",
+     "text": "Forty are still offline.", "simulated": True},
+    {"who": "Marco Rossi", "role": "Engineering", "source": "Discord",
+     "text": "I'm checking the spare gateway.", "simulated": True},
+    {"who": "Marta", "role": "Dispatch", "source": "Text message",
+     "text": "No earlier slot confirmed.", "simulated": True},
+    {"who": "Luca Bianchi", "role": "Operations", "source": "Drive",
+     "text": "That's the old service plan.", "simulated": True},
+    {"who": "Elena Russo", "role": "Leadership", "source": "Slack DM",
+     "text": "What can we actually tell the customer?", "simulated": True},
+    {"who": "Stefano, Cantina Langhe Viva", "role": "Vineyard customer", "source": "Text follow-up",
+     "text": "Can someone confirm today?", "simulated": True},
+]
+
 
 # ----------------------------------------------------------------------------------- the brain
 class Brain:
@@ -1433,6 +1461,14 @@ class Brain:
             return c
 
     # ---------- what one person sees (everything filtered here)
+    def case_context(self, pid: str) -> list[dict]:
+        """The film's supporting messages, shown only once the Wednesday frost email has actually arrived and only to
+        someone who may see it. Presentation only: it adds no people, permissions, notifications, actions or decisions."""
+        src = self.sources.get("email-101")
+        if not src or not self.can_see(pid, src["acl"]):
+            return []
+        return CASE_CONTEXT
+
     def view(self, pid: str) -> dict:
         if pid not in self.people:
             raise KeyError(pid)
@@ -1483,6 +1519,7 @@ class Brain:
                 "calls": [c for c in reversed(self.calls) if c["to"] == pid],
                 "meetings": [m for m in reversed(self.meetings) if pid in m["viewers"]],
                 "phone": {"ready": phone.configured(), "to": phone.callee_masked()}, "voice": voice.configured(),
+                "case_context": self.case_context(pid),
             }
 
     def open_source(self, pid: str, sid: str) -> dict:
