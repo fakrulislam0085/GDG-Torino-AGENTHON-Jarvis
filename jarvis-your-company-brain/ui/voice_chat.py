@@ -13,6 +13,6 @@ import streamlit.components.v1 as components
 _TEMPLATE = Path(__file__).with_name("voice_chat.html")
 
 
-def voice_chat(signed_url: str, dynamic_variables: dict, height: int = 400) -> None:
+def voice_chat(signed_url: str, dynamic_variables: dict, height: int = 462) -> None:
     cfg = json.dumps({"signedUrl": signed_url, "dynamicVariables": dynamic_variables}).replace("</", "<\\/")
     components.html(_TEMPLATE.read_text(encoding="utf-8").replace("__CFG__", cfg), height=height)
