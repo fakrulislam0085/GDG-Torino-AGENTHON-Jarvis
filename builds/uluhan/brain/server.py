@@ -43,7 +43,7 @@ def _run_summary(r: dict) -> dict:
 def _visible_run(r: dict, access: list[str], pid: str) -> bool:
     if r["agent"] == "ask":
         return r["actor"] == pid
-    if r["agent"] == "brief":
+    if r["agent"] in {"brief", "draft"}:
         return r["actor"] == pid
     return can_see(access, r["audience"])
 

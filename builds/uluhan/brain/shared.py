@@ -92,8 +92,10 @@ def load_shared():
     for eid, label in LIVE_EMAILS.items():
         src = sources.pop(eid)
         live_events.append({"id": eid, "label": label, "source": src, "fallback_candidates": []})
+    archive_event = next(event for event in live_events if event["id"] == "email-006")
+    archive_event["confirmation_basis"] = "mem-001"
     archived_email = emails["email-006"]
-    live_events[0]["fallback_candidates"].append({
+    archive_event["fallback_candidates"].append({
         "key": "cloud.budget.q1.2027", "topic": "Q1 2027 cloud budget",
         "fact": archived_email["body"], "quote": archived_email["body"],
     })

@@ -9,7 +9,7 @@ uv run --no-project --python 3.12 --with-requirements builds/uluhan/requirements
 ## Submission summary
 
 - All 7/7 jury checks are enforced in code: role filtering happens before the model, citations are validated, and “I don't know” is decided in code. No agent can send or approve.
-- The suite has 66 automated tests.
+- The suite has 74 automated tests.
 - A live seven-check run used Vertex AI in location `eu` (EU multi-region) with `gemini-3.8-flash`; that model is not served in `europe-west1`. The run cost USD 0.10–0.13, while one question costs about USD 0.001–0.004.
 - Wi-Fi loss trips a circuit breaker to a deterministic offline planner, labelled in the trace.
 
@@ -24,7 +24,7 @@ uv run --no-project --python 3.12 --with-requirements builds/uluhan/requirements
 7. On **🏁 Jury checklist → Change control**, click **Simulate newer €25,000 claim as Sara**. This build-local synthetic event follows the existing ingestion path. Sara sees the claim without a Replace button; the approval API also refuses her with 403.
 8. Switch to Giulia and click **Replace the record**. The receipt highlights **€25,000 active** and labels **€18,000 superseded**. Ask the same question: it now cites the new approved memory. The archived receipt preserves Sara's rejection.
 
-The [45-second stage cut](PITCH.md) uses a completed morning sweep. The measured local browser rehearsal took 25.4 seconds in **Offline fallback (no model)**; this upgrade has not been verified against live Vertex.
+The [45-second stage cut](PITCH.md) uses a completed morning sweep. The measured local browser rehearsal took 25.4 seconds in **Offline fallback (no model)**; the final Vertex verification and release check are recorded in [CHECKS.md](CHECKS.md).
 
 > “Most AI assistants believe the last thing they read. Ours treats an incoming email as a claim, not a decision. When a message contradicts an approved company fact, it shows both side by side, says why it didn't change anything, and only the person with authority can update the record. Your company's knowledge changes by decision, not by inbox.”
 

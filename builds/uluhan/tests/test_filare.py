@@ -267,11 +267,15 @@ def test_newer_claim_needs_authority_not_recency(demo):
 
 def test_two_receipts_preserve_rejection_after_later_budget_approval(demo):
     client, store = demo
+    question = "What is the Q1 2027 cloud budget?"
+    first = ask(client, "giulia", question)["answer"]
+    assert "18,000" in first["text"] and first["citations"][0]["source_id"] == "email-005"
     client.post('/api/events/email-006')
     archive = _conflict(client, 'sara')['candidate_id']
     assert client.post(f'/api/memory/{archive}/reject', json={'person': 'sara'}).status_code == 200
+    draft, = state(client, "giulia")["proposals"]
+    assert draft["status"] == "pending" and draft["citations"][0]["id"] == "mem-001"
     newer = _newer_claim(client)
-    question = 'What is the Q1 2027 cloud budget?'
     before = ask(client, 'giulia', question)['answer']
     assert '18,000' in before['text'] and before['citations'][0]['id'] == 'mem-001'
     assert client.post(f'/api/memory/{newer}/approve', json={'person': 'sara'}).status_code == 403
@@ -289,3 +293,21 @@ def test_two_receipts_preserve_rejection_after_later_budget_approval(demo):
     after = ask(client, 'giulia', question)['answer']
     assert '25,000' in after['text'] and after['citations'][0]['id'] == newer
     assert after['citations'][0]['source_id'] == 'mail-new'
+
+    release = f"/api/proposals/{draft['id']}/approve"
+    assert client.post(release, json={"person": "sara"}).status_code == 403
+    for _ in range(2):
+        assert client.post(release, json={"person": "giulia"}).status_code == 409
+    assert store.proposals[draft["id"]]["status"] == "withdrawn" and not store.outbox
+    assert sum(a["action"] == "proposal.withdrawn" for a in store.audit) == 1
+
+
+def test_archived_rejection_preserves_valid_budget_draft(demo):
+    client, store = demo
+    client.post("/api/events/email-006")
+    client.post(f"/api/memory/{_conflict(client, 'sara')['candidate_id']}/reject", json={"person": "sara"})
+    draft, = state(client, "giulia")["proposals"]
+    path = f"/api/proposals/{draft['id']}/approve"
+    assert client.post(path, json={"person": "giulia"}).status_code == 200
+    assert client.post(path, json={"person": "giulia"}).status_code == 409
+    assert len(store.outbox) == 1

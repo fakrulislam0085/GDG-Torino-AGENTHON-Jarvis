@@ -498,7 +498,21 @@ def receive_event(store: Store, event_id: str) -> list[dict] | None:
         store.sources[src["id"]] = src
         store.processed_sources.add(src["id"])
         store.clock = max(store.clock, src["ts"])
-    return [ingest(store, src["id"], f"new email {src['id']}")]
+    run = ingest(store, src["id"], f"new email {src['id']}")
+    with store.lock:
+        basis = store.memory.get(store.live_events[event_id].get("confirmation_basis"))
+        if basis and basis["status"] == "approved":
+            owner = basis["decided_by"]
+            ctx = T.Ctx(store, "brief", owner, store.role(owner),
+                        Trace("draft", owner, "draft confirmation", basis["audience"], store.clock))
+            T.t_propose_email(ctx, src["from"], f"Confirm {basis['topic']}", basis["fact"],
+                              "Confirm the approved decision with the sender of the archived estimate.",
+                              [basis["id"], src["id"]])
+            ctx.trace.run["mode"] = "offline"
+            draft_run = ctx.trace.done("done", {"proposals": ctx.proposals_made})
+            _record(store, draft_run, "brain", "draft", "Prepared confirmation for review", basis["audience"])
+            return [run, draft_run]
+    return [run]
 
 
 def _record(store: Store, run: dict, actor: str, action: str, detail: str, audience: list[str]) -> None:

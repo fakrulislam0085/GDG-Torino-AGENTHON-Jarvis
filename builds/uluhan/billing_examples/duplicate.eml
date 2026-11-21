@@ -1,0 +1,8 @@
+From: client@orchard.example
+Subject: Forwarded sign-off
+X-Milestone: Orchard / Site acceptance
+X-Version: 1
+X-Accepted-Scope: A+B
+X-Received: 2026-11-18T10:00:00+01:00
+
+We accept sites A and B.

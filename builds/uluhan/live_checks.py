@@ -11,7 +11,7 @@ def _full_run(client, run):
     """Hydrate privacy-filtered run summaries before inspecting their steps."""
     if isinstance(run.get("steps"), list):
         return run
-    viewer = run["actor"] if run["agent"] in {"ask", "brief"} else "elena"
+    viewer = run["actor"] if run["agent"] in {"ask", "brief", "draft"} else "elena"
     response = client.get(f"/api/runs/{run['id']}", params={"person": viewer})
     if response.status_code != 200:
         raise RuntimeError(f"run {run['id']}: expected HTTP 200, got {response.status_code} {response.text[:240]}")
@@ -78,11 +78,30 @@ def main():
         ask("giulia", "What is our Q2 2027 cloud budget?", "unknown")
         print("PASS · role-specific answers and genuine gaps")
 
+        budget_question = "What is the Q1 2027 cloud budget?"
+        ask("giulia", budget_question, "answered", "email-005")
         runs.extend(call("POST", "/api/events/email-006")["runs"])
         conflict, = [alert for alert in state("sara")["alerts"] if alert["source_id"] == "email-006"]
         call("POST", f"/api/memory/{conflict['candidate_id']}/approve", body={"person": "giulia"}, status=409)
         budget = ask("giulia", "What is the Q1 2027 cloud budget?", "answered", "email-005")
         assert "18,000" in budget["answer"]["text"]
+        call("POST", f"/api/memory/{conflict['candidate_id']}/reject", body={"person": "sara"})
+        ask("giulia", budget_question, "answered", "email-005")
+        draft, = [p for p in state("giulia")["proposals"] if any(c["id"] == "mem-001" for c in p["citations"])]
+        assert draft["status"] == "pending"
+        runs.extend(call("POST", "/api/events/mail-new")["runs"])
+        newer, = [a for a in state("sara")["alerts"] if a["source_id"] == "mail-new"]
+        assert not newer["receipt"]["you_can_approve"]
+        path = f"/api/memory/{newer['candidate_id']}/approve"
+        call("POST", path, body={"person": "sara"}, status=403)
+        call("POST", path, body={"person": "giulia"})
+        assert "25,000" in ask("giulia", budget_question, "answered", "mail-new")["answer"]["text"]
+        archive = next(a for a in state("giulia")["alerts"] if a["source_id"] == "email-006")
+        assert archive["receipt"]["outcome"].startswith("Claim rejected by Sara")
+        for _ in range(2):
+            call("POST", f"/api/proposals/{draft['id']}/approve", body={"person": "giulia"}, status=409)
+        assert not state("giulia")["outbox"]
+        print("PASS · authorized change, historical rejection, stale draft held on release")
         runs.extend(call("POST", "/api/events/email-008")["runs"])
         sara = state("sara")
         assert any(alert["kind"] == "suspicious" and alert["source_id"] == "email-008" for alert in sara["alerts"])
@@ -91,6 +110,8 @@ def main():
         print("PASS · archived claim, suspicious email and workspace")
         runs = [_full_run(client, run) for run in runs]
 
+    for r in runs:
+        print(f"  {r['agent']} {r['trigger']} {r['actor']} · {r['mode']}")
     modes = ", ".join(sorted({run["mode"] for run in runs}))
     cost = sum(run["usage"]["cost_usd"] for run in runs)
     if args.require_gemini:
