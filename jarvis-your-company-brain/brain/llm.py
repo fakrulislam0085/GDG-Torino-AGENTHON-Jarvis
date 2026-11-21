@@ -92,12 +92,14 @@ def _get_client():
     client = getattr(_local, "client", None)
     if client is None:
         from google import genai
+        from google.genai import types as _t
 
+        _http = _t.HttpOptions(timeout=20000)  # ms: a dead Wi-Fi must not hang a click
         key = os.getenv("GOOGLE_API_KEY")
         if key:
-            client = genai.Client(vertexai=True, api_key=key)
+            client = genai.Client(vertexai=True, api_key=key, http_options=_http)
         else:
-            client = genai.Client(vertexai=True, project=PROJECT, location=LOCATION)
+            client = genai.Client(vertexai=True, project=PROJECT, location=LOCATION, http_options=_http)
         _local.client = client
     return client
 
