@@ -1,31 +1,38 @@
 """In-memory state for the demo company. Every read that reaches the model goes through `visible()`.
 
-Demo data only (see app/data/seed.json). State resets from the seed file; nothing is persisted.
+Demo data comes from the team's shared data directory. State resets from the seed file; nothing is persisted.
 """
 from __future__ import annotations
 
 import copy
 import json
 import threading
+from datetime import datetime, timezone
 from pathlib import Path
 
-SEED_PATH = Path(__file__).resolve().parent.parent / "data" / "seed.json"
+from .shared import load_shared
 
 
-def can_see(role: str, audience: list[str]) -> bool:
-    return "all" in audience or role in audience
+def can_see(role: str | list[str], audience: list[str]) -> bool:
+    groups = {role} if isinstance(role, str) else set(role)
+    return "all" in audience or "exec" in groups or bool(groups.intersection(audience))
+
+
+def same_audience(first: list[str], second: list[str]) -> bool:
+    return set(first) == set(second)
 
 
 class Store:
-    def __init__(self, seed_path: Path = SEED_PATH):
+    def __init__(self, seed_path: Path | None = None):
         self.seed_path = seed_path
         self.lock = threading.RLock()
+        self.agent_operation = threading.Lock()
         self.reset()
 
     # ---- lifecycle -------------------------------------------------------
     def reset(self) -> None:
         with self.lock:
-            seed = json.loads(self.seed_path.read_text())
+            seed = json.loads(self.seed_path.read_text()) if self.seed_path else load_shared()
             self.seed = seed
             self.people = {p["id"]: p for p in seed["people"]}
             self.sources = {s["id"]: dict(s) for s in seed["sources"]}
@@ -46,7 +53,7 @@ class Store:
             self.audit: list[dict] = []
             self.processed_sources: set[str] = {s["id"] for s in seed["sources"] if s.get("stage") == "seed"}
             self.fired_events: set[str] = set()
-            self._n = {"M": len(self.memory), "P": 0, "A": 0, "r": 0}
+            self._n = {"M": max((int(m[1:]) for m in self.memory if m.startswith("M") and m[1:].isdigit()), default=0), "P": 0, "A": 0, "r": 0}
 
     def next_id(self, prefix: str) -> str:
         with self.lock:
@@ -62,10 +69,29 @@ class Store:
     def role(self, person_id: str) -> str:
         return self.person(person_id)["role"]
 
-    def visible_memory(self, role: str, statuses=("approved",)) -> list[dict]:
+    def access(self, person_id: str) -> list[str]:
+        person = self.person(person_id)
+        return person.get("groups", [person["role"]])
+
+    def may_decide_proposal(self, person_id: str, proposal: dict) -> bool:
+        owner = proposal.get("owner_id")
+        return owner == person_id if owner else proposal["owner_role"] in self.access(person_id)
+
+    def replays_current_evidence(self, candidate: dict) -> bool:
+        def timestamp(memory):
+            stamp = datetime.fromisoformat(self.sources[memory["source_id"]]["ts"])
+            return stamp if stamp.tzinfo else stamp.replace(tzinfo=timezone.utc)
+
+        return any(
+            old["key"] == candidate["key"] and same_audience(old["audience"], candidate["audience"])
+            and old["status"] == "approved" and timestamp(candidate) < timestamp(old)
+            for old in self.memory.values()
+        )
+
+    def visible_memory(self, role: str | list[str], statuses=("approved",)) -> list[dict]:
         return [m for m in self.memory.values() if m["status"] in statuses and can_see(role, m["audience"])]
 
-    def visible_sources(self, role: str) -> list[dict]:
+    def visible_sources(self, role: str | list[str]) -> list[dict]:
         return [s for s in self.sources.values() if can_see(role, s["audience"])]
 
     # ---- audit -----------------------------------------------------------

@@ -114,7 +114,7 @@ dialog::backdrop{background:#0006}
   <span class="pill" id="mode">…</span>
   <span class="pill" id="clock">…</span>
   <span class="spacer"></span>
-  <button id="sweepBtn" title="The scheduled background job. Nobody asks the brain anything.">⏰ Run 08:00 sweep</button>
+  <button id="sweepBtn" title="The scheduled background job. Nobody asks the brain anything.">⏰ Run morning sweep</button>
   <select id="eventSel" title="Simulate an email arriving"><option value="">✉ Simulate incoming email…</option></select>
   <label class="row" style="gap:6px">Viewing as
     <select id="personSel"></select>
@@ -143,10 +143,15 @@ dialog::backdrop{background:#0006}
 <script>
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const SUGGEST = ["Where do we send Verdi invoices?", "How much is Atlas milestone 2?",
-  "When does Atlas launch?", "What is the budget for the Atlas mobile app?", "What are NordPrint payment terms?"];
-let S = null, person = ["giulia", "marco"].includes(location.hash.slice(1)) ? location.hash.slice(1) : "giulia", view = "dm", activeRun = null, busy = false;
-const chats = {giulia: [], marco: []};
+const SUGGEST = ["When does the Langhe fix roll out?", "What is our cash runway?",
+  "What is the Q1 2027 cloud budget?", "What is our Q2 2027 cloud budget?"];
+let S = null, person = location.hash.slice(1) || "luca", view = "dm", activeRun = null, busy = false;
+const chats = new Map();
+
+function conversation(id) {
+  if (!chats.has(id)) chats.set(id, []);
+  return chats.get(id);
+}
 
 async function api(path, opts = {}) {
   const r = await fetch(path, {headers: {"Content-Type": "application/json"}, ...opts,
@@ -162,23 +167,38 @@ const chips = cits => `<div class="chips">${(cits || []).map(c =>
   `<span class="chip" data-src="${esc(c.source_id)}" title="${esc(c.quote || c.source_title)}">📎 ${esc(c.id)} · ${esc(c.label)}</span>`).join("")}</div>`;
 
 async function load() {
-  S = await api(`/api/state?person=${person}`);
-  render();
+  const selected = person;
+  let state;
+  try {
+    state = await api(`/api/state?person=${encodeURIComponent(selected)}`);
+  } catch (error) {
+    if (person === selected && error.message.startsWith("unknown person") && selected !== "luca") {
+      person = "luca";
+      return load();
+    }
+    throw error;
+  }
+  if (person === selected) {
+    S = state;
+    render();
+  }
 }
 
 function render() {
+  if (!S) return;
   $("#mode").textContent = S.mode === "gemini" ? `Gemini live · ${S.model}` : "Offline fallback (no model)";
   $("#mode").className = "pill " + S.mode; $("#mode").title = S.mode_note || "";
   location.hash = person;
   $("#clock").textContent = "🕗 " + S.clock.replace("T", " ");
-  $("#personSel").innerHTML = S.people.map(p => `<option value="${p.id}" ${p.id === person ? "selected" : ""}>${esc(p.name)} · ${esc(p.role)}</option>`).join("");
+  $("#personSel").innerHTML = S.people.map(p => `<option value="${p.id}" ${p.id === person ? "selected" : ""}>${esc(p.name)} · ${esc(p.title || p.role)}</option>`).join("");
+  $("#sweepBtn").textContent = `⏰ Run ${S.sweep_label} sweep`;
   $("#eventSel").innerHTML = `<option value="">✉ Simulate incoming email…</option>` +
     S.pending_events.map(e => `<option value="${esc(e.id)}">${esc(e.label)}</option>`).join("");
   const pend = S.proposals.filter(p => p.status === "pending").length;
   const openAlerts = S.alerts.filter(a => !a.closed).length;
   const nav = [["dm", "🧠 Brain", (S.brief ? 0 : 0) + openAlerts], ["memory", "📚 Memory review", S.candidates.length],
     ["approvals", "✅ Approvals", pend], ["outbox", "📤 Outbox", 0], ["sources", "🗂 Sources", 0], ["audit", "🧾 Audit log", 0]];
-  $("#nav").innerHTML = `<div class="ws">${esc(S.company.split(" (")[0])}</div><div class="who">Signed in as ${esc(S.person.name)}</div>
+  $("#nav").innerHTML = `<div class="ws">${esc(S.company.split(" (")[0])}</div><div class="who">Demo persona · ${esc(S.person.name)}</div>
     <div class="sec">Direct messages</div>` + nav.map(([k, l, n], i) =>
     (i === 1 ? `<div class="sec">Brain</div>` : "") +
     `<a data-view="${k}" class="${view === k ? "active" : ""}"><span>${l}</span>${n ? `<span class="badge">${n}</span>` : ""}</a>`).join("");
@@ -193,8 +213,8 @@ function setHead(t, s) { $("#title").textContent = t; $("#subtitle").textContent
 function proposalBox(p) {
   if (!p) return "";
   const btns = p.status === "pending"
-    ? `<div class="row"><button class="ok" data-prop="${p.id}" data-act="approve">Approve & send</button><button data-prop="${p.id}" data-act="reject">Reject</button>
-       <span class="muted">Nothing is sent until you approve.</span></div>`
+    ? `<div class="row"><button class="ok" data-prop="${p.id}" data-act="approve">Approve to mock outbox</button><button data-prop="${p.id}" data-act="reject">Reject</button>
+       <span class="muted">Nothing moves to the outbox until you approve.</span></div>`
     : p.status === "withdrawn"
       ? `<div class="muted">↩ Withdrawn by the brain at ${time(p.decided_at)}: the fact it quoted was replaced, so this draft is stale.</div>`
       : `<div class="muted">${p.status === "approved" ? "✅ Approved" : "✖ Rejected"} by ${esc(p.decided_by)} at ${time(p.decided_at)}${p.status === "approved" ? " · in Outbox (mock)" : ""}</div>`;
@@ -206,8 +226,8 @@ function renderDM() {
   setHead("🧠 Brain", `Direct messages with ${S.person.name}`);
   const props = Object.fromEntries(S.proposals.map(p => [p.id, p]));
   let h = "";
-  if (!S.brief) h += `<div class="empty">No brief yet. At 08:00 the brain sweeps overnight email, chat and tasks and writes to each person on its own.<br><br>
-    <button class="primary" id="sweep2">⏰ Run 08:00 sweep</button></div>`;
+  if (!S.brief) h += `<div class="empty">No brief yet. At the scheduled time the brain sweeps email, chat and tasks and writes to each person on its own.<br><br>
+    <button class="primary" id="sweep2">⏰ Run morning sweep</button></div>`;
   else {
     const b = S.brief;
     h += `<div class="msg"><div class="av">🧠</div><div><div class="meta"><b>Brain</b><span>${time(b.generated_at)} · morning brief, unprompted · <a href="#" data-run="${b.run_id}">trace</a></span></div>
@@ -218,10 +238,11 @@ function renderDM() {
   for (const a of S.alerts) {
     h += `<div class="msg"><div class="av">🧠</div><div><div class="meta"><b>Brain</b><span>${time(a.created_at)} · ${a.kind === "conflict" ? "memory conflict" : "suspicious message"}, unprompted</span></div>
       <div class="card ${a.kind}"><b>${a.kind === "conflict" ? "⚠ This contradicts what we know" : "⛔ I did not act on this message"}</b><div class="why">${esc(a.text)}</div>
+      ${chips([{source_id: a.source_id, id: a.source_id, label: "Incoming source"}])}
       ${a.kind === "conflict" && !a.closed ? `<div class="row" style="margin-top:6px"><button data-view-go="memory">Review in Memory</button></div>` : ""}
       ${a.closed ? `<div class="muted">Resolved.</div>` : ""}${proposalBox(props[a.proposal_id])}</div></div></div>`;
   }
-  for (const m of chats[person]) {
+  for (const m of conversation(person)) {
     if (m.who === "me") h += `<div class="msg"><div class="av me">${esc(S.person.name[0])}</div><div><div class="meta"><b>${esc(S.person.name)}</b><span>${time(m.clock)}</span></div><div>${esc(m.text)}</div></div></div>`;
     else if (m.thinking) h += `<div class="msg"><div class="av">🧠</div><div class="thinking">Searching memory you're allowed to see…</div></div>`;
     else {
@@ -240,10 +261,10 @@ function memCard(m, actions) {
     <b>${esc(m.topic)}</b> <span class="muted">${esc(m.id)}</span></div>
     <div style="margin-top:4px">${esc(m.fact)}</div>
     <div class="quote">“${esc(m.quote)}” — <span class="chip" data-src="${esc(m.source_id)}">📎 ${esc(m.source_id)}</span></div>
-    ${m.conflicts_with ? `<div style="color:var(--bad);font-weight:600">Contradicts approved ${esc(m.conflicts_with)}. Approving replaces it.</div>` : ""}
+    ${m.conflicts_with ? `<div style="color:var(--bad);font-weight:600">${m.stale_evidence ? "Archived evidence predates the approved record." : `Contradicts approved ${esc(m.conflicts_with)}. Approving replaces it.`}</div>` : ""}
     ${m.superseded_by ? `<div class="muted">Replaced by ${esc(m.superseded_by)}</div>` : ""}
     ${m.decided_by ? `<div class="muted" style="font-size:12px">Decided by ${esc(m.decided_by)} at ${time(m.decided_at)}</div>` : ""}
-    ${actions ? `<div class="row" style="margin-top:6px"><button class="ok" data-mem="${m.id}" data-act="approve">Approve</button><button data-mem="${m.id}" data-act="reject">Reject</button>
+    ${actions ? `<div class="row" style="margin-top:6px"><button class="ok" data-mem="${m.id}" data-act="approve" ${m.stale_evidence ? "disabled" : ""}>Approve</button><button data-mem="${m.id}" data-act="reject">Reject</button>
       <span class="muted">Only approved items can be used in answers.</span></div>` : ""}</div>`;
 }
 function renderMemory() {
@@ -280,10 +301,12 @@ function renderRuns() {
   if (!activeRun && S.runs.length) showRun(S.runs[0].id);
 }
 async function showRun(id) {
+  const selected = person;
   activeRun = id;
   document.querySelectorAll(".run").forEach(e => e.classList.toggle("active", e.dataset.run === id));
   let r;
-  try { r = await api(`/api/runs/${id}?person=${person}`); } catch { return; }
+  try { r = await api(`/api/runs/${id}?person=${encodeURIComponent(selected)}`); } catch { return; }
+  if (person !== selected || activeRun !== id) return;
   const icon = {trigger: "▶", tool_call: "→", tool_result: "←", guard: "!", fallback: "↯", model_text: "✎", final: "✓"};
   $("#steps").innerHTML = r.steps.map(s => `<div class="step ${s.kind}"><div class="k">${icon[s.kind] || "·"}</div><div>
     <div class="n">${esc(s.note)} <span class="muted">${s.ms}ms</span></div>
@@ -293,16 +316,16 @@ async function showRun(id) {
 }
 
 async function withBusy(btn, fn) {
-  if (busy) { toast("The brain is still working on the last request…"); return; } busy = true; const old = btn && btn.innerHTML;
+  if (busy) { toast("The brain is still working on the last request…"); return; } busy = true; $("#personSel").disabled = true; const old = btn && btn.innerHTML;
   if (btn) { btn.disabled = true; btn.innerHTML = `<span class="spin"></span> working…`; }
-  try { await fn(); } catch (e) { toast("⚠ " + e.message); } finally { busy = false; if (btn) { btn.disabled = false; btn.innerHTML = old; } }
+  try { await fn(); } catch (e) { toast("⚠ " + e.message); } finally { busy = false; $("#personSel").disabled = false; if (btn) { btn.disabled = false; btn.innerHTML = old; } }
 }
 async function sweep(btn) {
   await withBusy(btn, async () => { const r = await api("/api/sweep", {method: "POST"}); activeRun = null; view = "dm"; await load(); toast(`Sweep done: ${r.runs.length} agent runs`); });
 }
 async function ask(q) {
-  q = q.trim(); if (!q) return; if (busy) { toast("The brain is still working on the last request…"); return; }
-  const c = chats[person]; c.push({who: "me", text: q, clock: S.clock}); c.push({thinking: true}); $("#q").value = ""; renderDM();
+  q = q.trim(); if (!q || !S) return; if (busy) { toast("The brain is still working on the last request…"); return; }
+  const c = conversation(person); c.push({who: "me", text: q, clock: S.clock}); c.push({thinking: true}); $("#q").value = ""; renderDM();
   await withBusy(null, async () => {
     try { const r = await api("/api/ask", {method: "POST", body: {person, question: q}});
       c.pop(); c.push({who: "brain", answer: r.answer, run: r.run.id, clock: S.clock}); activeRun = r.run.id; }
@@ -334,10 +357,24 @@ document.addEventListener("click", async e => {
 });
 $("#askForm").addEventListener("submit", e => { e.preventDefault(); ask($("#q").value); });
 $("#sweepBtn").addEventListener("click", e => sweep(e.currentTarget));
-$("#personSel").addEventListener("change", e => { person = e.target.value; activeRun = null; load(); });
+$("#personSel").addEventListener("change", e => {
+  if (busy) return;
+  $("#dlg").close();
+  $("#dlgBody").textContent = "";
+  person = e.target.value;
+  activeRun = null;
+  S = null;
+  $("#steps").textContent = "";
+  $("#usage").textContent = "";
+  $("#runs").textContent = "";
+  $("#view").textContent = "Loading demo persona…";
+  $("#eventSel").value = "";
+  $("#eventSel").disabled = true;
+  load().catch(e => toast(e.message)).finally(() => { $("#eventSel").disabled = false; });
+});
 $("#eventSel").addEventListener("change", e => { const id = e.target.value; if (!id) return;
   withBusy(null, async () => { const r = await api(`/api/events/${id}`, {method: "POST"}); activeRun = r.runs[0]?.id || null; view = "dm"; await load(); if (activeRun) showRun(activeRun); toast(r.note || "Email received and processed"); }); });
-$("#resetBtn").addEventListener("click", () => withBusy(null, async () => { await api("/api/reset", {method: "POST"}); chats.giulia = []; chats.marco = []; activeRun = null; view = "dm"; await load(); toast("Demo reset"); }));
+$("#resetBtn").addEventListener("click", () => withBusy(null, async () => { await api("/api/reset", {method: "POST"}); chats.clear(); activeRun = null; view = "dm"; await load(); toast("Demo reset"); }));
 load().catch(e => toast("⚠ " + e.message));
 </script>
 </body>

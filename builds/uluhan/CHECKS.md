@@ -1,0 +1,19 @@
+# CHECKS.md · Uluhan · Challenge A
+
+**Run from the repository root:** `uv run --no-project --python 3.12 --with-requirements builds/uluhan/requirements.txt uvicorn --app-dir builds/uluhan brain.server:app --port 8010`
+
+| # | Check | Where it lives | Enforcement | Steps to show it in the UI |
+|---|---|---|---|---|
+| 1 | It speaks first | `brain/agents.py:sweep`, `brief`, `_invoice_review` | Code runs the simulated scheduled tick independently of chat. The invoice notice and proposal use shared evidence. | Start as Luca. Click **Run 08:30 sweep** before entering a question. Luca gets the second-notice DM. Davide gets the outage and renewal risk. |
+| 2 | People curate memory | `brain/server.py:_decide_memory`, `brain/tools.py:confident_match` | Code reads approved memory only. | As Sara, ask **When does the Langhe fix roll out?** Approve `mem-p01`, reject `mem-p02`, then ask again. Expect Thursday 26 Nov at 07:00. |
+| 3 | It knows who is asking | `brain/store.py:can_see`, `Store.access`, `brain/tools.py:_memory_hits`, `brain/server.py:state` | Code filters by group before the model sees facts. Exec has shared-source visibility. | Ask **What is our cash runway?** as Giulia, then Sara. Giulia gets about seven months with a citation. Sara gets **I don't know** and no restricted match metadata. |
+| 4 | It cites | `brain/tools.py:t_answer`, `t_submit_brief`, `brain/store.py:Store.citation` | Code selects a matching approved fact and renders its stored words, with a visible source citation. | Click `mem-p01` on Sara's rollout answer to see `chat-003`. Click `mem-002` on Giulia's answer to see `email-003`. |
+| 5 | It admits gaps | `brain/tools.py:confident_match`, `t_answer` | Code abstains on unsupported or tied candidates. | Ask Giulia **What is our Q2 2027 cloud budget?** Expect **I don't know** and no citation. |
+| 6 | It only proposes | `brain/agents.py:_invoice_review`, `brain/tools.py:t_propose_email`, `brain/server.py:_decide_proposal` | No agent tool can approve or send. Only Luca can decide his draft. | After the sweep, show the pending SensorParts draft and empty Outbox. Click **Approve to mock outbox** as Luca and show the entry. |
+| 7 | It fits the team's day | `web/index.html:renderDM` | Slack-style workspace with role picker, unprompted DMs, and source links. | Open **Brain** as Luca or Davide and show the morning DM before chat. |
+
+**Regression tests:** The pre-approval rollout question abstains. Sara's search and trace omit Finance-only facts, IDs, and topics. `email-006` raises a scoped conflict, cannot supersede `mem-001`, and is idempotent on replay. `email-008` is quarantined. An unrelated valid citation cannot make a model answer pass. Wrong-person approval and duplicate approval are rejected.
+
+**Worth grafting:** Show the old email and the authoritative decision together. Source chronology and matching ACLs protect the current fact at the approval endpoint, even if someone tries to approve the archived claim directly.
+
+**Known gaps:** Demo personas, simulated trigger, in-memory state, and mock outbox. Pinned Vertex SDK loop exercised with scripted responses. The prior build ran on Vertex `eu`. Run `live_checks.py` with team credentials to verify the merged Filare flow.

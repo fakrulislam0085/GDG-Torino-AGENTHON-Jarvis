@@ -1,128 +1,29 @@
-# Company Brain — agent ↔ UI contract
+# Company Brain · agent and UI contract
 
-Owner: agent lead (Uluhan). The UI builds against this. If a field changes, this file changes in the same commit.
-
-Base URL: `http://127.0.0.1:8000` (local). All bodies are JSON. **Demo data only — the company, people and messages are fictional.**
-
-The acting person is always sent by the UI (`person`), never chosen by the model. Every permission check happens in the tool layer, before Gemini sees any data.
-
-## People (fixed in demo data)
-
-| id | name | role |
-|---|---|---|
-| `giulia` | Giulia Rinaldi | `finance` |
-| `marco` | Marco Bellini | `tech` |
+Base URL `http://127.0.0.1:8010`. The app loads Filare Labs from the repository's shared `data/`. All data and addresses are synthetic. The `person` argument selects a demo persona. A production service must get identity from an authenticated session.
 
 ## Endpoints
 
-| Method | Path | Body | Returns | Jury check |
-|---|---|---|---|---|
-| GET | `/api/state?person=giulia` | — | `State` (filtered to what this person may see) | all |
-| POST | `/api/sweep` | `{}` | `{runs: Run[]}` — the 08:00 background sweep: ingests overnight sources, writes each person's brief | 1 speaks first |
-| POST | `/api/events/{event_id}` | `{}` | `{runs: Run[]}` — a new email arrives live (`nordprint_terms`, `injection`) | 1, red team |
-| POST | `/api/ask` | `{person, question}` | `{run: Run, answer: Answer}` | 3, 4, 5 |
-| POST | `/api/memory/{id}/approve` | `{person}` | `{memory: Memory}` | 2 |
-| POST | `/api/memory/{id}/reject` | `{person}` | `{memory: Memory}` | 2 |
-| POST | `/api/proposals/{id}/approve` | `{person}` | `{proposal: Proposal, outbox_item}` | 6 |
-| POST | `/api/proposals/{id}/reject` | `{person}` | `{proposal: Proposal}` | 6 |
-| POST | `/api/reset` | `{}` | `{ok: true}` | — |
-| GET | `/api/runs/{run_id}?person=giulia` | — | `Run` (full trace; only runs this person may see) | trace |
+| Method | Path | Body / query | Result |
+|---|---|---|---|
+| GET | `/api/state` | `person` query | `person`, `people`, `mode`, `mode_note`, `voice`, `model`, `company`, `clock`, `sweep_label`, `brief`, `alerts`, `memory`, `candidates`, `decided_candidates`, `proposals`, `outbox`, `sources`, `pending_events`, `runs`, `audit`. Filtered to the demo persona. |
+| POST | `/api/sweep` | — | `{runs}` summary list. Simulates the scheduled job across the seven people. |
+| POST | `/api/events/{event_id}` | — | `{runs, note?}` summaries. Preset events are `email-006` and `email-008`. |
+| POST | `/api/ask` | `{person, question}` | `{run, answer}`. `answer` has `status` (`answered` or `unknown`), `text`, `citations`, and compatibility field `restricted_to: null`. |
+| POST | `/api/memory/{id}/approve` or `/reject` | `{person}` | `{memory}`. Promotion uses matching audiences and declines older evidence that would replace an approved record. |
+| POST | `/api/proposals/{id}/approve` or `/reject` | `{person}` | `{proposal, outbox_item}`. Approval moves the draft to the mock outbox. |
+| GET | `/api/runs/{id}` | `person` query | Full run with ordered steps and token estimates. Ask and brief traces are personal. Ingest traces follow the source ACL. |
+| GET | `/api/brief/audio` | `person` query | MP3 of the selected persona’s existing brief. Requires ElevenLabs configuration. |
+| POST | `/api/reset` | — | `{ok: true}`. Restores the shared synthetic fixtures. |
 
-Errors: `403 {detail}` when the person is not allowed (e.g. tech approving a finance memory), `404` unknown id, `409` already decided.
+Errors include `403` for wrong-person decisions, `404` for unavailable resources, and `409` for decided or stale evidence and overlapping agent operations.
 
-## Types
+## Key records
 
-```jsonc
-// State
-{
-  "person": {"id": "giulia", "name": "Giulia Rinaldi", "role": "finance"},
-  "mode": "gemini" | "offline",        // show as a badge; offline = deterministic fallback, no model
-  "model": "gemini-3.8-flash",
-  "clock": "2026-12-07T08:00",
-  "brief": Brief | null,               // null until the sweep has run
-  "alerts": Alert[],                   // things the brain raised on its own (conflicts, suspicious input)
-  "memory": Memory[],                  // approved + superseded items this person may see
-  "candidates": Memory[],              // status "candidate", awaiting a human
-  "proposals": Proposal[],
-  "outbox": OutboxItem[],              // mock outbox: nothing is really sent
-  "sources": Source[],
-  "pending_events": [{"id": "nordprint_terms", "label": "..."}],
-  "runs": RunSummary[],                // newest first
-  "audit": AuditEntry[]
-}
+- **Citation** includes `id`, `kind`, `label`, `source_id`, `source_title`, `quote`, and `fact` for a memory citation. The UI opens the source only if it is in the current persona's state.
+- **Memory** includes `id`, `key`, `topic`, `fact`, `audience`, `source_id`, `quote`, and `status` (`approved`, `candidate`, `rejected`, `superseded`). Conflicts can include `conflicts_with` and `stale_evidence`. Seeded records can include `source_ids`.
+- **Brief** includes `person`, `generated_at`, `run_id` and `items`. Items contain `headline`, `why`, `citations` and `proposal_id`.
+- **Proposal** has `id`, `owner_role`, optional `owner_id`, draft fields, `citations` and `status` (`pending`, `approved`, `rejected`, `withdrawn`).
+- **Run** includes `id`, `agent`, `actor`, `trigger`, `mode`, `model`, `status`, `started_at`, `ms` and `usage`. Full runs also carry `steps` and `output`. `guard` steps mark an application rejection. Gemini usage estimates come from SDK metadata.
 
-// Memory
-{
-  "id": "M3", "key": "atlas.fee", "topic": "Atlas fee and milestones",
-  "fact": "Atlas fixed fee is €84,000 ...",
-  "audience": ["finance"],             // or ["all"]
-  "status": "approved" | "candidate" | "rejected" | "superseded",
-  "source_id": "D2", "quote": "exact text from the source",
-  "conflicts_with": "M4" | null,       // candidate that contradicts an approved item
-  "superseded_by": "M9" | null,
-  "decided_by": "giulia" | null, "decided_at": "..." | null
-}
-
-// Answer  (what /api/ask shows in the chat)
-{
-  "status": "answered" | "restricted" | "unknown",
-  "text": "Send it to ap@verdi-logistics.example.",   // for restricted/unknown the text is fixed by code, not the model
-  "citations": [{"id": "M8", "kind": "memory", "label": "Verdi invoice address", "source_id": "CH2", "source_title": "..."}],
-  "restricted_to": ["finance"] | null
-}
-
-// Brief
-{
-  "person": "giulia", "generated_at": "2026-12-07T08:00", "run_id": "r_...",
-  "items": [{
-    "headline": "Verdi signed off staging — milestone 2 (€28,000) is now invoiceable",
-    "why": "...",
-    "citations": [Citation],
-    "proposal_id": "P1" | null
-  }]
-}
-
-// Alert
-{"id": "A1", "kind": "conflict" | "suspicious", "to_roles": ["finance"], "text": "...",
- "memory_id": "M4", "candidate_id": "M10", "source_id": "L1", "created_at": "..."}
-
-// Proposal  (check 6: nothing happens until a person approves)
-{
-  "id": "P1", "kind": "email", "owner_role": "finance",
-  "to": "ap@verdi-logistics.example", "subject": "...", "body": "...",
-  "reason": "...", "citations": [Citation],
-  "status": "pending" | "approved" | "rejected",
-  "decided_by": null, "decided_at": null, "run_id": "r_..."
-}
-
-// Run  (the agent trace — render as a live timeline)
-{
-  "id": "r_ab12", "agent": "ask" | "brief" | "ingest",
-  "actor": "giulia" | "system", "trigger": "question" | "08:00 sweep" | "new email L1",
-  "mode": "gemini" | "offline", "model": "gemini-3.8-flash",
-  "status": "done" | "error",
-  "started_at": "...", "ms": 2140,
-  "steps": [{
-    "i": 1,
-    "kind": "trigger" | "tool_call" | "tool_result" | "guard" | "model_text" | "fallback",
-    "tool": "search_memory" | null,
-    "args": {...} | null,
-    "result": {...} | null,           // already permission-filtered
-    "note": "human-readable line for the timeline",
-    "ms": 312
-  }],
-  "usage": {"input_tokens": 1830, "output_tokens": 210, "cost_usd": 0.0021}
-}
-```
-
-`guard` steps are code refusing something the model tried (e.g. a citation it may not use, a recipient not on record, a quote not in the source). Show them: they are the trust story.
-
-## Demo script these endpoints support
-
-1. `POST /api/reset`, then `POST /api/sweep` → each person's DM shows a brief at 08:00. **(1, 7)**
-2. Giulia asks *"Where do we send Verdi invoices?"* → `unknown`. She approves candidate `M8` (invoice address) and rejects `M9` (launch-slip rumour). Ask again → answered, cites `M8`. **(2, 4, 5)**
-3. Ask *"How much is Atlas milestone 2?"* as Giulia → €28,000 with citation; as Marco → `restricted`. **(3)**
-4. Ask *"What is the budget for the Atlas mobile app?"* → `unknown`. **(5)**
-5. Proposal `P1` (milestone-2 invoice email) is `pending`; outbox empty; approve → outbox has it. **(6)**
-6. `POST /api/events/nordprint_terms` → conflict alert to finance, plus a pending reply asking for a signed amendment.
-7. `POST /api/events/injection` → flagged suspicious, nothing approved, nothing sent.
+The UI's jury walkthrough is in [CHECKS.md](CHECKS.md).

@@ -14,7 +14,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
-from .store import Store, can_see
+from .store import Store, can_see, same_audience
 
 STOP = set("""a an the is are was were be been of to in on for and or with at by from this that these those it its
 what when where who whom which how why do does did we our you your i me my us they them their there here as
@@ -27,7 +27,7 @@ SYN = {"bill": "invoice", "billed": "invoice", "invoiced": "invoice", "live": "l
        "e-mail": "email", "address": "address", "go-live": "launch"}
 
 # Named things (company, project, people, period). If a question names one, the answer must be about it.
-ENTITIES = {"atlas", "verdi", "nordprint", "officina", "lume", "giulia", "marco", "elena", "luca", "q4", "cloud"}
+ENTITIES = {"atlas", "verdi", "nordprint", "officina", "lume", "giulia", "marco", "elena", "luca", "q4", "q1", "cloud", "langhe", "filare", "sensorparts", "roero"}
 
 EMAIL_RE = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
 INJECTION_RE = re.compile(
@@ -37,8 +37,9 @@ INJECTION_RE = re.compile(
 
 def tokens(text: str) -> set[str]:
     out = set()
-    for w in re.findall(r"[a-z0-9]+", text.lower()):
-        if w in STOP or len(w) < 2:
+    folded = re.sub(r"\broll[ -]out\b", "rollout", text.lower())
+    for w in re.findall(r"[a-z0-9]+", folded):
+        if w in STOP or (len(w) < 2 and not w.isdigit()):
             continue
         if w.endswith("ies") and len(w) > 4:
             w = w[:-3] + "y"
@@ -67,42 +68,39 @@ class Ctx:
     role: str | None                # None for system (ingest)
     trace: "object"
     source_id: str | None = None    # ingest: the one source being read
+    question: str = ""
     proposals_made: list[str] = field(default_factory=list)
-    question: str = ""            # ask: the person's question, for the relevance check on 'restricted'
     final: dict | None = None
+
+    @property
+    def access(self):
+        return self.store.access(self.actor) if self.role is not None else []
 
 
 # ---------------------------------------------------------------------------------------------
 # shared helpers
 def _memory_hits(ctx: Ctx, query: str):
-    """Returns ([(coverage, score, m)], [(coverage, score, m)]) for permitted / restricted approved memory.
-    coverage = share of the query's content words found in the item; used to avoid answering a different question."""
+    """Rank visible, approved facts by how much of the question they cover."""
     q = tokens(query)
-    permitted, restricted = [], []
+    hits = []
     if not q:
-        return permitted, restricted
-    for m in ctx.store.memory.values():
-        if m["status"] != "approved":
-            continue
-        topic_t = tokens(m["topic"])
-        all_t = tokens(m["fact"]) | tokens(m["key"].replace(".", " ").replace("_", " ")) | topic_t
-        score = len(q & all_t) + len(q & topic_t)
-        if score <= 0:
-            continue
-        coverage = len(q & all_t) / len(q)
-        (permitted if can_see(ctx.role, m["audience"]) else restricted).append((coverage, score, m, q & all_t))
-    permitted.sort(key=lambda x: (-x[0], -x[1]))
-    restricted.sort(key=lambda x: (-x[0], -x[1]))
-    return permitted, restricted
+        return hits
+    for m in ctx.store.visible_memory(ctx.access):
+        topic = tokens(m["topic"])
+        words = tokens(m["fact"]) | tokens(m["key"].replace(".", " ").replace("_", " ")) | topic
+        matched = q & words
+        if matched:
+            hits.append((len(matched) / len(q), len(matched) + len(q & topic), m, matched))
+    return sorted(hits, key=lambda hit: (-hit[0], -hit[1]))
 
 
 MIN_COVERAGE = 0.75
 NEGATION_RE = re.compile(r"\b(not|never|no longer|except|without|other than|besides)\b|n't\b", re.I)
 
 
-def _doc_freq(store) -> dict[str, int]:
+def _doc_freq(ctx: Ctx) -> dict[str, int]:
     df: dict[str, int] = {}
-    for m in store.memory.values():
+    for m in ctx.store.visible_memory(ctx.access):
         for t in tokens(m["fact"]) | tokens(m["topic"]) | tokens(m["key"].replace(".", " ").replace("_", " ")):
             df[t] = df.get(t, 0) + 1
     return df
@@ -118,23 +116,19 @@ def _confident(q: set[str], hit, df: dict[str, int]) -> bool:
     coverage, _, _, matched = hit
     unmatched = q - matched
     return (coverage >= MIN_COVERAGE and len(matched) >= 2 and (q & ENTITIES) <= matched
-            and all(df.get(t, 0) >= 2 for t in unmatched))
+            and all(not t.isdigit() and df.get(t, 0) >= 2 for t in unmatched))
 
 
 def confident_match(ctx: "Ctx", question: str):
-    """Returns ("answered", m) | ("restricted", m) | ("unknown", None) for the offline planner."""
+    """Return the strongest supported fact, or abstain when the evidence ties."""
     if NEGATION_RE.search(question):
-        return "unknown", None          # keyword matching cannot handle "not / except / without"
+        return "unknown", None
     q = tokens(question)
-    df = _doc_freq(ctx.store)
-    permitted, restricted = _memory_hits(ctx, question)
-    for hit in permitted:
-        if _confident(q, hit, df):
-            return "answered", hit[2]
-    for hit in restricted:
-        if _confident(q, hit, df):
-            return "restricted", hit[2]
-    return "unknown", None
+    df = _doc_freq(ctx)
+    hits = [hit for hit in _memory_hits(ctx, question) if _confident(q, hit, df)]
+    if not hits or (len(hits) > 1 and hits[0][:2] == hits[1][:2]):
+        return "unknown", None
+    return "answered", hits[0][2]
 
 
 def _mem_view(ctx: Ctx, m: dict) -> dict:
@@ -142,10 +136,12 @@ def _mem_view(ctx: Ctx, m: dict) -> dict:
     return {"id": m["id"], "topic": m["topic"], "fact": m["fact"], "source_title": src.get("title", "")}
 
 
-def allowed_recipients(store: Store, role: str) -> set[str]:
+def allowed_recipients(store: Store, role: str | list[str]) -> set[str]:
     """Addresses the brain may draft to: those on record in approved memory or as senders of sources this role sees."""
     flagged = {a["source_id"] for a in store.alerts if a["kind"] == "suspicious"}
     out = set()
+    if role:
+        out.update(p["email"].lower() for p in store.people.values() if p.get("email"))
     for m in store.visible_memory(role):
         out |= {e.lower() for e in EMAIL_RE.findall(m["fact"])}
     for s in store.visible_sources(role):
@@ -158,27 +154,20 @@ def allowed_recipients(store: Store, role: str) -> set[str]:
 # ---------------------------------------------------------------------------------------------
 # tool implementations
 def t_list_memory_topics(ctx: Ctx) -> dict:
-    items = [{"id": m["id"], "topic": m["topic"]} for m in ctx.store.visible_memory(ctx.role)]
+    items = [{"id": m["id"], "topic": m["topic"]} for m in ctx.store.visible_memory(ctx.access)]
     return {"topics": items, "note": "Only approved memory this person may see."}
 
 
 def t_search_memory(ctx: Ctx, query: str) -> dict:
-    permitted, restricted = _memory_hits(ctx, query)
-    return {
-        "results": [_mem_view(ctx, h[2]) for h in permitted[:5]],
-        "restricted_matches": [
-            {"id": h[2]["id"], "topic": h[2]["topic"], "restricted_to": h[2]["audience"]} for h in restricted[:3]
-        ],
-        "note": "restricted_matches exist but their content is withheld from this person.",
-    }
+    return {"results": [_mem_view(ctx, hit[2]) for hit in _memory_hits(ctx, query)[:5]]}
 
 
 def t_list_new_items(ctx: Ctx) -> dict:
     s = ctx.store
     new = [x for x in s.sources.values()
-           if x.get("stage") != "seed" and x["id"] in s.processed_sources and can_see(ctx.role, x["audience"])]
-    tasks = [x for x in s.sources.values() if x["type"] == "task" and can_see(ctx.role, x["audience"])]
-    alerts = [a for a in s.alerts if ctx.role in a["to_roles"] and not a.get("closed")]
+           if x.get("stage") != "seed" and x["id"] in s.processed_sources and can_see(ctx.access, x["audience"])]
+    tasks = [x for x in s.sources.values() if x["type"] == "task" and can_see(ctx.access, x["audience"])]
+    alerts = [a for a in s.alerts if can_see(ctx.access, a["to_roles"]) and not a.get("closed")]
     return {
         "new_sources": [{"id": x["id"], "type": x["type"], "title": x["title"], "from": x["from"], "ts": x["ts"]} for x in new],
         "open_tasks": [{"id": x["id"], "title": x["title"], "body": x["body"]} for x in tasks],
@@ -193,7 +182,7 @@ def t_read_source(ctx: Ctx, source_id: str) -> dict:
         if source_id != ctx.source_id:
             ctx.trace.guard(f"read_source({source_id}) refused: ingest may only read {ctx.source_id}")
             return {"error": "not permitted"}
-    elif not s or not can_see(ctx.role, s["audience"]):
+    elif not s or not can_see(ctx.access, s["audience"]):
         ctx.trace.guard(f"read_source({source_id}) refused: not visible to {ctx.role}")
         return {"error": "not found or not permitted"}
     return {"id": s["id"], "type": s["type"], "from": s["from"], "to": s["to"], "ts": s["ts"], "title": s["title"],
@@ -205,7 +194,7 @@ def t_list_memory_keys(ctx: Ctx) -> dict:
     # Only keys the source's own audience may see: an "all" email must not reveal finance topics in the trace,
     # and must not be able to reuse (and later replace) a finance key.
     aud = ctx.store.sources[ctx.source_id]["audience"]
-    roles = ["finance", "tech"] if "all" in aud else aud
+    roles = aud
     return {"keys": [{"key": m["key"], "topic": m["topic"]} for m in ctx.store.memory.values()
                      if m["status"] == "approved" and all(can_see(r, m["audience"]) for r in roles)]}
 
@@ -213,6 +202,11 @@ def t_list_memory_keys(ctx: Ctx) -> dict:
 def t_propose_memory(ctx: Ctx, key: str, topic: str, fact: str, quote: str) -> dict:
     s = ctx.store
     src = s.sources[ctx.source_id]
+    if INJECTION_RE.search(src["body"]) or any(
+        a["source_id"] == src["id"] and a["kind"] == "suspicious" for a in s.alerts
+    ):
+        ctx.trace.guard("propose_memory refused: suspicious source")
+        return {"error": "suspicious source cannot produce memory"}
     if not quote or norm(quote) not in norm(src["body"]):
         ctx.trace.guard(f"propose_memory refused: quote not found verbatim in {src['id']}")
         return {"error": "quote must be copied verbatim from the source"}
@@ -229,31 +223,32 @@ def t_propose_memory(ctx: Ctx, key: str, topic: str, fact: str, quote: str) -> d
     result = {"status": "candidate_created", "id": mid, "audience": cand["audience"],
               "note": "A person must approve it before anyone can use it."}
     # A conflict is only raised against facts the source's audience may see (no cross-role key reuse).
-    roles = ["finance", "tech"] if "all" in src["audience"] else src["audience"]
     clash = [m for m in s.memory.values() if m["status"] == "approved" and m["key"] == key
-             and norm(m["fact"]) != norm(fact) and all(can_see(r, m["audience"]) for r in roles)]
+             and norm(m["fact"]) != norm(fact) and same_audience(m["audience"], cand["audience"])]
     if clash:
         old = clash[0]
         cand["conflicts_with"] = old["id"]
-        roles = [r for r in ("finance", "tech") if can_see(r, old["audience"])]
+        cand["stale_evidence"] = s.replays_current_evidence(cand)
+        roles = cand["audience"]
         old_src = s.sources.get(old["source_id"], {})
         aid = s.next_id("A")
         alert = {"id": aid, "kind": "conflict", "to_roles": roles, "memory_id": old["id"], "candidate_id": mid,
                  "source_id": src["id"], "created_at": s.clock,
                  "text": (f"New claim contradicts approved memory. On record ({old['id']}, from \"{old_src.get('title','')}\"): "
-                          f"{old['fact']} New claim ({mid}, from {src['from']}): {fact} I have not changed anything. "
-                          f"Approve {mid} to replace it, or reject it.")}
+                          f"{old['fact']} New claim ({mid}, from {src['from']}): {fact} The approved record is unchanged. " +
+                          ("This evidence predates the approved record. It cannot replace it."
+                           if cand["stale_evidence"] else f"Approve {mid} to replace it, or reject it."))}
         s.alerts.append(alert)
         s.log("brain", "alert.conflict", aid, f"{old['id']} vs {mid}", old["audience"])
         sender = (EMAIL_RE.findall(src["from"]) or [""])[0]
-        if sender:
+        if sender and not cand["stale_evidence"] and src["from"] not in {p.get("email") for p in s.people.values()}:
             pid = s.next_id("P")
             s.proposals[pid] = {
-                "id": pid, "kind": "email", "owner_role": roles[0] if roles else "finance", "to": sender,
+                "id": pid, "kind": "email", "owner_role": roles[0], "to": sender,
                 "subject": f"Re: {src['title']}",
                 "body": (f"Hello,\n\nThank you for your message. Our records show: {old['fact']} "
                          f"Before we update them, could you send the signed amendment confirming this change?\n\n"
-                         f"Kind regards,\nOfficina Lume"),
+                         f"Kind regards,\n{s.seed['company'].split(' (')[0]}"),
                 "reason": f"Claim in {src['id']} contradicts approved memory {old['id']}; ask for evidence before changing records.",
                 "citations": [c for c in (s.citation(old["id"]), s.citation(src["id"])) if c],
                 "status": "pending", "decided_by": None, "decided_at": None, "run_id": ctx.trace.id}
@@ -269,7 +264,7 @@ def t_flag_suspicious(ctx: Ctx, reason: str) -> dict:
     if any(a["kind"] == "suspicious" and a["source_id"] == src["id"] for a in s.alerts):
         return {"status": "already_flagged"}
     aid = s.next_id("A")
-    roles = ["finance", "tech"] if "all" in src["audience"] else list(src["audience"])
+    roles = list(src["audience"])
     s.alerts.append({"id": aid, "kind": "suspicious", "to_roles": roles, "source_id": src["id"], "created_at": s.clock,
                      "memory_id": None, "candidate_id": None,
                      "text": f"Suspicious message from {src['from']} (\"{src['title']}\"): {reason[:300]} I did not act on it."})
@@ -280,7 +275,7 @@ def t_flag_suspicious(ctx: Ctx, reason: str) -> dict:
 def t_propose_email(ctx: Ctx, to: str, subject: str, body: str, reason: str, citations: list[str]) -> dict:
     s = ctx.store
     to_l = (to or "").strip().lower()
-    if to_l not in allowed_recipients(s, ctx.role):
+    if to_l not in allowed_recipients(s, ctx.access):
         ctx.trace.guard(f"propose_email refused: {to} is not an address on record for {ctx.role}")
         return {"error": f"{to} is not on record. Only draft to addresses in approved memory or known senders."}
     cits = _valid_citations(ctx, citations)
@@ -288,10 +283,10 @@ def t_propose_email(ctx: Ctx, to: str, subject: str, body: str, reason: str, cit
         ctx.trace.guard("propose_email refused: no valid citation")
         return {"error": "cite at least one source or memory id you were shown"}
     for p in s.proposals.values():
-        if p["to"] == to_l and p["subject"] == subject and p["status"] == "pending":
+        if p.get("owner_id") == ctx.actor and p["to"] == to_l and p["subject"] == subject and p["status"] == "pending":
             return {"status": "already_pending", "id": p["id"]}
     pid = s.next_id("P")
-    s.proposals[pid] = {"id": pid, "kind": "email", "owner_role": ctx.role, "to": to_l, "subject": subject[:160],
+    s.proposals[pid] = {"id": pid, "kind": "email", "owner_role": ctx.role, "owner_id": ctx.actor, "to": to_l, "subject": subject[:160],
                         "body": body[:2000], "reason": reason[:400], "citations": [s.citation(c) for c in cits],
                         "status": "pending", "decided_by": None, "decided_at": None, "run_id": ctx.trace.id}
     ctx.proposals_made.append(pid)
@@ -304,9 +299,9 @@ def _valid_citations(ctx: Ctx, ids: list[str] | None) -> list[str]:
     for i in ids or []:
         if i in s.memory:
             m = s.memory[i]
-            good = m["status"] == "approved" and can_see(ctx.role, m["audience"])
+            good = m["status"] == "approved" and can_see(ctx.access, m["audience"])
         elif i in s.sources:
-            good = can_see(ctx.role, s.sources[i]["audience"])
+            good = can_see(ctx.access, s.sources[i]["audience"])
         else:
             good = False
         if good and i not in ok:
@@ -318,40 +313,15 @@ def _valid_citations(ctx: Ctx, ids: list[str] | None) -> list[str]:
 
 # ---------------------------------------------------------------------------------------------
 # terminal tools
-def _relevant(question: str, m: dict) -> bool:
-    q = tokens(question)
-    if not q:
-        return False
-    item = tokens(m["fact"]) | tokens(m["topic"]) | tokens(m["key"].replace(".", " ").replace("_", " "))
-    return (q & ENTITIES) <= item and len(q & item) / len(q) >= 0.5
-
-
 def t_answer(ctx: Ctx, status: str, text: str = "", citations: list[str] | None = None,
              restricted_id: str | None = None) -> dict:
-    s = ctx.store
     if status == "answered":
-        mem_cits = [c for c in _valid_citations(ctx, citations) if c in s.memory]
-        if not mem_cits:
-            ctx.trace.guard("answer downgraded to 'unknown': no valid approved-memory citation")
-            status = "unknown"
-        else:
-            ctx.final = {"status": "answered", "text": text.strip(), "citations": [s.citation(c) for c in mem_cits],
-                         "restricted_to": None}
+        _, evidence = confident_match(ctx, ctx.question)
+        if evidence and evidence["id"] in (citations or []):
+            ctx.final = {"status": "answered", "text": evidence["fact"],
+                         "citations": [ctx.store.citation(evidence["id"])], "restricted_to": None}
             return {"ok": True}
-    if status == "restricted":
-        m = s.memory.get(restricted_id or "")
-        if m and m["status"] == "approved" and not can_see(ctx.role, m["audience"]) and not _relevant(ctx.question, m):
-            # Seen live: Gemini answered "restricted to Tech" for a question no fact answers, pointing at an
-            # unrelated item. Saying "restricted" must mean the restricted fact really matches the question.
-            ctx.trace.guard(f"'restricted' via {m['id']} rejected: that item does not match the question -> 'unknown'")
-            m = None
-        if m and m["status"] == "approved" and not can_see(ctx.role, m["audience"]):
-            owner = "Giulia Rinaldi" if "finance" in m["audience"] else "Marco Bellini"
-            ctx.final = {"status": "restricted", "citations": [], "restricted_to": m["audience"],
-                         "text": f"I can't share that with you: it's restricted to {', '.join(m['audience']).title()}. "
-                                 f"Ask {owner} if you need it."}
-            return {"ok": True}
-        ctx.trace.guard("restricted claim not backed by a restricted memory item -> 'unknown'")
+        ctx.trace.guard("answer withheld: cited memory did not support the question")
     ctx.final = {"status": "unknown", "citations": [], "restricted_to": None,
                  "text": "I don't know. Nothing in approved memory answers that, and I won't guess."}
     return {"ok": True}
@@ -366,7 +336,7 @@ def t_submit_brief(ctx: Ctx, items: list[dict]) -> dict:
             ctx.trace.guard(f"brief item dropped (no valid citation): {str(it.get('headline'))[:60]}")
             continue
         pid = it.get("proposal_id")
-        if pid and (pid not in s.proposals or s.proposals[pid]["owner_role"] != ctx.role):
+        if pid and (pid not in s.proposals or not s.may_decide_proposal(ctx.actor, s.proposals[pid])):
             pid = None
         clean.append({"headline": str(it.get("headline", ""))[:200], "why": str(it.get("why", ""))[:600],
                       "citations": [s.citation(c) for c in cits], "proposal_id": pid})
@@ -388,7 +358,7 @@ DECLS = {
     "list_memory_topics": ({"type": "object", "properties": {}},
                            "List the topics of approved memory this person may see."),
     "search_memory": ({"type": "object", "properties": {"query": S}, "required": ["query"]},
-                      "Keyword search over approved memory. Returns permitted facts and the ids/topics of matches this person may NOT see."),
+                      "Keyword search over approved memory visible to this person."),
     "list_new_items": ({"type": "object", "properties": {}},
                        "List new emails/messages since yesterday, open tasks and open alerts visible to this person."),
     "read_source": ({"type": "object", "properties": {"source_id": S}, "required": ["source_id"]},
@@ -404,10 +374,10 @@ DECLS = {
                        "required": ["to", "subject", "body", "reason", "citations"]},
                       "Draft an email for this person to approve. It is NOT sent. 'to' must be an address on record."),
     "answer": ({"type": "object", "properties": {
-                    "status": {"type": "string", "enum": ["answered", "restricted", "unknown"]},
-                    "text": S, "citations": A, "restricted_id": S},
+                    "status": {"type": "string", "enum": ["answered", "unknown"]},
+                    "citations": A},
                 "required": ["status"]},
-               "Final answer. answered: text + citations (memory ids you were shown). restricted: restricted_id from restricted_matches. unknown: nothing answers it."),
+               "Select one memory citation that directly answers the question, or select unknown. The server renders its approved text."),
     "submit_brief": ({"type": "object", "properties": {"items": {"type": "array", "items": {
                           "type": "object", "properties": {"headline": S, "why": S, "citations": A, "proposal_id": S},
                           "required": ["headline", "why", "citations"]}}},

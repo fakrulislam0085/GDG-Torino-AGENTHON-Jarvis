@@ -1,76 +1,53 @@
-# Company Brain: Uluhan's build (Challenge A)
+# Company Brain · Uluhan's Challenge A build
 
-**The colleague who knows, speaks first, and never acts without you.** A Gemini agent watches a small team's email, chat, tasks and docs. At 08:00 it writes each person a brief nobody asked for. It answers only from memory that people approved, cites every answer, says "I don't know" when it doesn't know, and drafts actions that wait for a person's approval.
-
-**Demo data only.** Officina Lume, Verdi Logistics, NordPrint and every person here are fictional.
-
-## Run it
-
-From the repo root:
+Run from the repository root with Python 3.12 and `uv`.
 
 ```bash
-uv venv .venv --python 3.12 && uv pip install --python .venv/bin/python -r builds/uluhan/requirements.txt
-cd builds/uluhan && ../../.venv/bin/python -m uvicorn brain.server:app --port 8010
+uv run --no-project --python 3.12 --with-requirements builds/uluhan/requirements.txt uvicorn --app-dir builds/uluhan brain.server:app --port 8010
 ```
 
-Open http://localhost:8010. With no Gemini credentials it runs the **offline fallback**, and the header badge says so.
+Open [http://localhost:8010](http://localhost:8010). This build reads the team's shared synthetic **Filare Labs** data from the repository's [data directory](../../data). [CHECKS.md](CHECKS.md) gives the exact seven-check route.
 
-### Turn on Gemini (Vertex AI, event credits)
+**Change control for company facts.** The Company Brain watches new information and tells the team what needs their attention. Incoming claims go to review. An archived estimate cannot replace a newer approved decision, and a draft stays in Approvals until its designated reviewer acts. Answers use only approved evidence the selected person can see.
 
-Use one of these:
+## Three-minute walkthrough
+
+| Time | Show |
+|---|---|
+| 0:00–0:35 | Start as **Luca** and run the 08:30 sweep. His DM alerts him to the €14,640 second notice. Point to the pending review draft and empty Outbox. Approve it as Luca and show the one mock outbox entry. |
+| 0:35–1:15 | Switch to **Sara**. Ask **When does the Langhe fix roll out?** Approve `mem-p01` and reject `mem-p02` in Memory review. Ask again and open `chat-003`. The first answer abstains. The second gives Thursday 26 November at 07:00. |
+| 1:15–1:55 | Ask **What is our cash runway?** as Giulia and Sara. Open Giulia's `email-003` citation. Sara receives an abstention with no restricted fact or citation. Ask Giulia **What is our Q2 2027 cloud budget?** for the separate real gap. |
+| 1:55–2:40 | As Sara, replay **Archived cloud budget email** in **Simulate incoming email**. Open incoming `email-006`, then ask **What is the Q1 2027 cloud budget?** Open `email-005`. The archive says €12,000, and the approved budget remains €18,000. The review card explains why promotion is blocked. |
+| 2:40–3:00 | Close with one landing point for a pilot. Read one existing inbox and task queue, put decisions in front of their owners, and measure time to resolve conflicts and how often outdated figures reach downstream work. |
+
+Backup jury probe as **Sara**. Trigger **Suspicious email to Sara**. The agent flags `email-008`, creates no memory or action from it, and excludes that sender from draft recipients.
+
+## Vertex and offline mode
+
+With no credentials, the default is **Offline fallback**. To force that mode, prefix the run command with `BRAIN_MODE=offline`. For the team's Vertex project, configure ADC through an account that already has access, then start the app with these environment variables.
 
 ```bash
-# A: Google Cloud user credentials with access to the team project
-export GOOGLE_CLOUD_PROJECT=token-mafia-agenthon GOOGLE_CLOUD_LOCATION=europe-west1
 gcloud auth application-default login
-
-# B: a Vertex AI API key
-export GOOGLE_API_KEY=... GOOGLE_GENAI_USE_VERTEXAI=true
+export GOOGLE_CLOUD_PROJECT=token-mafia-agenthon
+export GOOGLE_CLOUD_LOCATION=eu
+export GEMINI_MODEL=gemini-3.8-flash
 ```
 
-`GEMINI_MODEL` defaults to `gemini-3.8-flash`. `BRAIN_MODE=offline` forces the fallback. Never commit keys.
+The build also accepts a Vertex AI key via `GOOGLE_API_KEY` with `GOOGLE_GENAI_USE_VERTEXAI=true` and no `GOOGLE_CLOUD_PROJECT`. Keep credentials out of Git. The upstream build verified Gemini on the `eu` endpoint. For the shared-data version, run the following against the configured server to check the current flow, model modes and token usage.
 
-## The seven checks, and where they're enforced
-
-| # | Check | What you click | What enforces it |
-|---|---|---|---|
-| 1 | Speaks first | **Run 08:00 sweep** → each person gets a DM brief; a new email raises an alert | `agents.sweep`, `brief`, `ingest` |
-| 2 | People curate memory | **Memory review** → approve M8, reject M9 → ask *"Where do we send Verdi invoices?"* | Retrieval only returns `approved` items (`tools._memory_hits`) |
-| 3 | Knows who's asking | Ask *"How much is Atlas milestone 2?"* as Giulia (finance), then as Marco (tech) | Role filter runs **before** the model sees data; restricted items show only id + topic |
-| 4 | Cites | Every answer and brief item has 📎 chips that open the source | `answer` / `submit_brief` drop any citation the person can't see or that isn't approved |
-| 5 | Admits gaps | *"What is the budget for the Atlas mobile app?"* | An answer without a valid citation is downgraded to "I don't know" in code |
-| 6 | Only proposes | Drafted emails sit in **Approvals**; the outbox stays empty until the owner approves | No agent has a send tool. Approval is an HTTP call by a person; the wrong role gets 403 |
-| 7 | Fits the day | A Slack-style workspace with the brief as a morning DM | `web/index.html` |
-
-**Extras for the red team**
-- **Stale memory.** *Simulate incoming email → NordPrint new terms*. The brain does not overwrite "30 days". It raises a conflict to Finance and drafts a reply asking for the signed amendment.
-- **Prompt injection.** *Simulate incoming email → Suspicious email*. The email is flagged and nothing is approved or sent. If the model misses it, a code backstop flags it anyway.
-- **Replay.** Sending the same email twice changes nothing.
-- **Trace.** The right-hand panel shows every tool call, every refused action (red `!`), tokens and cost per run.
-
-## Architecture
-
-```
-trigger (08:00 sweep · new email · question)
-   └─ agent (Gemini function calling, forced tool use, max 10 turns)
-        └─ tools.py  ← permission checks, quote verification, recipient allowlist, citation validation
-             └─ store.py (in-memory demo company, audit log)
-   └─ if Gemini fails or is missing: deterministic planner, same tools, labelled "offline" in the trace
+```bash
+uv run --no-project --python 3.12 --with-requirements builds/uluhan/requirements.txt builds/uluhan/live_checks.py http://127.0.0.1:8010
 ```
 
-Three agents with separate toolsets. **ingest** reads one new source and proposes memory candidates. **brief** writes a person's morning brief and drafts emails. **ask** answers one question. None of them can approve memory or send anything.
+Copy `.env.example` to `.env` inside this build to configure keys locally. With `ELEVENLABS_API_KEY`, the **Play voice brief** button reads the selected person's brief.
 
 ## Tests
 
 ```bash
-cd builds/uluhan && ../../.venv/bin/python -m pytest -q
+cd builds/uluhan
+BRAIN_MODE=offline uv run --no-project --python 3.12 --with-requirements requirements.txt python -m pytest -q
 ```
 
-There are 25 tests: one or more per jury check, plus the red-team cases. A scripted fake Gemini checks that the guards hold even when the model misbehaves.
+Tests cover the shared-data jury sequence, role boundaries, unsupported questions, evidence replay and approval. The legacy synthetic seed remains for regression tests. The running app loads only the repository's shared company.
 
-## Limits
-
-- The demo company is synthetic and stored in memory. **Reset** restores it.
-- The outbox is a mock: nothing is ever sent.
-- Retrieval is keyword-based over about 10 memory items. A real deployment needs embeddings and real connectors (Gmail, Slack, Drive).
-- The offline fallback uses fixed extraction results for the demo emails. The trace labels those runs "offline".
+The persona picker simulates identities. The demo has no production sign-in, live connectors, or persistent storage. The 08:30 button simulates an external scheduler tick. Approving a draft writes only to the local mock outbox.

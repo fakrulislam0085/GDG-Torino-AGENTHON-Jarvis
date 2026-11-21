@@ -3,19 +3,25 @@
 Run from builds/uluhan:  ../../.venv/bin/python -m pytest -q
 """
 import os
+from pathlib import Path
 
 os.environ["BRAIN_MODE"] = "offline"
 
 import pytest
 from fastapi.testclient import TestClient
 
-from brain.server import app, store
+from brain import server
+from brain.server import app
+from brain.store import Store
+
+store = Store(Path(__file__).resolve().parent / "fixtures" / "officina.json")
 
 c = TestClient(app)
 
 
 @pytest.fixture(autouse=True)
-def fresh():
+def fresh(monkeypatch):
+    monkeypatch.setattr(server, "store", store)
     c.post("/api/reset")
     yield
 
@@ -71,8 +77,8 @@ def test_3_same_question_finance_gets_it_tech_does_not():
     g = ask("giulia", q)
     assert g["status"] == "answered" and "28,000" in g["text"]
     m = ask("marco", q)
-    assert m["status"] == "restricted" and "28,000" not in m["text"] and "84,000" not in m["text"]
-    assert m["restricted_to"] == ["finance"]
+    assert m["status"] == "unknown" and "28,000" not in m["text"] and "84,000" not in m["text"]
+    assert m["restricted_to"] is None
 
 
 def test_3b_tech_run_trace_never_contains_finance_content():
