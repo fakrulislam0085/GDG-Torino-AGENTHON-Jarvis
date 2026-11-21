@@ -1,11 +1,11 @@
-{"ts": "2026-11-21T11:25:57", "event": "brief_posted", "user": "luca", "unprompted": true, "items": 3, "flagged": [], "mode": "gemini"}
-{"ts": "2026-11-21T11:25:57", "event": "brief_posted", "user": "davide", "unprompted": true, "items": 4, "flagged": ["email-008"], "mode": "gemini"}
-{"ts": "2026-11-21T11:25:57", "event": "brief_posted", "user": "marco", "unprompted": true, "items": 4, "flagged": ["email-008"], "mode": "gemini"}
-{"ts": "2026-11-21T11:25:57", "event": "brief_posted", "user": "giulia", "unprompted": true, "items": 4, "flagged": [], "mode": "gemini"}
-{"ts": "2026-11-21T11:25:57", "event": "brief_posted", "user": "sara", "unprompted": true, "items": 4, "flagged": ["email-008"], "mode": "gemini"}
-{"ts": "2026-11-21T11:25:58", "event": "brief_posted", "user": "paolo", "unprompted": true, "items": 4, "flagged": [], "mode": "gemini"}
-{"ts": "2026-11-21T11:25:58", "event": "brief_posted", "user": "elena", "unprompted": true, "items": 5, "flagged": ["email-008"], "mode": "gemini"}
-{"ts": "2026-11-21T11:25:59", "event": "action_proposed", "user": "sara", "action_id": "act-sara-1", "kind": "message_colleague", "to": "marco", "cites": ["task-004", "chat-007"]}
-{"ts": "2026-11-21T11:25:59", "event": "action_proposed", "user": "luca", "action_id": "act-luca-1", "kind": "message_colleague", "to": "giulia", "cites": ["task-002", "email-001"]}
-{"ts": "2026-11-21T11:26:00", "event": "action_proposed", "user": "paolo", "action_id": "act-paolo-1", "kind": "reply_draft", "to": "agronomo@langheviva.example", "cites": ["email-002"]}
-{"ts": "2026-11-21T11:26:00", "event": "sweep", "user": null, "people": 7}
+{"ts": "2026-11-21T11:45:39", "event": "brief_posted", "user": "sara", "unprompted": true, "items": 4, "flagged": ["email-008"], "mode": "gemini"}
+{"ts": "2026-11-21T11:45:39", "event": "brief_posted", "user": "luca", "unprompted": true, "items": 3, "flagged": [], "mode": "gemini"}
+{"ts": "2026-11-21T11:45:39", "event": "brief_posted", "user": "giulia", "unprompted": true, "items": 4, "flagged": [], "mode": "gemini"}
+{"ts": "2026-11-21T11:45:39", "event": "brief_posted", "user": "marco", "unprompted": true, "items": 4, "flagged": ["email-008"], "mode": "gemini"}
+{"ts": "2026-11-21T11:45:39", "event": "brief_posted", "user": "paolo", "unprompted": true, "items": 4, "flagged": [], "mode": "gemini"}
+{"ts": "2026-11-21T11:45:40", "event": "brief_posted", "user": "elena", "unprompted": true, "items": 5, "flagged": ["email-008"], "mode": "gemini"}
+{"ts": "2026-11-21T11:45:40", "event": "brief_posted", "user": "davide", "unprompted": true, "items": 4, "flagged": ["email-008"], "mode": "gemini"}
+{"ts": "2026-11-21T11:45:41", "event": "action_proposed", "user": "sara", "action_id": "act-sara-1", "kind": "message_colleague", "to": "marco", "cites": ["task-004", "chat-007"]}
+{"ts": "2026-11-21T11:45:41", "event": "action_proposed", "user": "luca", "action_id": "act-luca-1", "kind": "message_colleague", "to": "giulia", "cites": ["task-002", "email-001"]}
+{"ts": "2026-11-21T11:45:42", "event": "action_proposed", "user": "paolo", "action_id": "act-paolo-1", "kind": "reply_draft", "to": "agronomo@langheviva.example", "cites": ["email-002"]}
+{"ts": "2026-11-21T11:45:42", "event": "sweep", "user": null, "people": 7}

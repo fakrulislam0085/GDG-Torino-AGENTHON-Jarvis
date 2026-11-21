@@ -5,14 +5,14 @@
     "proposed_to": "luca",
     "to": "giulia",
     "subject": "Payment Approval: SensorParts Invoice INV-2026-0912",
-    "body": "Hi Giulia, could you please approve the payment for SensorParts invoice INV-2026-0912? It covers 120 soil probes (batch 7) for EUR 14,640.00 including VAT, and it is due on Tuesday, 24 November 2026. Thanks, Luca",
+    "body": "Hi Giulia, could you please approve the payment for SensorParts invoice INV-2026-0912? It covers 120 soil probes (batch 7) for EUR 14,640.00 including VAT. We have received a second notice, and the payment is due on Tuesday, 24 November 2026. Thanks, Luca",
     "reason": "Payment task task-002 needs the CFO's approval",
     "cites": [
       "task-002",
       "email-001"
     ],
     "status": "awaiting_approval",
-    "created": "2026-11-21T11:25:59"
+    "created": "2026-11-21T11:45:41"
   },
   {
     "id": "act-sara-1",
@@ -27,7 +27,7 @@
       "chat-007"
     ],
     "status": "awaiting_approval",
-    "created": "2026-11-21T11:25:59"
+    "created": "2026-11-21T11:45:41"
   },
   {
     "id": "act-paolo-1",
@@ -35,12 +35,12 @@
     "proposed_to": "paolo",
     "to": "agronomo@langheviva.example",
     "subject": "Re: 40 sensors offline since Wednesday",
-    "body": "Hi Stefano, thanks for reaching out. We have identified that the 40 offline sensors in your Barbaresco plots are connected to gateway GW-07. We are treating this outage urgently and will send an engineer within 2 working days to resolve it well before November 27. I will also call you shortly to discuss the details. Best, Paolo",
+    "body": "Hi Stefano, thanks for reaching out. We see the 40 offline sensors in your Barbaresco plots are connected to gateway GW-07. We will send an engineer within 2 working days to resolve the outage well ahead of Friday 27 November. I will also give you a call shortly to discuss. Best regards, Paolo",
     "reason": "Reply to agronomo@langheviva.example (email-002)",
     "cites": [
       "email-002"
     ],
     "status": "awaiting_approval",
-    "created": "2026-11-21T11:26:00"
+    "created": "2026-11-21T11:45:42"
   }
 ]

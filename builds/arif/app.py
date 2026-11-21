@@ -1,4 +1,6 @@
-"""Jarvis for Filare Labs: Arif's build of Challenge A (Company Jarvis). Run: python -m streamlit run app.py"""
+"""Jarvis for Filare Labs: Arif's build of Challenge A (Company Brain).
+Run from builds/arif:  .venv\\Scripts\\python -m streamlit run app.py
+"""
 from __future__ import annotations
 
 import html
@@ -12,35 +14,69 @@ import streamlit as st  # noqa: E402
 
 from brain import access, answer, audit, brief, call, llm, memory, propose, store, voice, watch  # noqa: E402
 
-st.set_page_config(page_title="Jarvis · Filare Labs", page_icon="🎩", layout="wide")
+st.set_page_config(page_title="Jarvis · Filare Labs", page_icon=":material/support_agent:", layout="wide")
 
+# Butler's desk: warm paper, ink, one brass accent. Serif for headings, Plex Sans for text, Plex Mono only for source ids.
 st.markdown("""
 <style>
-.block-container {padding-top: 1.2rem;}
-.msg {border:1px solid #2e3648; border-radius:12px; padding:14px 16px; margin:8px 0; background:#161b26;}
-.msg .who {font-weight:700;} .msg .meta {color:#8b95a8; font-size:0.82rem; margin-left:6px;}
-.item {margin:6px 0 2px 0;} .high {color:#ff8f6b;} .medium {color:#f2c14e;} .low {color:#8bd3a5;}
-.chip {display:inline-block; font-size:0.75rem; padding:1px 8px; border-radius:999px; background:#26304a; color:#c9d4ea; margin-right:4px;}
-.pill {display:inline-block; font-size:0.78rem; padding:2px 10px; border-radius:999px; background:#26304a; margin-bottom:6px;}
-.ok {background:#1d3b2b; color:#8bd3a5;} .warn {background:#3b2f14; color:#f2c14e;}
-.mail {background:#fbfaf6; color:#1b1f2a; border-radius:12px; padding:24px 28px; max-width:720px;}
-.mail h3 {color:#1b1f2a; margin-top:0;} .mail .muted {color:#5a6275; font-size:0.9rem;}
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+:root { --paper:#F5F0E6; --paper2:#EDE5D5; --sheet:#FBF8F1; --ink:#1E1A14; --ink2:#4E463A; --rule:#D9CEB8;
+        --brass:#8A5A12; --brass-tint:#F3E6CB; --red:#A3341F; --red-tint:#F6E1DA; --green:#2F6B47; }
+html, body, .stApp { background: var(--paper); color: var(--ink); font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+::selection { background: var(--brass-tint); color: var(--ink); }
+* { scrollbar-color: var(--rule) transparent; }
+[data-testid="stHeader"] { background: transparent; }
+[data-testid="stSidebar"] { background: var(--paper2); border-right: 1px solid var(--rule); }
+.block-container { padding-top: 2.2rem; max-width: 1180px; }
+h1, h2, h3, .serif { font-family: 'Newsreader', Georgia, serif !important; letter-spacing: -0.01em; color: var(--ink); }
+.wordmark { font-family: 'Newsreader', Georgia, serif; font-size: 2rem; font-weight: 600; line-height: 1; color: var(--ink); }
+.wordmark-sub { color: var(--ink2); font-size: .92rem; margin: .25rem 0 1.1rem; }
+.greet { font-family: 'Newsreader', Georgia, serif !important; font-size: 2.6rem !important; font-weight: 500; line-height: 1.1; margin: 0; color: var(--ink); text-wrap: balance; }
+.sub { color: var(--ink2); font-size: 1rem; margin: .4rem 0 1.6rem; }
+.status { font-size: .8rem; color: var(--ink2); text-align: right; padding-top: .6rem; }
+.status b { color: var(--green); font-weight: 600; }
+.status b.off { color: var(--brass); }
+.section { font-family: 'Newsreader', Georgia, serif; font-size: 1.35rem; font-weight: 600; margin: 1.8rem 0 .4rem; }
+.row { display: grid; grid-template-columns: 7.5rem 1fr; gap: 1rem; padding: .85rem 0 .35rem; border-top: 1px solid var(--rule); }
+.when { font-size: .82rem; font-weight: 600; padding-top: .15rem; }
+.when.high { color: var(--red); } .when.medium { color: var(--brass); } .when.low { color: var(--green); }
+.txt { font-size: 1.02rem; line-height: 1.5; max-width: 68ch; }
+.row.blocked { background: var(--red-tint); border-top-color: #E7C2B7; padding-left: .7rem; padding-right: .7rem; border-radius: 6px; }
+.ids { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: .78rem; color: var(--ink2); }
+.q { font-weight: 600; margin-top: 1.1rem; }
+.a { line-height: 1.55; max-width: 68ch; }
+.a.unknown { color: var(--brass); }
+.who { font-size: .8rem; color: var(--ink2); }
+.msgline { padding: .6rem 0; border-top: 1px solid var(--rule); }
+.mail { background: var(--sheet); border: 1px solid var(--rule); border-radius: 8px; padding: 2rem 2.4rem; max-width: 46rem;
+        box-shadow: 0 6px 24px rgba(30,26,20,.08); }
+.mail .meta { color: var(--ink2); font-size: .88rem; border-bottom: 1px solid var(--rule); padding-bottom: .8rem; margin-bottom: 1.2rem; }
+.mail li { margin-bottom: .6rem; line-height: 1.5; }
+.callcard { background: var(--brass-tint); border: 1px solid #E2C995; border-radius: 8px; padding: 1.1rem 1.3rem .4rem; margin-bottom: 1rem; }
+.callcard .t { font-family: 'Newsreader', Georgia, serif; font-size: 1.5rem; font-weight: 600; }
+.callcard .script { font-family: 'Newsreader', Georgia, serif; font-size: 1.15rem; line-height: 1.5; margin: .6rem 0; max-width: 62ch; }
+.chk { font-size: .82rem; color: var(--ink2); margin-top: .4rem; }
+[data-testid="stExpander"] details { border: none; background: transparent; }
+[data-testid="stExpander"] summary { padding: .1rem 0; font-size: .82rem; color: var(--ink2); }
+[data-testid="stExpander"] summary:hover { color: var(--brass); }
 </style>""", unsafe_allow_html=True)
 
 PEOPLE = store.people()
-PAGES = ["🎩 Jarvis", "🗂️ Memory review", "✅ Approvals", "📧 Morning email", "📜 Audit log"]
+PAGES = [":material/wb_sunny: Today", ":material/inventory_2: Memory", ":material/task_alt: Approvals",
+         ":material/mail: Morning email", ":material/receipt_long: Audit log"]
+WHEN = {"high": "Today", "medium": "This week", "low": "For info"}
 ss = st.session_state
 ss.setdefault("user", "davide")
 ss.setdefault("page", PAGES[0])
 ss.setdefault("prefill", "")
 ss.setdefault("chat", {})
-ss.setdefault("channel", "🎩 Jarvis")
+ss.setdefault("channel", "Jarvis")
 
 if not store.briefs():
     if store.has_snapshot():
         store.restore_snapshot()
     else:
-        with st.spinner("Jarvis is running its 08:00 sweep for everyone…"):
+        with st.spinner("Jarvis is preparing everyone's 08:00 brief…"):
             brief.sweep()
 
 
@@ -50,16 +86,20 @@ def name(uid: str) -> str:
     return p["name"] if p else uid
 
 
+def first(uid: str) -> str:
+    return name(uid).split()[0]
+
+
 def goto(page: str, user: str | None = None, prefill: str = "") -> None:
     ss.page = page
     if user:
         ss.user = user
     ss.prefill = prefill
-    ss.channel = "🎩 Jarvis"
+    ss.channel = "Jarvis"
 
 
 def do_reset() -> None:
-    """Instant: restores the 08:00 briefs Jarvis made earlier. '▶ 08:00 sweep' regenerates them live."""
+    """Instant: restores the 08:00 briefs Jarvis made earlier. 'Run 08:00 sweep' regenerates them live."""
     ss.chat = {}
     ss.prefill = ""
     if store.has_snapshot():
@@ -92,7 +132,7 @@ def check_status() -> dict:
     rows = audit.read()
     asks = [r for r in rows if r["event"] == "ask"]
     approved = {r["mem_id"] for r in rows if r["event"] == "memory_approved"}
-    s = {
+    return {
         1: any(r["event"] in ("brief_posted", "alert_posted") and r.get("unprompted") for r in rows),
         2: bool(approved) and any(r["event"] == "memory_rejected" for r in rows)
            and any(a["known"] and set(a.get("cited", [])) & approved for a in asks),
@@ -103,7 +143,6 @@ def check_status() -> dict:
         6: any(r["event"] == "action_proposed" for r in rows) and any(r["event"] == "action_approved" for r in rows),
         7: any(r["event"] == "viewed" and r.get("page") in ("brain", "email") for r in rows),
     }
-    return s
 
 
 def mark_viewed(page: str) -> None:
@@ -113,45 +152,62 @@ def mark_viewed(page: str) -> None:
         audit.log("viewed", ss.user, page=page)
 
 
-def render_cites(ids: list, user: str) -> None:
+def clean(text: str) -> str:
+    return text.replace("⚠️", "").strip()
+
+
+def sources_block(ids: list, user: str) -> None:
+    """Every claim shows where it came from: memory item → original email, chat, task or doc."""
+    if not ids:
+        return
     mem = {m["id"]: m for m in access.visible(store.memory(), user)}
     src = {s["id"]: s for s in access.visible(store.sources(), user)}
-    for cid in ids:
-        if cid in mem:
-            m = mem[cid]
-            with st.expander(f"📎 memory {cid} · {m['status']}"):
+    with st.expander(f"Sources · {', '.join(ids)}"):
+        for cid in ids:
+            if cid in mem:
+                m = mem[cid]
+                st.markdown(f"<span class='ids'>{cid} · memory · {m['status']}</span>", unsafe_allow_html=True)
                 st.write(m["fact"])
                 for sid in m["sources"]:
                     if sid in src:
                         s = src[sid]
-                        st.caption(f"{s['kind']} {sid} · {s.get('author', '')} · {s['date'][:16]}")
+                        st.markdown(f"<span class='ids'>{sid} · {s['kind']} · {html.escape(str(s.get('author', '')))} · {s['date'][:10]}</span>", unsafe_allow_html=True)
                         st.write(f"**{s['title']}**: {s['text']}")
-        elif cid in src:
-            s = src[cid]
-            with st.expander(f"📎 {s['kind']} {cid}"):
-                st.caption(f"{s.get('author', '')} · {s['date'][:16]}")
+            elif cid in src:
+                s = src[cid]
+                st.markdown(f"<span class='ids'>{cid} · {s['kind']} · {html.escape(str(s.get('author', '')))} · {s['date'][:10]}</span>", unsafe_allow_html=True)
                 st.write(f"**{s['title']}**: {s['text']}")
+
+
+def brief_row(it: dict, user: str) -> None:
+    if it.get("security") or it["text"].startswith("⚠️"):
+        st.markdown(f"<div class='row blocked'><div class='when high'>Blocked</div><div class='txt'>{html.escape(clean(it['text']))}</div></div>",
+                    unsafe_allow_html=True)
+    else:
+        u = it.get("urgency", "medium")
+        st.markdown(f"<div class='row'><div class='when {u}'>{WHEN.get(u, 'This week')}</div><div class='txt'>{html.escape(clean(it['text']))}</div></div>",
+                    unsafe_allow_html=True)
+    sources_block(it.get("cited", []), user)
 
 
 # ---------- sidebar ----------
 with st.sidebar:
-    st.markdown("### 🎩 Jarvis · Filare Labs")
-    if llm.mode() == "gemini":
-        st.markdown(f'<span class="pill ok">Gemini {llm.MODEL} · Vertex AI {llm.LOCATION}</span>', unsafe_allow_html=True)
-    else:
-        st.markdown('<span class="pill warn">Offline fallback · no Gemini credentials</span>', unsafe_allow_html=True)
-    st.selectbox("You are", list(PEOPLE), key="user", format_func=lambda u: f"{PEOPLE[u]['name']} · {PEOPLE[u]['role']}")
-    st.caption("Groups: " + ", ".join(access.groups(ss.user)) + ". Identity comes from here, never from what you type.")
-    st.radio("Go to", PAGES, key="page")
-    c1, c2 = st.columns(2)
-    c1.button("▶ 08:00 sweep", on_click=do_sweep, width="stretch", help="Jarvis writes everyone's brief and proposes actions, without anyone asking")
-    c2.button("↺ Reset demo", on_click=do_reset, width="stretch")
-    st.button("📨 Simulate: a new email arrives", on_click=do_new_email, width="stretch")
-    st.button("🚨 Simulate: an URGENT email arrives", on_click=do_urgent_email, width="stretch",
+    st.markdown("<div class='wordmark'>Jarvis</div><div class='wordmark-sub'>for Filare Labs · speaks first, asks before it acts</div>",
+                unsafe_allow_html=True)
+    st.selectbox("Signed in as", list(PEOPLE), key="user", format_func=lambda u: f"{PEOPLE[u]['name']} · {PEOPLE[u]['role']}")
+    st.caption("Access: " + ", ".join(g for g in access.groups(ss.user) if g != "all") + ". Set here, never by what you type.")
+    st.radio("Go to", PAGES, key="page", label_visibility="collapsed")
+
+    st.markdown("<div class='section' style='font-size:1.05rem'>Demo controls</div>", unsafe_allow_html=True)
+    st.button("Run the 08:00 sweep", icon=":material/schedule:", on_click=do_sweep, width="stretch",
+              help="Jarvis writes everyone's brief and proposes actions, without anyone asking (live Gemini)")
+    st.button("Reset the demo", icon=":material/restart_alt:", on_click=do_reset, width="stretch")
+    st.button("New email arrives", icon=":material/mark_email_unread:", on_click=do_new_email, width="stretch")
+    st.button("An URGENT email arrives", icon=":material/notification_important:", on_click=do_urgent_email, width="stretch",
               help="Jarvis decides it's urgent, phones the CEO with a spoken briefing, and prepares a fix that waits for approval")
 
-    st.markdown("---\n#### Jury checklist")
     status = check_status()
+    st.markdown(f"<div class='section' style='font-size:1.05rem'>Jury checklist · {sum(status.values())} of 7</div>", unsafe_allow_html=True)
     checks = [
         (1, "It speaks first", PAGES[0], "davide", ""),
         (2, "People curate the memory", PAGES[1], "davide", "When does the Langhe fix roll out?"),
@@ -162,149 +218,175 @@ with st.sidebar:
         (7, "It fits the team's day", PAGES[3], "davide", ""),
     ]
     for n, label, page, user, q in checks:
-        st.button(f"{'✅' if status[n] else '⬜'} {n}. {label}", key=f"chk{n}", on_click=goto, args=(page, user, q), width="stretch")
-    st.caption(f"{sum(status.values())}/7 shown since the last reset. "
-               "3: ask the runway as Giulia, then switch to Sara and ask again. 2: approve mem-p01, reject mem-p02, then ask.")
+        st.button(f"{n}. {label}", key=f"chk{n}", on_click=goto, args=(page, user, q), width="stretch",
+                  icon=":material/check_circle:" if status[n] else ":material/radio_button_unchecked:")
+    st.markdown("<div class='chk'>Check 3: ask the runway as Giulia, then as Sara. Check 2: approve mem-p01, reject mem-p02, then ask.</div>",
+                unsafe_allow_html=True)
 
 user = ss.user
 me = PEOPLE[user]
+
+# ---------- header ----------
+h1, h2 = st.columns([3, 1])
+with h2:
+    if llm.mode() == "gemini":
+        st.markdown(f"<div class='status'><b>●</b> Gemini {llm.MODEL} · Vertex AI</div>", unsafe_allow_html=True)
+    else:
+        st.markdown("<div class='status'><b class='off'>●</b> Offline fallback (no Gemini credentials)</div>", unsafe_allow_html=True)
 
 # ---------- incoming call from Jarvis (mock phone, real ElevenLabs voice) ----------
 for c in call.calls_for(user):
     if c["status"] == "ended":
         continue
-    with st.container(border=True):
-        st.markdown(f"### 📞 {'Incoming call' if c['status'] == 'ringing' else 'On the call'}: Jarvis → {html.escape(me['name'])}")
-        st.caption(f"Why Jarvis is calling: {c['why']} · source {c['source']} · mock phone today, real calls via ElevenLabs Agents + Twilio")
-        if c["status"] == "ringing":
-            a1, a2 = st.columns(2)
-            a1.button("🟢 Answer", key=f"ans-{c['id']}", on_click=call.answer, args=(c["id"], user), width="stretch")
-            a2.button("🔴 Decline", key=f"dec-{c['id']}", on_click=call.hang_up, args=(c["id"], user), width="stretch")
-        else:
-            if voice.available():
-                try:
-                    st.audio(voice.speak(f"call-{c['id']}", c["script"]), format="audio/mpeg", autoplay=True)
-                except Exception as e:  # never crash the demo
-                    st.warning(f"Voice unavailable: {e}")
-            st.markdown(f"> {html.escape(c['script'])}")
-            b1, b2 = st.columns(2)
-            if c.get("action"):
-                b1.button("✋ Review the fix Jarvis prepared", key=f"rev-{c['id']}", on_click=goto, args=(PAGES[2],), width="stretch")
-            b2.button("Hang up", key=f"hang-{c['id']}", on_click=call.hang_up, args=(c["id"], user), width="stretch")
+    ringing = c["status"] == "ringing"
+    st.markdown(f"<div class='callcard'><div class='t'>{'Jarvis is calling you' if ringing else 'On the call with Jarvis'}</div>"
+                f"<div class='who'>{html.escape(c['why'])} · source <span class='ids'>{c['source']}</span> · "
+                "mock phone today; real calls via ElevenLabs Agents + Twilio</div>"
+                + ("" if ringing else f"<div class='script'>“{html.escape(c['script'])}”</div>") + "</div>", unsafe_allow_html=True)
+    if ringing:
+        a1, a2, _ = st.columns([1, 1, 3])
+        a1.button("Answer", key=f"ans-{c['id']}", icon=":material/call:", type="primary", on_click=call.answer, args=(c["id"], user), width="stretch")
+        a2.button("Decline", key=f"dec-{c['id']}", icon=":material/call_end:", on_click=call.hang_up, args=(c["id"], user), width="stretch")
+    else:
+        if voice.available():
+            try:
+                st.audio(voice.speak(f"call-{c['id']}", c["script"]), format="audio/mpeg", autoplay=True)
+            except Exception as e:  # never crash the demo
+                st.warning(f"Voice unavailable: {e}")
+        b1, b2, _ = st.columns([2, 1, 2])
+        if c.get("action"):
+            b1.button("Review the fix Jarvis prepared", key=f"rev-{c['id']}", icon=":material/task_alt:", type="primary",
+                      on_click=goto, args=(PAGES[2],), width="stretch")
+        b2.button("Hang up", key=f"hang-{c['id']}", icon=":material/call_end:", on_click=call.hang_up, args=(c["id"], user), width="stretch")
 
 # ---------- pages ----------
 if ss.page == PAGES[0]:
     mark_viewed("brain")
-    left, right = st.columns([1, 3])
+    b = store.briefs().get(user, {"items": []})
+    items = b.get("alerts", []) + b["items"]
+    pending = [a for a in propose.for_user(user) if a["status"] == "awaiting_approval"]
+    with h1:
+        st.markdown(f"<div class='greet'>Good morning, {html.escape(first(user))}.</div>"
+                    f"<div class='sub'>Monday 23 November · {len(items)} things need you"
+                    + (f" · {len(pending)} waiting for your approval" if pending else "") + "</div>", unsafe_allow_html=True)
+
+    left, right = st.columns([1, 3.2], gap="large")
     with left:
-        st.markdown("**Filare Labs**")
         channels = sorted({s["channel"] for s in access.visible(store.sources(), user) if s["kind"] == "chat"})
-        st.radio("Channels", ["🎩 Jarvis"] + channels, key="channel", label_visibility="collapsed")
+        st.radio("Workspace", ["Jarvis"] + channels, key="channel",
+                 format_func=lambda c: "Jarvis (direct)" if c == "Jarvis" else c)
     with right:
-        if ss.channel != "🎩 Jarvis":
-            st.markdown(f"#### {ss.channel}")
+        if ss.channel != "Jarvis":
+            st.markdown(f"<div class='section' style='margin-top:0'>{html.escape(ss.channel)}</div>", unsafe_allow_html=True)
             for s in sorted((s for s in access.visible(store.sources(), user) if s.get("channel") == ss.channel), key=lambda s: s["date"]):
-                st.markdown(f'<div class="msg"><span class="who">{html.escape(name(s["author"]))}</span>'
-                            f'<span class="meta">{s["date"][5:16].replace("T", " ")}</span><br>{html.escape(s["text"])}</div>', unsafe_allow_html=True)
+                st.markdown(f"<div class='msgline'><div class='who'><b>{html.escape(name(s['author']))}</b> · {s['date'][5:16].replace('T', ' ')}</div>"
+                            f"<div class='txt'>{html.escape(s['text'])}</div></div>", unsafe_allow_html=True)
         else:
-            st.markdown(f"#### 🎩 Jarvis → {me['name']}")
-            b = store.briefs().get(user, {"items": []})
-            for title, items in (("New since your brief", b.get("alerts", [])), (f"Good morning {me['name'].split()[0]}. Here's what needs you today.", b["items"])):
-                if not items:
-                    continue
-                st.markdown(f'<div class="msg"><span class="who">🎩 Jarvis</span><span class="meta">{b.get("posted_at", "")} · nobody asked · {b.get("mode", "")}</span>'
-                            f'<br><b>{html.escape(title)}</b></div>', unsafe_allow_html=True)
-                for i, it in enumerate(items, 1):
-                    st.markdown(f'<div class="item"><span class="{it.get("urgency", "medium")}">●</span> {html.escape(it["text"])}</div>', unsafe_allow_html=True)
-                    render_cites(it.get("cited", []), user)
-            if voice.available() and b["items"]:
-                if st.button("🔊 Play my brief (ElevenLabs)"):
-                    text = f"Good morning {me['name'].split()[0]}. " + " ".join(i["text"] for i in b["items"])
-                    try:
-                        st.audio(voice.speak(user, text), format="audio/mpeg")
-                    except Exception as e:  # never crash the demo
-                        st.warning(f"Voice unavailable: {e}")
-            pending = [a for a in propose.for_user(user) if a["status"] == "awaiting_approval"]
+            if b.get("alerts"):
+                st.markdown("<div class='section' style='margin-top:0'>New since 08:00</div>", unsafe_allow_html=True)
+                for it in b["alerts"]:
+                    brief_row(it, user)
+            st.markdown(f"<div class='section' style='{'' if b.get('alerts') else 'margin-top:0'}'>Your 08:00 brief</div>"
+                        f"<div class='who'>Posted by Jarvis {b.get('posted_at', '')}. Nobody asked for it.</div>", unsafe_allow_html=True)
+            for it in b["items"]:
+                brief_row(it, user)
+            bc1, bc2, _ = st.columns([1.4, 1.6, 2])
+            if voice.available() and b["items"] and bc1.button("Play my brief", icon=":material/volume_up:"):
+                text = f"Good morning {first(user)}. " + " ".join(clean(i["text"]) for i in b["items"])
+                try:
+                    st.audio(voice.speak(user, text), format="audio/mpeg", autoplay=True)
+                except Exception as e:  # never crash the demo
+                    st.warning(f"Voice unavailable: {e}")
             if pending:
-                st.info(f"✋ {len(pending)} action(s) are waiting for your approval. Nothing is sent until you approve.")
-                st.button("Review them", on_click=goto, args=(PAGES[2],))
+                bc2.button(f"Review {len(pending)} waiting for approval", icon=":material/task_alt:", on_click=goto, args=(PAGES[2],))
 
+            st.markdown("<div class='section'>Ask Jarvis</div><div class='who'>Answers come only from team memory you may see, with sources. Otherwise: “I don't know”.</div>",
+                        unsafe_allow_html=True)
             for qa in ss.chat.get(user, []):
-                st.markdown(f'<div class="msg"><span class="who">{html.escape(me["name"])}</span><br>{html.escape(qa["question"])}</div>', unsafe_allow_html=True)
-                cls = "" if qa["known"] else "warn"
-                st.markdown(f'<div class="msg"><span class="who">🎩 Jarvis</span><span class="meta">{qa["mode"]}</span><br>'
-                            f'<span class="{cls}">{html.escape(qa["answer"])}</span></div>', unsafe_allow_html=True)
-                render_cites([c["mem_id"] for c in qa["citations"]], user)
-
-            with st.form("ask", clear_on_submit=True):
-                q = st.text_input("Ask Jarvis", value=ss.prefill, placeholder="e.g. When does the Langhe fix roll out?")
-                if st.form_submit_button("Ask") and q.strip():
+                st.markdown(f"<div class='q'>{html.escape(qa['question'])}</div>"
+                            f"<div class='a{'' if qa['known'] else ' unknown'}'>{html.escape(qa['answer'])}</div>", unsafe_allow_html=True)
+                sources_block([c["mem_id"] for c in qa["citations"]], user)
+            with st.form("ask", clear_on_submit=True, border=False):
+                fq, fb = st.columns([5, 1])
+                q = fq.text_input("Ask Jarvis", value=ss.prefill, placeholder="When does the Langhe fix roll out?", label_visibility="collapsed")
+                if fb.form_submit_button("Ask", type="primary", width="stretch") and q.strip():
                     ss.chat.setdefault(user, []).append(answer.ask(user, q))
                     ss.prefill = ""
                     st.rerun()
 
 elif ss.page == PAGES[1]:
-    st.markdown("#### 🗂️ Memory review")
-    st.caption("Jarvis answers **only** from approved memory. Each item keeps the access list of its source, so people only see what their team may see.")
+    with h1:
+        st.markdown("<div class='greet'>Team memory</div><div class='sub'>Jarvis answers only from approved items. Each item keeps the access list of its source.</div>",
+                    unsafe_allow_html=True)
     pend = memory.pending_for(user)
+    st.markdown("<div class='section' style='margin-top:0'>Waiting for your review</div>", unsafe_allow_html=True)
     if not pend:
-        st.write("Nothing waiting for review that you can see.")
+        st.markdown("<div class='who'>Nothing to review that you can see. New facts appear here when an email arrives.</div>", unsafe_allow_html=True)
     for m in pend:
-        with st.container(border=True):
-            st.markdown(f"**{m['id']}** · proposed by {m.get('proposed_by', 'extractor')} · visible to: {', '.join(m['acl'])}")
-            st.write(m["fact"])
-            render_cites(m["sources"], user)
-            c1, c2 = st.columns(2)
-            c1.button("✅ Approve", key=f"ap-{m['id']}", on_click=memory.approve, args=(m["id"], user), width="stretch")
-            c2.button("❌ Reject", key=f"rj-{m['id']}", on_click=memory.reject, args=(m["id"], user), width="stretch")
+        st.markdown(f"<div class='row'><div class='when medium'>Pending</div><div class='txt'>{html.escape(m['fact'])}"
+                    f"<div class='ids'>{m['id']} · proposed by {m.get('proposed_by', 'extractor')} · visible to {', '.join(m['acl'])}</div></div></div>",
+                    unsafe_allow_html=True)
+        sources_block(m["sources"], user)
+        c1, c2, _ = st.columns([1, 1, 3])
+        c1.button("Approve", key=f"ap-{m['id']}", icon=":material/check:", type="primary", on_click=memory.approve, args=(m["id"], user), width="stretch")
+        c2.button("Reject", key=f"rj-{m['id']}", icon=":material/close:", on_click=memory.reject, args=(m["id"], user), width="stretch")
     vis = access.visible(store.memory(), user)
-    with st.expander(f"Approved memory you can see ({sum(m['status'] == 'approved' for m in vis)})"):
-        for m in vis:
-            if m["status"] == "approved":
-                st.markdown(f"- **{m['id']}** {m['fact']}")
+    st.markdown(f"<div class='section'>Approved · {sum(m['status'] == 'approved' for m in vis)}</div>", unsafe_allow_html=True)
+    for m in vis:
+        if m["status"] == "approved":
+            st.markdown(f"<div class='msgline'><div class='txt'>{html.escape(m['fact'])}</div><div class='ids'>{m['id']} · {', '.join(m['sources'])}</div></div>",
+                        unsafe_allow_html=True)
     rej = [m for m in vis if m["status"] == "rejected"]
     if rej:
-        with st.expander(f"Rejected ({len(rej)}): never used for answers"):
-            for m in rej:
-                st.markdown(f"- ~~{m['fact']}~~ · rejected by {name(m.get('reviewed_by', ''))}")
+        st.markdown(f"<div class='section'>Rejected · never used for answers</div>", unsafe_allow_html=True)
+        for m in rej:
+            st.markdown(f"<div class='msgline'><div class='txt'><s>{html.escape(m['fact'])}</s></div>"
+                        f"<div class='ids'>{m['id']} · rejected by {html.escape(name(m.get('reviewed_by', '')))}</div></div>", unsafe_allow_html=True)
 
 elif ss.page == PAGES[2]:
-    st.markdown("#### ✅ Approvals")
-    st.caption("Jarvis has no tool that sends. It only proposes. An action moves to the outbox only when **you** click Approve. "
-               "Recipients are checked in code: colleagues, or the original sender of a normal email. Suspicious emails never lead to an action.")
     acts = propose.for_user(user)
+    waiting = [a for a in acts if a["status"] == "awaiting_approval"]
+    with h1:
+        st.markdown(f"<div class='greet'>Approvals</div><div class='sub'>{len(waiting)} waiting. Jarvis has no tool that sends: nothing leaves until you approve it.</div>",
+                    unsafe_allow_html=True)
     if not acts:
-        st.write("No actions proposed for you.")
+        st.markdown("<div class='who'>Nothing proposed for you.</div>", unsafe_allow_html=True)
     for a in acts:
-        with st.container(border=True):
-            st.markdown(f"**{a['subject']}** · {a['type'].replace('_', ' ')} → **{html.escape(name(a['to']))}** · status: `{a['status']}`")
-            st.write(a["body"])
-            st.caption(f"Why: {a['reason']}")
-            render_cites(a["cites"], user)
-            if a["status"] == "awaiting_approval":
-                c1, c2 = st.columns(2)
-                c1.button("✅ Approve and send (mock)", key=f"aa-{a['id']}", on_click=propose.approve_action, args=(a["id"], user), width="stretch")
-                c2.button("❌ Reject", key=f"ar-{a['id']}", on_click=propose.reject_action, args=(a["id"], user), width="stretch")
+        label = {"awaiting_approval": ("Waiting", "medium"), "approved": ("Sent", "low"), "rejected": ("Rejected", "high")}[a["status"]]
+        st.markdown(f"<div class='row'><div class='when {label[1]}'>{label[0]}</div><div class='txt'><b>{html.escape(a['subject'])}</b>"
+                    f"<div class='who'>{a['type'].replace('_', ' ')} to {html.escape(name(a['to']))} · why: {html.escape(a['reason'])}</div>"
+                    f"<div style='margin-top:.5rem; white-space:pre-line'>{html.escape(a['body'])}</div></div></div>", unsafe_allow_html=True)
+        sources_block(a["cites"], user)
+        if a["status"] == "awaiting_approval":
+            c1, c2, _ = st.columns([1.4, 1, 2.6])
+            c1.button("Approve and send", key=f"aa-{a['id']}", icon=":material/send:", type="primary",
+                      on_click=propose.approve_action, args=(a["id"], user), width="stretch")
+            c2.button("Reject", key=f"ar-{a['id']}", icon=":material/close:", on_click=propose.reject_action, args=(a["id"], user), width="stretch")
     box = [o for o in store.outbox() if o["proposed_to"] == user]
-    st.markdown(f"##### 📤 Outbox ({len(box)})")
+    st.markdown(f"<div class='section'>Outbox · {len(box)}</div><div class='who'>Mock: nothing leaves this demo.</div>", unsafe_allow_html=True)
     for o in box:
-        st.markdown(f"- **{o['subject']}** → {name(o['to'])} · approved by {name(o['decided_by'])} at {o['decided_at'][11:16]} · {o['sent']}")
+        st.markdown(f"<div class='msgline'><div class='txt'><b>{html.escape(o['subject'])}</b> to {html.escape(name(o['to']))}</div>"
+                    f"<div class='ids'>approved by {html.escape(name(o['decided_by']))} at {o['decided_at'][11:16]}</div></div>", unsafe_allow_html=True)
 
 elif ss.page == PAGES[3]:
     mark_viewed("email")
     b = store.briefs().get(user, {"items": []})
     items = b.get("alerts", []) + b["items"]
-    lis = "".join(f"<li style='margin-bottom:8px'>{html.escape(i['text'])} <span class='muted'>[{', '.join(i.get('cited', []))}]</span></li>" for i in items)
+    with h1:
+        st.markdown("<div class='greet'>Morning email</div><div class='sub'>Where the team meets Jarvis at 08:00, before opening anything else.</div>",
+                    unsafe_allow_html=True)
+    lis = "".join(f"<li>{html.escape(clean(i['text']))} <span class='ids'>[{', '.join(i.get('cited', []))}]</span></li>" for i in items)
     n_pending = sum(a["status"] == "awaiting_approval" for a in propose.for_user(user))
-    st.markdown(f"""<div class="mail"><div class="muted">From: Jarvis &lt;jarvis@filare-labs.example&gt; · To: {html.escape(me['name'])} · Mon 23 Nov, 08:00</div>
-<h3>Good morning {html.escape(me['name'].split()[0])}: {len(items)} things need you today</h3><ol>{lis}</ol>
-<p><b>{n_pending} action(s) wait for your approval.</b> Nothing is sent until you approve it in Jarvis.</p>
-<p class="muted">Every item cites its source. Jarvis only uses memory your team approved and that your role may see. (Mock-up: no real email is sent.)</p></div>""",
+    st.markdown(f"""<div class="mail"><div class="meta">From Jarvis &lt;jarvis@filare-labs.example&gt; · to {html.escape(me['name'])} · Monday 23 November, 08:00</div>
+<h3 style="margin-top:0">Good morning {html.escape(first(user))}: {len(items)} things need you today</h3><ol>{lis}</ol>
+<p><b>{n_pending} waiting for your approval.</b> Nothing is sent until you approve it in Jarvis.</p>
+<p class="who">Every item cites its source. Jarvis only uses memory your team approved and that your role may see. Mock-up: no real email is sent.</p></div>""",
                 unsafe_allow_html=True)
 
 else:
-    st.markdown("#### 📜 Audit log")
-    st.caption("Everything Jarvis did: who asked, what it answered and cited, what it proposed, and who approved.")
+    with h1:
+        st.markdown("<div class='greet'>Audit log</div><div class='sub'>Everything Jarvis did: who asked, what it cited, what it proposed, who approved.</div>",
+                    unsafe_allow_html=True)
     rows = list(reversed(audit.read()))
     st.dataframe(rows, width="stretch", height=460)
     u = llm.USAGE

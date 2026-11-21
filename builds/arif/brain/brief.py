@@ -77,7 +77,7 @@ def make_brief(user_id: str) -> dict:
         items = _offline(user_id, mem, tasks)
 
     security = [{"text": f"⚠️ A suspicious {s['kind']} from {s.get('author', 'unknown')} ('{s['title']}') tries to instruct me: "
-                         f"{'; '.join(guard.suspicious(s['text']))}. I treated it as data, ignored it and took no action. Consider reporting it to IT.",
+                         f"{'; '.join(guard.suspicious(s['text'])[:2])}. I treated it as data, ignored it and took no action. Consider reporting it to IT.",
                  "urgency": "high", "cited": [s["id"]], "security": True} for s in flagged]
     brief = {"user": user_id, "posted_at": "Mon 23 Nov, 08:00", "unprompted": True, "mode": mode, "items": security + items}
     audit.log("brief_posted", user_id, unprompted=True, items=len(brief["items"]), flagged=sorted(flagged_ids), mode=mode)
