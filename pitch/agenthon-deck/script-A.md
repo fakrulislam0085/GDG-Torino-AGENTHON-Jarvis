@@ -16,12 +16,12 @@ Ideas to remember (5): 1. Jarvis speaks first. 2. It only uses what people appro
 - **Kicker:** The problem
 - **Headline:** Every company already has the answer. / It's in someone else's inbox.
 - **On slide:**
-  - Studio Rinaldi: 60 client files stuck before the 28 November deadline
+  - Studio Rinaldi: 60 client files stuck before the 28 November tax deadline
   - Silvia and Lorenzo receive the urgent email. Jarvis alerts Francesca, the CEO, and prepares two proposals for her approval
   - Each person needs to know something different
 - **Visual:** one email card landing with Silvia (to) and Lorenzo (cc)
 - **Sources:** F21, F22 (footer: "Fictional scenario on Ariete's public services. Not Ariete's data.")
-- **Say:** Our demo company does what Ariete does: AI automations for professional firms. Studio Rinaldi has 60 client files stuck before the 28 November deadline. Silvia and Lorenzo receive the urgent email. Jarvis alerts Francesca, the CEO, and prepares two proposals for her approval. Each person needs to know something different, today.
+- **Say:** Our demo company does what Ariete does: AI automations for professional firms. Studio Rinaldi has 60 client files stuck before the 28 November tax deadline. Silvia and Lorenzo receive the urgent email. Jarvis alerts Francesca, the CEO, and prepares two proposals for her approval. Each person needs to know something different, today.
 
 ## 03 · How it works (A day with Jarvis)
 - **Kicker:** How it works
@@ -49,7 +49,7 @@ Ideas to remember (5): 1. Jarvis speaks first. 2. It only uses what people appro
 
 ## 05 · The 7 jury checks (absorbs "Built and tested")
 - **Kicker:** The 7 jury checks
-- **Headline:** All seven checks. / Enforced in code.
+- **Headline:** All seven checks. / Safety rules in code.
 - **On slide:** (check icon per row; name in bold, then how)
   - It speaks first · 08:00 brief
   - People curate memory · people approve
@@ -80,7 +80,7 @@ Ideas to remember (5): 1. Jarvis speaks first. 2. It only uses what people appro
 - **Kicker:** The ask
 - **Headline:** Ariete: let's pilot Jarvis with one of your client firms.
 - **On slide:**
-  - Token Mafia: Fakrul (Arif) Islam · Hamid Sajjadi · Uluhan Simsek (equal, one row, no titles)
+  - Token Mafia: Fakrul Islam · Hamid Sajjadi · Uluhan Simsek (equal, one row, no titles)
   - Three builds in parallel, the best ideas merged
   - A colleague you trust says "I don't know", and "May I?"
 - **Visual:** three equal names in one row, the closing line large
