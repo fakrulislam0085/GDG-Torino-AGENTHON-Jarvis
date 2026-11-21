@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import streamlit as st  # noqa: E402
 
-from brain import access, answer, audit, brief, call, llm, memory, propose, store, voice, watch  # noqa: E402
+from brain import access, answer, audit, brief, call, llm, memory, phone, propose, store, voice, watch  # noqa: E402
 
 st.set_page_config(page_title="Jarvis · Filare Labs", page_icon=":material/support_agent:", layout="wide")
 
@@ -122,6 +122,18 @@ def do_urgent_email() -> None:
     if ss.last_watch.get("call"):
         ss.user = next((c["to"] for c in store.calls() if c["id"] == ss.last_watch["call"]), ss.user)
         ss.page = PAGES[0]
+
+
+def do_ring(c: dict) -> None:
+    """Place the REAL phone call (ElevenLabs agent over Twilio) for this escalation."""
+    act = next((a for a in store.actions() if a["id"] == c.get("action")), None)
+    fix = (f"A message to {name(act['to'])}: {act['body']}" if act else "A fix") + " It is waiting for approval in the Jarvis app."
+    try:
+        out = phone.place_call(company=store.company()["company"]["name"], name=first(c["to"]),
+                               headline=c["why"], situation=c["script"], fix=fix, source=c["source"])
+        ss.ring_result = {"call": c["id"], "ok": True, "conversation_id": out.get("conversation_id")}
+    except Exception as e:  # never crash the demo
+        ss.ring_result = {"call": c["id"], "ok": False, "error": str(e)[:200]}
 
 
 def norm(q: str) -> str:
@@ -244,9 +256,18 @@ for c in call.calls_for(user):
                 "mock phone today; real calls via ElevenLabs Agents + Twilio</div>"
                 + ("" if ringing else f"<div class='script'>“{html.escape(c['script'])}”</div>") + "</div>", unsafe_allow_html=True)
     if ringing:
-        a1, a2, _ = st.columns([1, 1, 3])
-        a1.button("Answer", key=f"ans-{c['id']}", icon=":material/call:", type="primary", on_click=call.answer, args=(c["id"], user), width="stretch")
+        a1, a2, a3, _ = st.columns([1, 1, 1.6, 1.4])
+        a1.button("Answer here", key=f"ans-{c['id']}", icon=":material/call:", type="primary", on_click=call.answer, args=(c["id"], user), width="stretch")
         a2.button("Decline", key=f"dec-{c['id']}", icon=":material/call_end:", on_click=call.hang_up, args=(c["id"], user), width="stretch")
+        if phone.configured():
+            a3.button(f"Ring my real phone ({phone.callee_masked()})", key=f"ring-{c['id']}", icon=":material/phone_in_talk:",
+                      on_click=do_ring, args=(c,), width="stretch")
+    if ss.get("ring_result", {}).get("call") == c["id"]:
+        rr = ss.ring_result
+        if rr.get("ok"):
+            st.success("Calling your phone now. Answer it and talk to Jarvis: it can explain, but approvals stay in this app.")
+        else:
+            st.error(f"The phone call didn't go through: {rr.get('error')}")
     else:
         if voice.available():
             try:
