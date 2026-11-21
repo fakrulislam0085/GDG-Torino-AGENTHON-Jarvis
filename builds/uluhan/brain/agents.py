@@ -14,7 +14,7 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor
 
 from . import tools as T
-from .store import Store, can_see
+from .store import LEAD_TITLE, Store, can_see
 
 MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
 PRICE_IN, PRICE_OUT = 0.75 / 1e6, 3.75 / 1e6   # USD per token, gemini-3.8-flash (event brief)
@@ -77,6 +77,19 @@ def trip_breaker(reason: str) -> None:
 def reset_breaker() -> None:
     global _down_until, _down_reason, _fails
     _down_until, _down_reason, _fails = 0.0, "", 0
+
+
+def is_network_failure(e: Exception) -> bool:
+    """Only failures to reach Vertex count toward the breaker (Wi-Fi down, DNS, client timeout).
+    An error response (504, 429, 500...) means Vertex answered: fall back for that run only.
+    Seen live: parallel briefs got two 504s at once and paused Gemini for 5 minutes."""
+    try:
+        from google.genai import errors
+        if isinstance(e, errors.APIError):
+            return False
+    except Exception:  # pragma: no cover
+        pass
+    return True
 
 
 def record_failure(reason: str) -> None:
@@ -216,7 +229,8 @@ def _run(ctx: T.Ctx, system: str, prompt: str, offline_plan) -> None:
             reason = "model did not finish"
         except Exception as e:
             reason = f"{type(e).__name__}: {str(e)[:160]}"
-            record_failure(reason)   # 2 in a row -> stop waiting on Gemini for BREAKER_SECONDS
+            if is_network_failure(e):
+                record_failure(reason)   # 2 in a row -> stop waiting on Gemini for BREAKER_SECONDS
         ctx.final = None
         ctx.trace.step("fallback", f"Gemini unavailable ({reason}); running the deterministic planner with the same tools.")
     ctx.trace.run["mode"] = "offline"
@@ -340,7 +354,6 @@ def _brief_offline(ctx: T.Ctx):
 
 # Business rules: generic, driven by the data (org chart, approved memory, message content). No demo ids here.
 REVIEW_TRIGGER = re.compile(r"\b(second notice|final notice|overdue|payment reminder|past due)\b", re.I)
-LEAD_TITLE = re.compile(r"\b(CEO|CFO|CTO|COO|lead|head|director)\b", re.I)
 
 
 def _approved_fact_citing(ctx: T.Ctx, source_id: str) -> dict | None:

@@ -168,3 +168,15 @@ def test_last_turn_only_allows_the_finishing_tool(fake):
     first = cl.models.configs[0].tool_config.function_calling_config.allowed_function_names
     assert last == ["submit_brief"] and len(first) > 1
     assert run["mode"] == "gemini" and not any(st["kind"] == "fallback" for st in run["steps"])
+
+
+def test_vertex_error_response_does_not_trip_breaker(fake):
+    from google.genai import errors
+    agents.reset_breaker()
+    s = Store()
+    fake([errors.ServerError(504, {"error": {"code": 504, "message": "Deadline expired", "status": "DEADLINE_EXCEEDED"}})] * 2)
+    agents.ask(s, next(iter(s.people)), "anything")
+    agents.ask(s, next(iter(s.people)), "anything")
+    assert agents._fails == 0                       # Vertex answered: not a network failure
+    assert agents.is_network_failure(ConnectionError("wifi down")) is True
+    agents.reset_breaker()

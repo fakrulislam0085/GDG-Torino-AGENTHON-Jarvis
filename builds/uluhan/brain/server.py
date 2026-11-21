@@ -73,7 +73,8 @@ def state(person: str):
             "clock": s.clock, "company": s.seed["company"], "sweep_label": s.seed.get("sweep_label", "08:00"),
             "people": list(s.people.values()),
             "brief": s.briefs.get(person),
-            "alerts": [a for a in s.alerts if can_see(access, a["to_roles"])],
+            "alerts": [({**a, "receipt": s.decision_receipt(a, person)} if a["kind"] == "conflict" else a)
+                       for a in s.alerts if can_see(access, a["to_roles"])],
             "memory": [m for m in mem if m["status"] in ("approved", "superseded")],
             "candidates": [m for m in mem if m["status"] == "candidate"],
             "decided_candidates": [m for m in mem if m["status"] == "rejected"],
@@ -137,6 +138,13 @@ def _decide_memory(mid: str, pid: str, approve: bool):
             raise HTTPException(409, f"already {m['status']}")
         if approve and store.replays_current_evidence(m):
             raise HTTPException(409, "Source predates the approved record. Review newer evidence.")
+        if approve:
+            # Change control: replacing an approved fact needs authority over it, not just visibility.
+            current = next((o for o in store.memory.values() if o is not m and o["status"] == "approved"
+                            and o["key"] == m["key"] and same_audience(m["audience"], o["audience"])), None)
+            if current and not store.may_revise(pid, current):
+                names = ", ".join(p["name"] for p in store.fact_reviewers(current) or [])
+                raise HTTPException(403, f"Only {names} can change this approved fact. Being newer is not enough.")
         m["status"] = "approved" if approve else "rejected"
         m["decided_by"], m["decided_at"] = pid, store.clock
         if approve:

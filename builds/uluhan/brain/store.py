@@ -6,11 +6,15 @@ from __future__ import annotations
 
 import copy
 import json
+import re
 import threading
 from datetime import datetime, timezone
 from pathlib import Path
 
 from .shared import load_shared
+
+# Job titles that carry authority over their team's facts (from the org chart).
+LEAD_TITLE = re.compile(r"\b(CEO|CFO|CTO|COO|lead|head|director)\b", re.I)
 
 
 def can_see(role: str | list[str], audience: list[str]) -> bool:
@@ -87,6 +91,76 @@ class Store:
             and old["status"] == "approved" and timestamp(candidate) < timestamp(old)
             for old in self.memory.values()
         )
+
+    # ---- change control -------------------------------------------------
+    def fact_reviewers(self, fact: dict) -> list[dict] | None:
+        """Who may replace an approved fact: whoever approved it, a lead of a team that owns it, or exec.
+        Being newer never makes a message authoritative. None = no approver on record (any curator may decide)."""
+        if not fact.get("decided_by") or fact["decided_by"] not in self.people:
+            return None
+        owners = set(fact["audience"]) - {"all"}
+        out = []
+        for p in self.people.values():
+            groups = set(p.get("groups", [p.get("role")]))
+            if (p["id"] == fact["decided_by"] or "exec" in groups
+                    or (groups & owners and LEAD_TITLE.search(p.get("title", "")))):
+                out.append(p)
+        return out
+
+    def may_revise(self, person_id: str, fact: dict) -> bool:
+        reviewers = self.fact_reviewers(fact)
+        return reviewers is None or any(p["id"] == person_id for p in reviewers)
+
+    def decision_receipt(self, alert: dict, person_id: str) -> dict | None:
+        """A human-readable record of why a shared fact did or did not change. Built only from the alert, the two
+        memory items, their sources and the audit trail; nothing new is stored."""
+        old, new = self.memory.get(alert.get("memory_id") or ""), self.memory.get(alert.get("candidate_id") or "")
+        if not old or not new:
+            return None
+
+        def sources(m):
+            out = []
+            for sid in m.get("source_ids", [m["source_id"]]):
+                src = self.sources.get(sid)
+                if src:
+                    out.append({"id": sid, "source_id": sid, "label": src["title"], "date": src["ts"][:10],
+                                "from": src.get("from", "")})
+            return out
+
+        def who(pid):
+            p = self.people.get(pid or "")
+            return f"{p['name']} ({p.get('title', p.get('role', ''))})" if p else (pid or "nobody")
+
+        stale = bool(new.get("stale_evidence")) or self.replays_current_evidence(new)
+        reviewers = self.fact_reviewers(old)
+        old_date, new_src = (old.get("decided_at") or "")[:10], sources(new)
+        new_date = new_src[0]["date"] if new_src else ""
+        reasons = ["An incoming message is a claim, not a decision. It was filed as a candidate and never "
+                   "written over the approved fact."]
+        if stale:
+            reasons.append(f"Older evidence: the claim is dated {new_date}, the approved decision {old_date}. "
+                           "Older evidence cannot replace a newer decision.")
+        if reviewers:
+            reasons.append("Being newer would not be enough either: only " + ", ".join(who(p["id"]) for p in reviewers)
+                           + " can change an approved fact.")
+        if old["status"] == "approved" and new["status"] == "rejected":
+            outcome = f"Claim rejected by {who(new.get('decided_by'))}. Company record unchanged."
+        elif old["status"] == "approved":
+            outcome = "Awaiting a decision. Company record unchanged."
+        else:
+            outcome = f"Record replaced after review by {who(new.get('decided_by'))}."
+        return {
+            "current": {"id": old["id"], "fact": old["fact"], "status": old["status"], "approved_by": who(old.get("decided_by")),
+                        "approved_on": old_date, "sources": sources(old)},
+            "claim": {"id": new["id"], "fact": new["fact"], "status": new["status"], "dated": new_date,
+                      "sources": new_src},
+            "reasons": reasons,
+            "reviewers": [who(p["id"]) for p in reviewers] if reviewers else ["anyone who can see this fact"],
+            "record_changed": old["status"] != "approved",
+            "outcome": outcome,
+            "you_can_approve": (new["status"] == "candidate" and not stale and self.may_revise(person_id, old)),
+            "you_can_reject": new["status"] == "candidate",
+        }
 
     def visible_memory(self, role: str | list[str], statuses=("approved",)) -> list[dict]:
         return [m for m in self.memory.values() if m["status"] in statuses and can_see(role, m["audience"])]

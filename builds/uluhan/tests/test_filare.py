@@ -170,3 +170,67 @@ def test_agent_code_has_no_demo_ids_or_names():
     for mod in (agents, server, store):
         src = inspect.getsource(mod)
         assert not re.search(r'"(email|mem|chat|task|doc)-\d|"(luca|giulia|marco|sara|davide|paolo|elena)"', src), mod.__name__
+
+
+# Change control: approved facts change only by authority, never by chronology alone ---------------
+def _conflict(client, person):
+    return next(a for a in state(client, person)["alerts"] if a["kind"] == "conflict")
+
+
+def test_decision_receipt_for_archived_budget_claim(demo):
+    client, store = demo
+    client.post("/api/events/email-006")
+    alert = _conflict(client, "giulia")
+    r = alert["receipt"]
+    assert "18,000" in r["current"]["fact"] and "12,000" in r["claim"]["fact"]
+    assert r["current"]["approved_by"].startswith("Giulia") and r["current"]["status"] == "approved"
+    assert {s["id"] for s in r["current"]["sources"]} == {"email-004", "email-005"}
+    assert r["claim"]["dated"] == "2026-08-04"
+    assert any("Older evidence" in x for x in r["reasons"])
+    assert r["record_changed"] is False and "unchanged" in r["outcome"]
+    assert r["you_can_approve"] is False and r["you_can_reject"] is True
+    # The approval endpoint refuses it too, for everyone.
+    for person in ("giulia", "elena"):
+        assert client.post(f"/api/memory/{alert['candidate_id']}/approve", json={"person": person}).status_code in (403, 409)
+    # Final proof: the budget answer is still the approved figure, with its citation.
+    answer = ask(client, "giulia", "What is the Q1 2027 cloud budget?")["answer"]
+    assert "18,000" in answer["text"] and answer["citations"][0]["id"] == "mem-001"
+    # Rejecting the claim is recorded and the record stays.
+    assert client.post(f"/api/memory/{alert['candidate_id']}/reject", json={"person": "sara"}).status_code == 200
+    r = _conflict(client, "giulia")["receipt"]
+    assert r["record_changed"] is False and r["outcome"].startswith("Claim rejected by Sara")
+
+
+def _newer_claim(store):
+    """A NEWER, plausible-looking claim on the same fact: newer must not mean authoritative."""
+    store.sources["mail-new"] = {"id": "mail-new", "type": "mail", "audience": ["finance", "tech"],
+                                 "ts": "2026-11-22T10:00:00+01:00", "stage": "live", "from": "sara@filare.example",
+                                 "to": "", "recipient_ids": [], "title": "Budget update?",
+                                 "body": "I think the Q1 2027 cloud budget is now EUR 25,000."}
+    store.processed_sources.add("mail-new")
+    from brain import agents, tools as T
+    ctx = T.Ctx(store, "ingest", "system", None, agents.Trace("ingest", "system", "t", ["finance", "tech"], store.clock),
+                source_id="mail-new")
+    key = store.memory["mem-001"]["key"]
+    result = T.call(ctx, "propose_memory", {"key": key, "topic": "Q1 2027 cloud budget",
+                                            "fact": "The Q1 2027 cloud budget is EUR 25,000.",
+                                            "quote": "the Q1 2027 cloud budget is now EUR 25,000"})
+    assert result.get("conflict"), result
+    return result["id"]
+
+
+def test_newer_claim_needs_authority_not_recency(demo):
+    client, store = demo
+    cid = _newer_claim(store)
+    # Sara can see the budget but has no authority over it.
+    r = client.post(f"/api/memory/{cid}/approve", json={"person": "sara"})
+    assert r.status_code == 403 and "Being newer is not enough" in r.json()["detail"]
+    assert store.memory["mem-001"]["status"] == "approved"
+    receipt = _conflict(client, "sara")["receipt"]
+    assert receipt["you_can_approve"] is False and not any("Older evidence" in x for x in receipt["reasons"])
+    assert any("Giulia Ferrero" in x for x in receipt["reviewers"])
+    # The CFO who approved it can.
+    assert _conflict(client, "giulia")["receipt"]["you_can_approve"] is True
+    assert client.post(f"/api/memory/{cid}/approve", json={"person": "giulia"}).status_code == 200
+    assert store.memory["mem-001"]["status"] == "superseded"
+    assert _conflict(client, "giulia")["receipt"]["record_changed"] is True

@@ -98,6 +98,20 @@ td,th{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertic
 th{font-size:12px;color:var(--muted);font-weight:600}
 dialog{border:1px solid var(--line);border-radius:10px;max-width:560px;padding:16px 18px}
 dialog::backdrop{background:#0006}
+.receipt{margin-top:8px}
+.receipt .cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.receipt .col{border:1px solid var(--line);border-radius:8px;padding:10px;background:#fff}
+.receipt .col.keep{border-color:var(--ok);background:var(--ok-soft)}
+.receipt .col.claim{border-style:dashed;border-color:var(--bad)}
+.receipt .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700}
+.receipt .val{margin:4px 0;font-size:14px}
+.receipt .amt{font-size:18px;font-weight:800}
+.receipt .col.claim .amt{text-decoration:line-through;text-decoration-color:var(--bad)}
+.receipt ul{margin:6px 0 0 18px;padding:0}
+.receipt .status{display:inline-block;margin-top:8px;padding:3px 10px;border-radius:99px;font-weight:700;font-size:13px}
+.receipt .status.kept{background:var(--ok);color:#fff}
+.receipt .status.changed{background:var(--warn);color:#fff}
+@media (max-width:700px){.receipt .cols{grid-template-columns:1fr}}
 .toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#1b1322;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;opacity:0;transition:.2s;pointer-events:none}
 .toast.on{opacity:1}
 .spin{display:inline-block;width:12px;height:12px;border:2px solid #fff6;border-top-color:#fff;border-radius:50%;animation:s 1s linear infinite;vertical-align:-2px}
@@ -196,7 +210,7 @@ function render() {
     S.pending_events.map(e => `<option value="${esc(e.id)}">${esc(e.label)}</option>`).join("");
   const pend = S.proposals.filter(p => p.status === "pending").length;
   const openAlerts = S.alerts.filter(a => !a.closed).length;
-  const nav = [["dm", "🧠 Brain", (S.brief ? 0 : 0) + openAlerts], ["memory", "📚 Memory review", S.candidates.length],
+  const nav = [["dm", "🧠 Brain", (S.brief ? 0 : 0) + openAlerts], ["email", "📧 Morning email", S.brief ? 1 : 0], ["memory", "📚 Memory review", S.candidates.length],
     ["approvals", "✅ Approvals", pend], ["outbox", "📤 Outbox", 0], ["sources", "🗂 Sources", 0], ["audit", "🧾 Audit log", 0]];
   $("#nav").innerHTML = `<div class="ws">${esc(S.company.split(" (")[0])}</div><div class="who">Demo persona · ${esc(S.person.name)}</div>
     <div class="sec">Direct messages</div>` + nav.map(([k, l, n], i) =>
@@ -204,7 +218,7 @@ function render() {
     `<a data-view="${k}" class="${view === k ? "active" : ""}"><span>${l}</span>${n ? `<span class="badge">${n}</span>` : ""}</a>`).join("");
   $("#composer").style.display = view === "dm" ? "" : "none";
   $("#suggest").innerHTML = SUGGEST.map(q => `<button type="button" data-q="${esc(q)}">${esc(q)}</button>`).join("");
-  ({dm: renderDM, memory: renderMemory, approvals: renderApprovals, outbox: renderOutbox, sources: renderSources, audit: renderAudit})[view]();
+  ({dm: renderDM, email: renderEmail, memory: renderMemory, approvals: renderApprovals, outbox: renderOutbox, sources: renderSources, audit: renderAudit})[view]();
   renderRuns();
 }
 
@@ -222,6 +236,29 @@ function proposalBox(p) {
     <div><b>${esc(p.subject)}</b></div><pre>${esc(p.body)}</pre><div class="muted" style="font-size:12px">Why: ${esc(p.reason)}</div>${chips(p.citations)}${btns}</div>`;
 }
 
+const amounts = t => esc(t).replace(/((?:EUR|€)\s?\d{1,3}(?:[.,]\d{3})*)/g, '<span class="amt">$1</span>');
+function receiptCard(a) {
+  const r = a.receipt, cur = r.current, cl = r.claim;
+  const srcChips = list => `<div class="chips">${list.map(x => `<span class="chip" data-src="${esc(x.source_id)}">📎 ${esc(x.label)} · ${esc(x.date)}</span>`).join("")}</div>`;
+  return `<div class="msg"><div class="av">🧠</div><div><div class="meta"><b>Brain</b><span>${time(a.created_at)} · change control, unprompted</span></div>
+    <div class="card conflict"><b>⚠ A message contradicts an approved company fact. I did not change it.</b>
+    <div class="receipt"><div class="cols">
+      <div class="col keep"><div class="lbl">Company record · ${cur.status === "approved" ? "approved" : esc(cur.status)}</div>
+        <div class="val">${amounts(cur.fact)}</div>
+        <div class="muted" style="font-size:12px">Approved by ${esc(cur.approved_by)} · ${esc(cur.approved_on)}</div>${srcChips(cur.sources)}</div>
+      <div class="col claim"><div class="lbl">Incoming claim · ${esc(cl.status === "candidate" ? "not approved" : cl.status)}</div>
+        <div class="val">${amounts(cl.fact)}</div>
+        <div class="muted" style="font-size:12px">Dated ${esc(cl.dated)}</div>${srcChips(cl.sources)}</div>
+    </div>
+    <div style="margin-top:8px"><b>Decision receipt</b><ul>${r.reasons.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>
+    <div class="muted" style="font-size:12px;margin-top:4px">Can decide: ${r.reviewers.map(esc).join(", ")}</div>
+    <span class="status ${r.record_changed ? "changed" : "kept"}">${r.record_changed ? "Record changed after review" : "✓ Company record unchanged"}</span>
+    <span class="muted" style="font-size:12px;margin-left:6px">${esc(r.outcome)}</span>
+    ${r.you_can_reject ? `<div class="row" style="margin-top:8px"><button data-mem="${esc(cl.id)}" data-act="reject">Reject claim</button>
+      ${r.you_can_approve ? `<button data-mem="${esc(cl.id)}" data-act="approve">Replace the record</button>` : `<span class="muted" style="font-size:12px">You can't replace this record.</span>`}</div>` : ""}
+    </div></div></div></div>`;
+}
+
 function renderDM() {
   setHead("🧠 Brain", `Direct messages with ${S.person.name}`);
   const props = Object.fromEntries(S.proposals.map(p => [p.id, p]));
@@ -236,6 +273,7 @@ function renderDM() {
       </div></div></div>`;
   }
   for (const a of S.alerts) {
+    if (a.kind === "conflict" && a.receipt) { h += receiptCard(a); continue; }
     h += `<div class="msg"><div class="av">🧠</div><div><div class="meta"><b>Brain</b><span>${time(a.created_at)} · ${a.kind === "conflict" ? "memory conflict" : "suspicious message"}, unprompted</span></div>
       <div class="card ${a.kind}"><b>${a.kind === "conflict" ? "⚠ This contradicts what we know" : "⛔ I did not act on this message"}</b><div class="why">${esc(a.text)}</div>
       ${chips([{source_id: a.source_id, id: a.source_id, label: "Incoming source"}])}
@@ -278,6 +316,22 @@ function renderApprovals() {
   setHead("✅ Approvals", "Actions the brain drafted. Nothing happens until a person approves.");
   $("#view").innerHTML = S.proposals.length ? S.proposals.slice().reverse().map(proposalBox).join("") : `<div class="empty">No proposals for ${esc(S.person.role)}.</div>`;
 }
+function renderEmail() {
+  setHead("📧 Morning email", `The same brief, delivered to ${S.person.name}'s inbox`);
+  const b = S.brief;
+  if (!b) { $("#view").innerHTML = `<div class="empty">No email yet. It is sent by the scheduled morning sweep, not on request.</div>`; return; }
+  const props = Object.fromEntries(S.proposals.map(p => [p.id, p]));
+  const pending = b.items.filter(it => props[it.proposal_id] && props[it.proposal_id].status === "pending").length;
+  $("#view").innerHTML = `<div class="card" style="max-width:720px">
+    <div class="muted" style="font-size:13px">From: <b>Company Brain</b> &lt;brain@${esc((S.person.email || "").split("@")[1] || "company.example")}&gt;<br>
+    To: ${esc(S.person.name)} &lt;${esc(S.person.email || "")}&gt;<br>Date: ${esc((b.generated_at || "").replace("T", " ").slice(0, 16))}</div>
+    <h3 style="margin:10px 0 4px">Your morning brief: ${b.items.length} item${b.items.length === 1 ? "" : "s"}${pending ? ` · ${pending} waiting for your approval` : ""}</h3>
+    <p>Good morning ${esc(S.person.name.split(" ")[0])}, here is what needs you today. Every line links to its source.</p>
+    <ol>${b.items.map(it => `<li style="margin-bottom:10px"><b>${esc(it.headline)}</b><div class="why">${esc(it.why)}</div>${chips(it.citations)}
+      ${props[it.proposal_id] ? `<div class="muted" style="font-size:12px">Draft "${esc(props[it.proposal_id].subject)}" is <b>${esc(props[it.proposal_id].status)}</b>. Nothing is sent until you approve it in Approvals.</div>` : ""}</li>`).join("")}</ol>
+    <p class="muted" style="font-size:12px">Demo data. This email is a mock-up: nothing is sent. Generated from approved memory you are allowed to see.</p></div>`;
+}
+
 function renderOutbox() {
   setHead("📤 Outbox", "Mock outbox: approved emails land here. Nothing leaves the demo.");
   $("#view").innerHTML = S.outbox.length ? S.outbox.map(o => `<div class="card"><div class="row"><span class="tag approved">approved by ${esc(o.approved_by)}</span> to <b>${esc(o.to)}</b> <span class="muted">${time(o.at)}</span></div>
