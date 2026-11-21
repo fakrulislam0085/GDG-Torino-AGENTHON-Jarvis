@@ -1,9 +1,0 @@
-[
-  { "id": "task-001", "title": "Fix Langhe Viva outage (GW-07 firmware 2.3)", "owner": "davide", "status": "in_progress", "due": "2026-11-26", "source": "chat-003", "acl": ["tech", "sales"] },
-  { "id": "task-002", "title": "Pay SensorParts INV-2026-0912 (EUR 14,640)", "owner": "luca", "status": "todo", "due": "2026-11-24", "source": "email-001", "acl": ["finance"] },
-  { "id": "task-003", "title": "Collect November payroll inputs", "owner": "giulia", "status": "todo", "due": "2026-11-25", "source": "email-007", "acl": ["finance"] },
-  { "id": "task-004", "title": "Renew staging database certificate", "owner": "sara", "status": "blocked", "blocked_by": "Marco's approval", "due": "2026-11-25", "source": "chat-007", "acl": ["tech"] },
-  { "id": "task-005", "title": "Prepare demo kit for Cantina Roero Alta", "owner": "paolo", "status": "todo", "due": "2026-11-25", "source": "chat-010", "acl": ["sales", "tech"] },
-  { "id": "task-006", "title": "Call Stefano at Langhe Viva about frost alerts", "owner": "paolo", "status": "todo", "due": "2026-11-23", "source": "chat-005", "acl": ["sales"] },
-  { "id": "task-007", "title": "Chase 3 expense reports from the Alba trip", "owner": "luca", "status": "todo", "due": "2026-11-24", "source": "chat-009", "acl": ["finance"] }
-]

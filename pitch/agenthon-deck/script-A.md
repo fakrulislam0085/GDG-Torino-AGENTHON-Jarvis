@@ -32,7 +32,7 @@ Ideas to remember (5): 1. Jarvis speaks first. 2. It only uses what people appro
   - Proposes facts. A person approves.
   - Answers only from approved facts, with sources
   - Drafts actions and Zoom meetings. Nothing happens without a yes.
-- **Visual:** the workflow picture (builds/arif/docs/jarvis-workflow.png)
+- **Visual:** the How-it-works diagram (Reads → Guard → A person approves → Answers & proposes)
 - **Sources:** F05, F12
 - **Say:** Jarvis reads the team's tools and proposes facts. A person approves them. It answers only from those, with sources. Nothing leaves without a yes.
 

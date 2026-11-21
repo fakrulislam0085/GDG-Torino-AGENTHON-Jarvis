@@ -1,8 +1,0 @@
-From: client@orchard.example
-Subject: Site B exception
-X-Milestone: Orchard / Site acceptance
-X-Version: 3
-X-Accepted-Scope: A
-X-Received: 2026-11-22T10:00:00+01:00
-
-We accept only site A. Site B still needs testing.

@@ -5,8 +5,8 @@ Jarvis watches the team's email, chat, tasks and docs, keeps a shared memory tha
 morning brief and alerts, answers only from approved memory the asker may see, and **only proposes**: nothing is sent
 until a person approves it.
 
-This build starts from `builds/arif` (Jarvis: Streamlit + Gemini on Vertex AI, the most features), runs on the
-shared Filare data, uses a **light theme**, and adds the best ideas from `builds/daddy` (Hamid) and `builds/uluhan` (Uluhan).
+This build starts from Arif's Jarvis (Streamlit + Gemini on Vertex AI, the most features), uses a **light theme**, and adds
+the best ideas from Hamid's and Uluhan's builds (their original builds are in this repo's git history).
 
 All data is synthetic. No real client or personal data.
 
@@ -67,9 +67,9 @@ Optional sources (calendar, Canva, Instagram) are simply absent for Filare; the 
 
 | From | What |
 |---|---|
-| Arif (`builds/arif`) | The base: briefs and alerts, role filter in code, approved-only answers with citations, three kinds of "I don't know", number check, conflicts, edit and history, manual notes, export, paste-an-email attacks, urgent call with the orb and ElevenLabs voice, Zoom proposals, Stripe sync, stale drafts. |
-| Uluhan (`builds/uluhan`) | An older source can't replace a newer approved fact (blocked "Approve and replace") and a **decision receipt** (active fact, rejected or replaced fact, who, when, which source, reason). Strict "not for your role" matching: only a clear, confident match says "ask X"; a tie or a weak match says plain "I don't know". |
-| Hamid (`builds/daddy`) | **Reasons**: rejecting a fact or a draft needs a reason; approving a fact with a conflict or a number warning needs a written reason. **"How I got this"** under every answer. **Draft self-check** (one Gemini call lists statements the sources don't support; never blocks). **Quote check** on new memory (a fact without its exact words in the source is dropped). **Outbox privacy** (an approved item is visible only to people who may see every source it cites). **Timer** (the sweep runs by itself every 30 minutes). Approving a fact made from an email you pasted yourself is refused. |
+| Arif | The base: briefs and alerts, role filter in code, approved-only answers with citations, three kinds of "I don't know", number check, conflicts, edit and history, manual notes, export, paste-an-email attacks, urgent call with the orb and ElevenLabs voice, Zoom proposals, Stripe sync, stale drafts. |
+| Uluhan | An older source can't replace a newer approved fact (blocked "Approve and replace") and a **decision receipt** (active fact, rejected or replaced fact, who, when, which source, reason). Strict "not for your role" matching: only a clear, confident match says "ask X"; a tie or a weak match says plain "I don't know". |
+| Hamid | **Reasons**: rejecting a fact or a draft needs a reason; approving a fact with a conflict or a number warning needs a written reason. **"How I got this"** under every answer. **Draft self-check** (one Gemini call lists statements the sources don't support; never blocks). **Quote check** on new memory (a fact without its exact words in the source is dropped). **Outbox privacy** (an approved item is visible only to people who may see every source it cites). **Timer** (the sweep runs by itself every 30 minutes). Approving a fact made from an email you pasted yourself is refused. |
 | New here | Light theme, data-driven app (no company names in code), CEO-only reset, Gemini circuit breaker (2 failures in a row: offline for 60 s, shown in the status line), audit log filtered by role, value words stripped from the "not for your role" check, a re-sweep keeps alerts and escalation drafts. |
 
 ## Safety rules (in code, not in the prompt)
