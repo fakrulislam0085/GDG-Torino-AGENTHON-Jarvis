@@ -366,3 +366,17 @@ p, li { color: var(--text); }
   .counters .ctr { align-items: flex-start; }
   .counters .ctr b { font-size: 1.7rem; }
 }
+
+/* ---------- cold open (ported): a held customer reply with its two real sources and the simulated case context ---------- */
+.coldopen { margin: .7rem 0; padding: .85rem 1rem; border: 1px solid var(--amber-line, #ecd9a8);
+  border-left: 3px solid var(--amber, #b8860b); border-radius: 10px; background: var(--amber-tint, #fffdf4); }
+.coldopen .co-head { font-weight: 600; font-size: .95rem; color: var(--amber, #8a5a00); margin-bottom: .35rem; }
+.coldopen .who { font-size: .85rem; color: var(--text-2, #66758c); }
+.coldopen .timeline { margin: .6rem 0 .2rem; font-size: .9rem; }
+.coldopen .timeline .tl-step { display: flex; flex-direction: column; gap: .1rem; }
+.coldopen .timeline .tl-arrow { text-align: center; color: var(--amber, #b8860b); font-weight: 700; line-height: 1; margin: .15rem 0; }
+.coldopen .timeline .tl-verdict { font-weight: 600; color: var(--amber, #8a5a00); }
+.coldopen .timeline .tl-outcome { font-weight: 600; }
+.coldopen .co-table { width: 100%; border-collapse: collapse; margin-top: .5rem; font-size: .85rem; background: transparent; }
+.coldopen .co-table th, .coldopen .co-table td { text-align: left; padding: .3rem .5rem; border-bottom: 1px solid var(--line, #e5eaf2); vertical-align: top; }
+.coldopen .co-table tr:last-child td { border-bottom: none; }
