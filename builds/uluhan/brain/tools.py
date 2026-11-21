@@ -68,6 +68,7 @@ class Ctx:
     role: str | None                # None for system (ingest)
     trace: "object"
     source_id: str | None = None    # ingest: the one source being read
+    reserved_items: list[dict] = field(default_factory=list)   # brief: items a business rule already owns
     question: str = ""
     proposals_made: list[str] = field(default_factory=list)
     final: dict | None = None

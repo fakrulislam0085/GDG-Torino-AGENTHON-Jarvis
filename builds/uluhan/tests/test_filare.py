@@ -133,3 +133,40 @@ def test_archived_flag_comes_from_the_date_not_the_id():
     import inspect
     from brain import agents
     assert "email-006" not in inspect.getsource(agents)   # no demo ids in agent logic
+
+
+# Business rules are generic: driven by org chart + approved memory, not demo ids ---------------------
+def _rule_ctx(store, person):
+    from brain import agents, tools as T
+    tr = agents.Trace("brief", person, "test", store.access(person), store.clock)
+    return T.Ctx(store, "brief", person, store.person(person)["role"], tr)
+
+
+def _add_overdue_mail_to(store, person, audience):
+    store.sources["mail-x"] = {"id": "mail-x", "type": "mail", "audience": audience, "ts": "2026-11-22T09:00:00+01:00",
+                               "stage": "overnight", "from": "billing@cloudhost.example", "to": "", "recipient_ids": [person],
+                               "title": "Hosting invoice overdue", "body": "Your hosting invoice H-77 for EUR 900 is overdue."}
+    store.memory["mem-x"] = {"id": "mem-x", "key": "hosting.invoice", "topic": "Hosting invoice", "audience": audience,
+                             "fact": "Hosting invoice H-77 for EUR 900 is overdue.", "status": "approved",
+                             "source_id": "mail-x", "source_ids": ["mail-x"], "quote": "overdue",
+                             "decided_by": "marco", "decided_at": store.clock}
+    store.processed_sources.add("mail-x")
+
+
+def test_review_rule_works_for_any_team():
+    from brain import agents
+    from brain.store import Store
+    s = Store()
+    _add_overdue_mail_to(s, "sara", ["tech"])
+    item = agents._review_request(_rule_ctx(s, "sara"))
+    assert item and s.proposals[item["proposal_id"]]["to"] == s.person("marco")["email"]   # Sara's lead: CTO
+    assert agents._review_request(_rule_ctx(s, "marco")) is None                            # leads don't escalate
+    assert agents._review_request(_rule_ctx(s, "elena")) is None                            # not a recipient
+
+
+def test_agent_code_has_no_demo_ids_or_names():
+    import inspect, re
+    from brain import agents, server, store, tools
+    for mod in (agents, server, store):
+        src = inspect.getsource(mod)
+        assert not re.search(r'"(email|mem|chat|task|doc)-\d|"(luca|giulia|marco|sara|davide|paolo|elena)"', src), mod.__name__

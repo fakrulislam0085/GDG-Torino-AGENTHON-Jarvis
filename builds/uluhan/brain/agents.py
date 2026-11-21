@@ -7,13 +7,14 @@ trace says so ("fallback" step, mode "offline"). Nothing is ever invented to fil
 from __future__ import annotations
 
 import json
+import re
 import os
 import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 
 from . import tools as T
-from .store import Store
+from .store import Store, can_see
 
 MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
 PRICE_IN, PRICE_OUT = 0.75 / 1e6, 3.75 / 1e6   # USD per token, gemini-3.8-flash (event brief)
@@ -322,12 +323,13 @@ def _brief_offline(ctx: T.Ctx):
         al = next(x for x in ctx.store.alerts if x["id"] == a["id"])
         items.append({"headline": ("Conflict: " if a["kind"] == "conflict" else "Suspicious message: ") + al["text"][:90],
                       "why": al["text"], "citations": [al["source_id"]], "proposal_id": al.get("proposal_id")})
+    handled = {c for item in ctx.reserved_items for c in item["citations"]}
     for source in new.get("new_sources", []):
-        if source["id"] == "email-001" and ctx.actor == "luca":
-            continue
-        if source["id"] == "email-002" and ctx.actor in ("davide", "paolo"):
-            items.append({"headline": source["title"], "why": ctx.store.memory["mem-003"]["fact"],
-                          "citations": [source["id"], "mem-003"]})
+        if source["id"] in handled:
+            continue                      # already covered by a business rule (e.g. a review request)
+        fact = _approved_fact_citing(ctx, source["id"])
+        if fact:                          # the team already approved what this source means: say that
+            items.append({"headline": source["title"], "why": fact["fact"], "citations": [source["id"], fact["id"]]})
             continue
         src = _call_tool(ctx, "read_source", {"source_id": source["id"]})
         items.append({"headline": f"New {source['type']} from {source['from']}: {source['title']}",
@@ -336,27 +338,63 @@ def _brief_offline(ctx: T.Ctx):
     _call_tool(ctx, "submit_brief", {"items": items[:5]})
 
 
-def _invoice_review(ctx: T.Ctx) -> dict | None:
-    """An open second notice produces an internal draft for its accountable reviewer."""
-    source_id = "email-001"
-    if ctx.actor != "luca" or source_id not in ctx.store.processed_sources:
+# Business rules: generic, driven by the data (org chart, approved memory, message content). No demo ids here.
+REVIEW_TRIGGER = re.compile(r"\b(second notice|final notice|overdue|payment reminder|past due)\b", re.I)
+LEAD_TITLE = re.compile(r"\b(CEO|CFO|CTO|COO|lead|head|director)\b", re.I)
+
+
+def _approved_fact_citing(ctx: T.Ctx, source_id: str) -> dict | None:
+    """An approved memory item the actor may see that cites this source."""
+    access = ctx.store.access(ctx.actor)
+    for m in ctx.store.memory.values():
+        if m["status"] == "approved" and source_id in m.get("source_ids", [m["source_id"]]) and can_see(access, m["audience"]):
+            return m
+    return None
+
+
+def _group_lead(store: Store, person: dict) -> dict | None:
+    """The lead of the person's own team, from job titles in the org chart. None if the person is the lead."""
+    groups = {g for g in person.get("groups", [person.get("role")]) if g not in ("all", "exec")}
+    if LEAD_TITLE.search(person.get("title", "")):
         return None
-    source = ctx.store.sources[source_id]
-    fact = ctx.store.memory["mem-005"]
-    recipient = ctx.store.person("giulia")["email"]
-    subject = f"Finance review: {source['title']}"
-    draft = next((p for p in ctx.store.proposals.values()
-                  if p.get("owner_id") == ctx.actor and p["subject"] == subject), None)
-    if draft is None:
-        draft = _call_tool(ctx, "propose_email", {
-            "to": recipient,
-            "subject": subject,
-            "body": f"Hi Giulia, can you review the due invoice and confirm the next step?\n\n{source['body']}",
-            "reason": "The supplier sent a second notice. Luca should check with Finance before replying.",
-            "citations": [source_id, fact["id"]],
-        })
-    return {"headline": source["title"], "why": fact["fact"], "citations": [source_id, fact["id"]],
-            "proposal_id": draft.get("id")}
+    for other in store.people.values():
+        if other["id"] != person["id"] and groups & set(other.get("groups", [other.get("role")])) \
+                and LEAD_TITLE.search(other.get("title", "")):
+            return other
+    return None
+
+
+def _review_request(ctx: T.Ctx) -> dict | None:
+    """Rule: when a team member receives a payment notice (second notice, overdue...) and an approved fact backs
+    it, draft an internal review request to their team lead. Pending until the member approves it."""
+    store = ctx.store
+    me = store.person(ctx.actor)
+    lead = _group_lead(store, me)
+    if not lead:
+        return None
+    for source in sorted(store.sources.values(), key=lambda x: x["ts"]):
+        if (source["id"] not in store.processed_sources or ctx.actor not in source.get("recipient_ids", [])
+                or not REVIEW_TRIGGER.search(f"{source['title']} {source['body']}")):
+            continue
+        fact = _approved_fact_citing(ctx, source["id"])
+        if not fact:
+            continue
+        subject = f"Review request: {source['title']}"
+        draft = next((p for p in store.proposals.values()
+                      if p.get("owner_id") == ctx.actor and p["subject"] == subject), None)
+        if draft is None:
+            draft = _call_tool(ctx, "propose_email", {
+                "to": lead["email"],
+                "subject": subject,
+                "body": (f"Hi {lead['name'].split()[0]}, can you review this and confirm the next step?\n\n"
+                         f"{source['body']}"),
+                "reason": (f"{source['title']} is a payment notice sent to {me['name']}. "
+                           f"{lead['name']} ({lead.get('title', lead['role'])}) leads the team, so it goes to them first."),
+                "citations": [source["id"], fact["id"]],
+            })
+        return {"headline": source["title"], "why": fact["fact"], "citations": [source["id"], fact["id"]],
+                "proposal_id": draft.get("id")}
+    return None
 
 
 def brief(store: Store, person_id: str) -> dict:
@@ -366,17 +404,20 @@ def brief(store: Store, person_id: str) -> dict:
     tr.step("trigger", f"Scheduled {label} sweep: brief for {p['name']} ({p['role']}). Nobody asked.")
     ctx = T.Ctx(store, "brief", person_id, p["role"], tr)
     system = BRIEF_SYSTEM.format(name=p["name"], role=p["role"])
+    # Business rules run in code in both modes, so a model can't omit them.
+    rule_item = _review_request(ctx)
+    ctx.reserved_items = [rule_item] if rule_item else []
+    ctx.proposals_made = []
     _run(ctx, system, f"Today is {store.clock}. Write the brief for {p['name']}.", _brief_offline)
-    invoice = _invoice_review(ctx)
-    if invoice:
-        # The invoice policy is code-backed in both modes, so a model may not omit this case.
+    if rule_item:
+        rule_sources = set(rule_item["citations"])
         existing = [item for item in ctx.final["items"] if not any(
-            c["source_id"] == "email-001" for c in item["citations"]
+            c["source_id"] in rule_sources for c in item["citations"]
         )] if ctx.final else []
-        for citation in invoice["citations"]:
+        for citation in rule_item["citations"]:
             if store.citation(citation) is None:
-                raise RuntimeError(f"Invoice review missing evidence {citation}")
-        ctx.final = {"items": [{**invoice, "citations": [store.citation(c) for c in invoice["citations"]]},
+                raise RuntimeError(f"Review request missing evidence {citation}")
+        ctx.final = {"items": [{**rule_item, "citations": [store.citation(c) for c in rule_item["citations"]]},
                                *existing[:4]]}
     if ctx.final is None:
         T.t_submit_brief(ctx, [])
