@@ -66,7 +66,7 @@ main .head .sub{color:var(--muted);font-size:13px}
 .tag.all{background:#eeece7;color:#55524c}
 .tag.pending{background:var(--warn-soft);color:var(--warn)}
 .tag.approved{background:var(--ok-soft);color:var(--ok)}
-.tag.rejected,.tag.superseded{background:#eeece7;color:#77736b}
+.tag.rejected,.tag.superseded,.tag.withdrawn{background:#eeece7;color:#77736b}
 .proposal{border:1px dashed var(--warn);background:#fffaf0;border-radius:8px;padding:10px 12px;margin-top:8px}
 .proposal pre{white-space:pre-wrap;font:13px/1.45 inherit;margin:6px 0;background:#fff;border:1px solid var(--line);border-radius:6px;padding:8px}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -143,9 +143,9 @@ dialog::backdrop{background:#0006}
 <script>
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const SUGGEST = ["Where should we send the Atlas milestone 2 invoice?", "How much is Atlas milestone 2?",
+const SUGGEST = ["Where do we send Verdi invoices?", "How much is Atlas milestone 2?",
   "When does Atlas launch?", "What is the budget for the Atlas mobile app?", "What are NordPrint payment terms?"];
-let S = null, person = "giulia", view = "dm", activeRun = null, busy = false;
+let S = null, person = ["giulia", "marco"].includes(location.hash.slice(1)) ? location.hash.slice(1) : "giulia", view = "dm", activeRun = null, busy = false;
 const chats = {giulia: [], marco: []};
 
 async function api(path, opts = {}) {
@@ -168,7 +168,8 @@ async function load() {
 
 function render() {
   $("#mode").textContent = S.mode === "gemini" ? `Gemini live · ${S.model}` : "Offline fallback (no model)";
-  $("#mode").className = "pill " + S.mode;
+  $("#mode").className = "pill " + S.mode; $("#mode").title = S.mode_note || "";
+  location.hash = person;
   $("#clock").textContent = "🕗 " + S.clock.replace("T", " ");
   $("#personSel").innerHTML = S.people.map(p => `<option value="${p.id}" ${p.id === person ? "selected" : ""}>${esc(p.name)} · ${esc(p.role)}</option>`).join("");
   $("#eventSel").innerHTML = `<option value="">✉ Simulate incoming email…</option>` +
@@ -194,8 +195,10 @@ function proposalBox(p) {
   const btns = p.status === "pending"
     ? `<div class="row"><button class="ok" data-prop="${p.id}" data-act="approve">Approve & send</button><button data-prop="${p.id}" data-act="reject">Reject</button>
        <span class="muted">Nothing is sent until you approve.</span></div>`
-    : `<div class="muted">${p.status === "approved" ? "✅ Approved" : "✖ Rejected"} by ${esc(p.decided_by)} at ${time(p.decided_at)}${p.status === "approved" ? " · in Outbox (mock)" : ""}</div>`;
-  return `<div class="proposal"><div class="row"><span class="tag pending">${esc(p.status)}</span><b>Draft email</b> to ${esc(p.to)}</div>
+    : p.status === "withdrawn"
+      ? `<div class="muted">↩ Withdrawn by the brain at ${time(p.decided_at)}: the fact it quoted was replaced, so this draft is stale.</div>`
+      : `<div class="muted">${p.status === "approved" ? "✅ Approved" : "✖ Rejected"} by ${esc(p.decided_by)} at ${time(p.decided_at)}${p.status === "approved" ? " · in Outbox (mock)" : ""}</div>`;
+  return `<div class="proposal"><div class="row"><span class="tag ${esc(p.status)}">${esc(p.status)}</span><b>Draft email</b> to ${esc(p.to)}</div>
     <div><b>${esc(p.subject)}</b></div><pre>${esc(p.body)}</pre><div class="muted" style="font-size:12px">Why: ${esc(p.reason)}</div>${chips(p.citations)}${btns}</div>`;
 }
 
@@ -224,7 +227,8 @@ function renderDM() {
     else {
       const a = m.answer, lbl = {answered: "", restricted: "🔒 Restricted", unknown: "🤷 I don't know"}[a.status];
       h += `<div class="msg"><div class="av">🧠</div><div><div class="meta"><b>Brain</b><span>${time(m.clock)} · <a href="#" data-run="${m.run}">trace</a></span></div>
-        <div class="card ${a.status}">${lbl ? `<b>${lbl}</b><br>` : ""}${esc(a.text)}${chips(a.citations)}</div></div></div>`;
+        <div class="card ${a.status}">${lbl ? `<b>${lbl}</b><br>` : ""}${esc(a.text)}${chips(a.citations)}
+        ${(a.citations || []).filter(c => c.fact && c.fact !== a.text).map(c => `<div class="quote">Approved fact ${esc(c.id)}: ${esc(c.fact)}</div>`).join("")}</div></div></div>`;
     }
   }
   $("#view").innerHTML = h;
@@ -289,7 +293,7 @@ async function showRun(id) {
 }
 
 async function withBusy(btn, fn) {
-  if (busy) return; busy = true; const old = btn && btn.innerHTML;
+  if (busy) { toast("The brain is still working on the last request…"); return; } busy = true; const old = btn && btn.innerHTML;
   if (btn) { btn.disabled = true; btn.innerHTML = `<span class="spin"></span> working…`; }
   try { await fn(); } catch (e) { toast("⚠ " + e.message); } finally { busy = false; if (btn) { btn.disabled = false; btn.innerHTML = old; } }
 }
@@ -297,7 +301,7 @@ async function sweep(btn) {
   await withBusy(btn, async () => { const r = await api("/api/sweep", {method: "POST"}); activeRun = null; view = "dm"; await load(); toast(`Sweep done: ${r.runs.length} agent runs`); });
 }
 async function ask(q) {
-  q = q.trim(); if (!q || busy) return;
+  q = q.trim(); if (!q) return; if (busy) { toast("The brain is still working on the last request…"); return; }
   const c = chats[person]; c.push({who: "me", text: q, clock: S.clock}); c.push({thinking: true}); $("#q").value = ""; renderDM();
   await withBusy(null, async () => {
     try { const r = await api("/api/ask", {method: "POST", body: {person, question: q}});

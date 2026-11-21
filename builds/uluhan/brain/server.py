@@ -53,7 +53,8 @@ def state(person: str):
         props = [x for x in s.proposals.values() if x["owner_role"] == role]
         prop_ids = {x["id"] for x in props}
         return {
-            "person": p, "mode": agents.mode(), "model": agents.MODEL if agents.mode() == "gemini" else None,
+            "person": p, "mode": agents.mode(), "mode_note": agents.mode_note(),
+            "model": agents.MODEL if agents.mode() == "gemini" else None,
             "clock": s.clock, "company": s.seed["company"],
             "people": list(s.people.values()),
             "brief": s.briefs.get(person),
@@ -81,9 +82,11 @@ def get_run(run_id: str, person: str):
     raise HTTPException(404, "run not found")
 
 
+# /sweep and /events are not tied to a person, so they return run SUMMARIES only (no steps, no output).
+# Full traces go through /api/runs/{id}?person=..., which applies the role filter.
 @app.post("/api/sweep")
 def sweep():
-    return {"runs": agents.sweep(store)}
+    return {"runs": [_run_summary(r) for r in agents.sweep(store)]}
 
 
 @app.post("/api/events/{event_id}")
@@ -94,7 +97,7 @@ def event(event_id: str):
         raise HTTPException(404, "unknown event")
     if runs is None:
         return {"runs": [], "note": "Already received. Replaying the same email changes nothing."}
-    return {"runs": runs}
+    return {"runs": [_run_summary(r) for r in runs]}
 
 
 @app.post("/api/ask")
@@ -118,12 +121,21 @@ def _decide_memory(mid: str, pid: str, approve: bool):
         m["decided_by"], m["decided_at"] = pid, store.clock
         if approve:
             for old in store.memory.values():
-                if old is not m and old["status"] == "approved" and old["key"] == m["key"]:
+                # Only replace items the approver can see; a tech person can never retire a finance fact.
+                if (old is not m and old["status"] == "approved" and old["key"] == m["key"]
+                        and can_see(p["role"], old["audience"])):
                     old["status"], old["superseded_by"] = "superseded", m["id"]
                     store.log(pid, "memory.superseded", old["id"], f"replaced by {m['id']}", old["audience"])
         for a in store.alerts:
             if a.get("candidate_id") == mid:
                 a["closed"] = True
+                # The drafted "please send the signed amendment" reply quotes the OLD fact. Once the new fact is
+                # accepted it is stale, so it must not be sendable any more.
+                pr = store.proposals.get(a.get("proposal_id") or "")
+                if approve and pr and pr["status"] == "pending":
+                    pr["status"], pr["decided_by"], pr["decided_at"] = "withdrawn", "brain", store.clock
+                    store.log("brain", "proposal.withdrawn", pr["id"], f"stale after {mid} was approved",
+                              [pr["owner_role"]])
         store.log(pid, "memory.approved" if approve else "memory.rejected", mid, f"{m['topic']}: {m['fact']}",
                   m["audience"])
         return {"memory": m}

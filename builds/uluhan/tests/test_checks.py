@@ -47,7 +47,7 @@ def test_1_speaks_first_brief_without_a_question():
 
 # 2 · People curate the memory --------------------------------------------------------------
 def test_2_curation_controls_what_can_be_answered():
-    q = "Where should we send the Atlas milestone 2 invoice?"
+    q = "Where do we send Verdi invoices?"
     assert ask("giulia", q)["status"] == "unknown"                    # candidate not usable yet
     assert c.post("/api/memory/M8/approve", json={"person": "giulia"}).status_code == 200
     assert c.post("/api/memory/M9/reject", json={"person": "giulia"}).status_code == 200
@@ -187,3 +187,103 @@ def test_state_never_leaks_finance_to_tech():
     blob = json.dumps(st("marco"))
     for secret in ("28,000", "84,000", "2,400", "2,050", "NordPrint payment", "ap@verdi"):
         assert secret not in blob, secret
+
+
+# Retrieval must not answer a different question (jury-scorer break list) ------------------------
+@pytest.mark.parametrize("q", [
+    "Did Verdi sign off staging?",          # was: answered with the Atlas fee
+    "What is the Atlas launch budget?",     # was: answered with the launch date
+    "Atlas",                                 # one word is not a question
+    "What is the name of the Atlas CEO?",
+    "When does the Atlas mobile app launch?",
+])
+def test_no_confident_wrong_answers(q):
+    c.post("/api/memory/M8/approve", json={"person": "giulia"})
+    assert ask("giulia", q)["status"] == "unknown", q
+
+
+@pytest.mark.parametrize("q,expect,cite", [
+    ("When does Atlas go live?", "15 December", "M1"),
+    ("Which email address do I bill Verdi at?", "ap@verdi-logistics.example", "M8"),
+    ("Where do Verdi invoices go?", "ap@verdi-logistics.example", "M8"),
+    ("What are the payment terms with NordPrint?", "30 days", "M4"),
+    ("What's the Q4 cloud budget?", "2,400", "M6"),
+])
+def test_paraphrases_are_answered(q, expect, cite):
+    c.post("/api/memory/M8/approve", json={"person": "giulia"})
+    a = ask("giulia", q)
+    assert a["status"] == "answered" and expect in a["text"] and a["citations"][0]["id"] == cite, (q, a)
+
+
+def test_ambiguous_question_never_gets_the_wrong_fact():
+    # Fee fact (M3) and invoice-address fact (M8) each match 3 of 4 words. Offline must not guess.
+    for approve in (False, True):
+        if approve:
+            c.post("/api/memory/M8/approve", json={"person": "giulia"})
+        a = ask("giulia", "Where should we send the Atlas milestone 2 invoice?")
+        assert a["status"] in ("unknown", "answered")
+        if a["status"] == "answered":
+            assert a["citations"][0]["id"] == "M8"
+        assert "84,000" not in a["text"]
+
+
+# Failure-hunter regressions ----------------------------------------------------------------------
+FINANCE_STRINGS = ("28,000", "84,000", "2,400", "2,050", "ap@verdi", "30 days", "15 days")
+
+
+def test_sweep_and_event_responses_do_not_leak_traces():
+    import json
+    blob = json.dumps(c.post("/api/sweep").json()) + json.dumps(c.post("/api/events/nordprint_terms").json())
+    for s in FINANCE_STRINGS:
+        assert s not in blob, s
+    assert '"steps": [' not in blob                      # summaries only
+
+
+def test_stale_draft_is_withdrawn_when_new_fact_is_approved():
+    c.post("/api/events/nordprint_terms")
+    alert = [a for a in st("giulia")["alerts"] if a["kind"] == "conflict"][0]
+    c.post(f"/api/memory/{alert['candidate_id']}/approve", json={"person": "giulia"})
+    p = store.proposals[alert["proposal_id"]]
+    assert p["status"] == "withdrawn"
+    assert c.post(f"/api/proposals/{p['id']}/approve", json={"person": "giulia"}).status_code == 409
+    assert store.outbox == []
+
+
+def test_draft_survives_if_new_claim_is_rejected():
+    c.post("/api/events/nordprint_terms")
+    alert = [a for a in st("giulia")["alerts"] if a["kind"] == "conflict"][0]
+    c.post(f"/api/memory/{alert['candidate_id']}/reject", json={"person": "giulia"})
+    assert store.proposals[alert["proposal_id"]]["status"] == "pending"
+
+
+@pytest.mark.parametrize("q", ["When does Atlas NOT launch?", "What is the cloud budget for Q4 2027?",
+                               "Are NordPrint terms 60 days?", "Who owns Atlas billing and what is the Atlas fee?"])
+def test_tricky_questions_get_i_dont_know(q):
+    assert ask("giulia", q)["status"] == "unknown", q
+
+
+def test_clock_never_goes_backwards():
+    c.post("/api/events/nordprint_terms")
+    c.post("/api/sweep")
+    assert store.clock == "2026-12-07T09:20"
+
+
+def test_ingest_of_all_source_cannot_see_finance_keys():
+    from brain import agents, tools as T
+    store.processed_sources.add("E1")
+    tr = agents.Trace("ingest", "system", "t", ["all"], store.clock)
+    keys = T.call(T.Ctx(store, "ingest", "system", None, tr, source_id="E1"), "list_memory_keys", {})["keys"]
+    assert {k["key"] for k in keys} == {"atlas.launch_date", "atlas.owners", "office.closure"}
+
+
+def test_breaker_switches_to_offline(monkeypatch):
+    from brain import agents
+    monkeypatch.delenv("BRAIN_MODE", raising=False)
+    monkeypatch.setattr(agents, "_configured", lambda: object())
+    assert agents.client() is not None
+    agents.trip_breaker("ConnectError: wifi down")
+    try:
+        assert agents.client() is None and agents.mode() == "offline"
+        assert "paused" in agents.mode_note()
+    finally:
+        agents.reset_breaker()

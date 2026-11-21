@@ -35,7 +35,7 @@ export GOOGLE_API_KEY=... GOOGLE_GENAI_USE_VERTEXAI=true
 | # | Check | What you click | What enforces it |
 |---|---|---|---|
 | 1 | Speaks first | **Run 08:00 sweep** → each person gets a DM brief; a new email raises an alert | `agents.sweep`, `brief`, `ingest` |
-| 2 | People curate memory | **Memory review** → approve M8, reject M9 → ask *"Where should we send the Atlas milestone 2 invoice?"* | Retrieval only returns `approved` items (`tools._memory_hits`) |
+| 2 | People curate memory | **Memory review** → approve M8, reject M9 → ask *"Where do we send Verdi invoices?"* | Retrieval only returns `approved` items (`tools._memory_hits`) |
 | 3 | Knows who's asking | Ask *"How much is Atlas milestone 2?"* as Giulia (finance), then as Marco (tech) | Role filter runs **before** the model sees data; restricted items show only id + topic |
 | 4 | Cites | Every answer and brief item has 📎 chips that open the source | `answer` / `submit_brief` drop any citation the person can't see or that isn't approved |
 | 5 | Admits gaps | *"What is the budget for the Atlas mobile app?"* | An answer without a valid citation is downgraded to "I don't know" in code |

@@ -19,7 +19,15 @@ from .store import Store, can_see
 STOP = set("""a an the is are was were be been of to in on for and or with at by from this that these those it its
 what when where who whom which how why do does did we our you your i me my us they them their there here as
 about into than then so if not no yes can could should would will shall may might must have has had please
-much many any some all""".split())
+much many any some all go get got does did done name""".split())
+
+# A few business synonyms, applied after stemming. Keep small and explicit.
+SYN = {"bill": "invoice", "billed": "invoice", "invoiced": "invoice", "live": "launch", "launched": "launch",
+       "payment": "pay", "paid": "pay", "term": "terms", "signed": "sign", "signoff": "sign", "mail": "email",
+       "e-mail": "email", "address": "address", "go-live": "launch"}
+
+# Named things (company, project, people, period). If a question names one, the answer must be about it.
+ENTITIES = {"atlas", "verdi", "nordprint", "officina", "lume", "giulia", "marco", "elena", "luca", "q4", "cloud"}
 
 EMAIL_RE = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
 INJECTION_RE = re.compile(
@@ -32,10 +40,17 @@ def tokens(text: str) -> set[str]:
     for w in re.findall(r"[a-z0-9]+", text.lower()):
         if w in STOP or len(w) < 2:
             continue
-        for suf in ("ing", "es", "s"):
-            if w.endswith(suf) and len(w) - len(suf) >= 3:
-                w = w[: -len(suf)]
-                break
+        if w.endswith("ies") and len(w) > 4:
+            w = w[:-3] + "y"
+        elif w.endswith(("ches", "shes", "xes", "sses")):
+            w = w[:-2]
+        elif w.endswith("s") and not w.endswith("ss") and len(w) > 3:
+            w = w[:-1]
+        if w.endswith("ing") and len(w) >= 7:
+            w = w[:-3]
+        w = SYN.get(w, w)
+        if w in STOP:
+            continue
         out.add(w)
     return out
 
@@ -74,10 +89,51 @@ def _memory_hits(ctx: Ctx, query: str):
         if score <= 0:
             continue
         coverage = len(q & all_t) / len(q)
-        (permitted if can_see(ctx.role, m["audience"]) else restricted).append((coverage, score, m))
+        (permitted if can_see(ctx.role, m["audience"]) else restricted).append((coverage, score, m, q & all_t))
     permitted.sort(key=lambda x: (-x[0], -x[1]))
     restricted.sort(key=lambda x: (-x[0], -x[1]))
     return permitted, restricted
+
+
+MIN_COVERAGE = 0.75
+NEGATION_RE = re.compile(r"\b(not|never|no longer|except|without|other than|besides)\b|n't\b", re.I)
+
+
+def _doc_freq(store) -> dict[str, int]:
+    df: dict[str, int] = {}
+    for m in store.memory.values():
+        for t in tokens(m["fact"]) | tokens(m["topic"]) | tokens(m["key"].replace(".", " ").replace("_", " ")):
+            df[t] = df.get(t, 0) + 1
+    return df
+
+
+def _confident(q: set[str], hit, df: dict[str, int]) -> bool:
+    """Strict rule for answering WITHOUT a model. The fact must
+      - cover >= 75% of the question's words and at least two of them,
+      - include every named entity the question mentions (Verdi, NordPrint, Atlas...),
+      - leave unmatched only words that are common across memory (a rare or unseen word in the question is
+        probably the thing being asked about, so if the fact lacks it, it answers a different question).
+    Otherwise the planner says "I don't know". Wrong-but-cited is worse than no answer."""
+    coverage, _, _, matched = hit
+    unmatched = q - matched
+    return (coverage >= MIN_COVERAGE and len(matched) >= 2 and (q & ENTITIES) <= matched
+            and all(df.get(t, 0) >= 2 for t in unmatched))
+
+
+def confident_match(ctx: "Ctx", question: str):
+    """Returns ("answered", m) | ("restricted", m) | ("unknown", None) for the offline planner."""
+    if NEGATION_RE.search(question):
+        return "unknown", None          # keyword matching cannot handle "not / except / without"
+    q = tokens(question)
+    df = _doc_freq(ctx.store)
+    permitted, restricted = _memory_hits(ctx, question)
+    for hit in permitted:
+        if _confident(q, hit, df):
+            return "answered", hit[2]
+    for hit in restricted:
+        if _confident(q, hit, df):
+            return "restricted", hit[2]
+    return "unknown", None
 
 
 def _mem_view(ctx: Ctx, m: dict) -> dict:
@@ -108,9 +164,9 @@ def t_list_memory_topics(ctx: Ctx) -> dict:
 def t_search_memory(ctx: Ctx, query: str) -> dict:
     permitted, restricted = _memory_hits(ctx, query)
     return {
-        "results": [_mem_view(ctx, m) for _, _, m in permitted[:5]],
+        "results": [_mem_view(ctx, h[2]) for h in permitted[:5]],
         "restricted_matches": [
-            {"id": m["id"], "topic": m["topic"], "restricted_to": m["audience"]} for _, _, m in restricted[:3]
+            {"id": h[2]["id"], "topic": h[2]["topic"], "restricted_to": h[2]["audience"]} for h in restricted[:3]
         ],
         "note": "restricted_matches exist but their content is withheld from this person.",
     }
@@ -145,7 +201,12 @@ def t_read_source(ctx: Ctx, source_id: str) -> dict:
 
 
 def t_list_memory_keys(ctx: Ctx) -> dict:
-    return {"keys": [{"key": m["key"], "topic": m["topic"]} for m in ctx.store.memory.values() if m["status"] == "approved"]}
+    # Only keys the source's own audience may see: an "all" email must not reveal finance topics in the trace,
+    # and must not be able to reuse (and later replace) a finance key.
+    aud = ctx.store.sources[ctx.source_id]["audience"]
+    roles = ["finance", "tech"] if "all" in aud else aud
+    return {"keys": [{"key": m["key"], "topic": m["topic"]} for m in ctx.store.memory.values()
+                     if m["status"] == "approved" and all(can_see(r, m["audience"]) for r in roles)]}
 
 
 def t_propose_memory(ctx: Ctx, key: str, topic: str, fact: str, quote: str) -> dict:
@@ -166,7 +227,10 @@ def t_propose_memory(ctx: Ctx, key: str, topic: str, fact: str, quote: str) -> d
     s.log("brain", "memory.candidate", mid, f"{topic}: candidate from {src['id']}", cand["audience"])
     result = {"status": "candidate_created", "id": mid, "audience": cand["audience"],
               "note": "A person must approve it before anyone can use it."}
-    clash = [m for m in s.memory.values() if m["status"] == "approved" and m["key"] == key and norm(m["fact"]) != norm(fact)]
+    # A conflict is only raised against facts the source's audience may see (no cross-role key reuse).
+    roles = ["finance", "tech"] if "all" in src["audience"] else src["audience"]
+    clash = [m for m in s.memory.values() if m["status"] == "approved" and m["key"] == key
+             and norm(m["fact"]) != norm(fact) and all(can_see(r, m["audience"]) for r in roles)]
     if clash:
         old = clash[0]
         cand["conflicts_with"] = old["id"]

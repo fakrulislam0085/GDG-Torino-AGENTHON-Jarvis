@@ -17,8 +17,7 @@ from .store import Store, can_see
 
 MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
 PRICE_IN, PRICE_OUT = 0.75 / 1e6, 3.75 / 1e6   # USD per token, gemini-3.8-flash (event brief)
-MAX_TURNS = 10
-ANSWER_COVERAGE = 0.6                          # offline planner: share of question words a fact must cover
+MAX_TURNS = 8
 
 
 # ------------------------------------------------------------------------------------------------
@@ -60,17 +59,47 @@ _client = None
 _client_err = None
 
 
-def client():
-    """Returns a google-genai client or None (offline). Config by env, see README."""
-    global _client, _client_err
+CALL_TIMEOUT_MS = 12_000
+BREAKER_SECONDS = 300
+_down_until = 0.0          # circuit breaker: after a Gemini failure, go offline for a while instead of
+_down_reason = ""          # making every click wait for another timeout (Wi-Fi dies mid-demo)
+
+
+def trip_breaker(reason: str) -> None:
+    global _down_until, _down_reason
+    _down_until, _down_reason = time.time() + BREAKER_SECONDS, reason
+
+
+def reset_breaker() -> None:
+    global _down_until, _down_reason
+    _down_until, _down_reason = 0.0, ""
+
+
+def mode_note() -> str:
     if os.getenv("BRAIN_MODE", "auto") == "offline":
+        return "Forced offline (BRAIN_MODE=offline)."
+    if time.time() < _down_until:
+        return f"Gemini paused after an error ({_down_reason[:80]}). Retrying in {int(_down_until - time.time())}s."
+    if _configured() is None:
+        return "No Gemini credentials configured."
+    return ""
+
+
+def client():
+    """Returns a google-genai client, or None (offline, breaker open, or not configured)."""
+    if os.getenv("BRAIN_MODE", "auto") == "offline" or time.time() < _down_until:
         return None
+    return _configured()
+
+
+def _configured():
+    global _client, _client_err
     if _client is not None:
         return _client
     try:
         from google import genai
         from google.genai import types
-        opts = types.HttpOptions(timeout=45_000)
+        opts = types.HttpOptions(timeout=CALL_TIMEOUT_MS)
         project = os.getenv("GOOGLE_CLOUD_PROJECT")
         key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
         if project:
@@ -155,6 +184,7 @@ def _run(ctx: T.Ctx, system: str, prompt: str, offline_plan) -> None:
             reason = "model did not finish"
         except Exception as e:
             reason = f"{type(e).__name__}: {str(e)[:160]}"
+            trip_breaker(reason)   # API/network failure: stop waiting on Gemini for BREAKER_SECONDS
         ctx.final = None
         ctx.trace.step("fallback", f"Gemini unavailable ({reason}); running the deterministic planner with the same tools.")
     ctx.trace.run["mode"] = "offline"
@@ -175,13 +205,13 @@ Rules you must follow:
 
 def _ask_offline(ctx: T.Ctx, question: str):
     hits = _call_tool(ctx, "search_memory", {"query": question})
-    permitted, restricted = T._memory_hits(ctx, question)
-    if permitted and permitted[0][0] >= ANSWER_COVERAGE:
-        m = permitted[0][2]
+    kind, m = T.confident_match(ctx, question)
+    if kind == "answered":
         _call_tool(ctx, "answer", {"status": "answered", "text": m["fact"], "citations": [m["id"]]})
-    elif restricted and restricted[0][0] >= ANSWER_COVERAGE:
-        _call_tool(ctx, "answer", {"status": "restricted", "restricted_id": restricted[0][2]["id"]})
+    elif kind == "restricted":
+        _call_tool(ctx, "answer", {"status": "restricted", "restricted_id": m["id"]})
     else:
+        ctx.trace.step("model_text", "No approved fact covers this question closely enough; answering 'I don't know'.")
         _call_tool(ctx, "answer", {"status": "unknown"})
     return hits
 
@@ -220,6 +250,8 @@ def _ingest_offline(ctx: T.Ctx):
     src = _call_tool(ctx, "read_source", {"source_id": ctx.source_id})
     if T.INJECTION_RE.search(src.get("body_untrusted", "")):
         _call_tool(ctx, "flag_suspicious", {"reason": "It contains instructions addressed to the assistant."})
+    elif any(m["source_id"] == ctx.source_id for m in ctx.store.memory.values()):
+        ctx.trace.step("model_text", "Candidates from this source already exist (partial model run); not adding more.")
     else:
         for c in ctx.store.fallback_candidates.get(ctx.source_id, []):
             _call_tool(ctx, "propose_memory", dict(c))
@@ -302,7 +334,7 @@ def brief(store: Store, person_id: str) -> dict:
 # ------------------------------------------------------------------------------------------------
 def sweep(store: Store) -> list[dict]:
     with store.lock:
-        store.clock = store.seed["sweep_time"]
+        store.clock = max(store.clock, store.seed["sweep_time"])   # never move the clock backwards
         todo = [s["id"] for s in store.sources.values() if s["id"] not in store.processed_sources]
         store.processed_sources |= set(todo)
     with ThreadPoolExecutor(4) as ex:

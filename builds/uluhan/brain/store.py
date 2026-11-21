@@ -81,7 +81,7 @@ class Store:
             m = self.memory[item_id]
             src = self.sources.get(m["source_id"], {})
             return {"id": m["id"], "kind": "memory", "label": m["topic"], "source_id": m["source_id"],
-                    "source_title": src.get("title", ""), "quote": m.get("quote", "")}
+                    "source_title": src.get("title", ""), "quote": m.get("quote", ""), "fact": m["fact"]}
         if item_id in self.sources:
             s = self.sources[item_id]
             return {"id": s["id"], "kind": "source", "label": s["title"], "source_id": s["id"],

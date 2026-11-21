@@ -69,7 +69,7 @@
      "fact": "Q4 cloud budget is EUR 2,400 per month, alert at 80%; overruns need Giulia Rinaldi's approval.", "quote": "Cloud budget for Q4 is EUR 2,400 per month."},
     {"id": "M7", "key": "office.closure", "topic": "Office holiday closure", "audience": ["all"], "status": "approved", "source_id": "D6",
      "fact": "The office is closed from 24 December to 6 January.", "quote": "The office is closed from 24 December to 6 January."},
-    {"id": "M8", "key": "client.verdi.invoice_address", "topic": "Where to send Verdi invoices", "audience": ["finance"], "status": "candidate", "source_id": "CH2",
+    {"id": "M8", "key": "client.verdi.invoice_address", "topic": "Verdi invoice email address (where to send invoices)", "audience": ["finance"], "status": "candidate", "source_id": "CH2",
      "fact": "Verdi Logistics wants all Atlas invoices sent to ap@verdi-logistics.example.", "quote": "please send all Atlas invoices to ap@verdi-logistics.example"},
     {"id": "M9", "key": "atlas.launch_date", "topic": "Atlas launch date", "audience": ["all"], "status": "candidate", "source_id": "CH1",
      "fact": "Atlas launch may slip to the end of January.", "quote": "Atlas launch might slip to end of January"}

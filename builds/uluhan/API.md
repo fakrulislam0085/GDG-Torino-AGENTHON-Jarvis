@@ -120,7 +120,7 @@ Errors: `403 {detail}` when the person is not allowed (e.g. tech approving a fin
 ## Demo script these endpoints support
 
 1. `POST /api/reset`, then `POST /api/sweep` → each person's DM shows a brief at 08:00. **(1, 7)**
-2. Giulia asks *"Where should we send the Atlas milestone 2 invoice?"* → `unknown`. She approves candidate `M8` (invoice address) and rejects `M9` (launch-slip rumour). Ask again → answered, cites `M8`. **(2, 4, 5)**
+2. Giulia asks *"Where do we send Verdi invoices?"* → `unknown`. She approves candidate `M8` (invoice address) and rejects `M9` (launch-slip rumour). Ask again → answered, cites `M8`. **(2, 4, 5)**
 3. Ask *"How much is Atlas milestone 2?"* as Giulia → €28,000 with citation; as Marco → `restricted`. **(3)**
 4. Ask *"What is the budget for the Atlas mobile app?"* → `unknown`. **(5)**
 5. Proposal `P1` (milestone-2 invoice email) is `pending`; outbox empty; approve → outbox has it. **(6)**
