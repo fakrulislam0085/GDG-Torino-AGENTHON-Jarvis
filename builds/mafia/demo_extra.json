@@ -76,7 +76,7 @@
         "davide"
       ],
       "subject": "Frost on Friday night",
-      "body": "Paolo, the forecast says -3 °C in Barbaresco on Friday night 27 November. Without the 40 sensors we are blind for frost alerts. Can you confirm today when they will be back online? Stefano, Cantina Langhe Viva.",
+      "body": "Paolo, the forecast says -4 °C in Barbaresco on Friday night 27 November. Without the 40 sensors we are blind for frost alerts. Can you confirm today when they will be back online? Stefano, Cantina Langhe Viva.",
       "acl": [
         "sales",
         "tech"
@@ -159,7 +159,7 @@
       "email-105": {
         "suspicious": false,
         "alert": {
-          "headline": "Langhe Viva: -3 °C frost forecast for Friday night 27 Nov, and 40 of their sensors are still offline. The Thursday rollout is already before it, so no earlier repair is needed.",
+          "headline": "Langhe Viva: -4 °C frost forecast for Friday night 27 Nov, and 40 of their sensors are still offline. Stefano wants a date today.",
           "notify": [
             "paolo",
             "davide"
@@ -167,11 +167,25 @@
         },
         "memory": [
           {
-            "fact": "A frost of -3 °C is forecast in Barbaresco (Cantina Langhe Viva) on Friday night 27 November 2026.",
-            "quote": "the forecast says -3 °C in Barbaresco on Friday night 27 November"
+            "fact": "A frost of -4 °C is forecast in Barbaresco (Cantina Langhe Viva) on Friday night 27 November 2026.",
+            "quote": "the forecast says -4 °C in Barbaresco on Friday night 27 November"
           }
         ],
-        "proposals": []
+        "proposals": [
+          {
+            "kind": "email",
+            "approver": "paolo",
+            "to": "davide",
+            "subject": "Langhe Viva: can GW-07 be fixed before Friday night?",
+            "body": "Davide, Stefano at Langhe Viva expects -4 °C on Friday night 27 Nov and is blind without the 40 sensors on GW-07. The firmware 2.3 rollout is planned for Thursday 07:00. Can we do it Friday instead, or install the spare gateway first? I promised him an answer today. Paolo",
+            "why": "The customer needs the sensors before the frost on Friday night, but the fix is planned for Thursday morning.",
+            "sources": [
+              "email-105",
+              "chat-003",
+              "chat-004"
+            ]
+          }
+        ]
       }
     },
     "proposals": [

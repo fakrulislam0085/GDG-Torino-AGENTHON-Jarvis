@@ -234,6 +234,10 @@ NIGHT = re.compile(r"\b(mon|tue|wed|thu|fri|sat|sun)[a-z]*\s+(?:night|evening)\b
 CLOCK = re.compile(r"\b(?:[01]?\d|2[0-3]):[0-5]\d\b")
 WEEKDAY = re.compile(r"\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b", re.I)
 
+# What the Brain says when the incoming forecast does not need the repair moved up, or cannot be compared.
+TIMING_OK = "Rollout is scheduled before the forecast. Restoration is unconfirmed."
+TIMING_UNKNOWN = "Timing needs confirmation."
+
 
 # ----------------------------------------------------------------------------------- the brain
 class Brain:
@@ -1108,10 +1112,11 @@ class Brain:
                     pass
         return found
 
-    def _timing_conflict(self, src: dict) -> dict | None:
+    def _timing_case(self, src: dict) -> dict | None:
         """Compare the day the customer needs coverage with the day of the planned fix, for the same customer and
-        outage. A confirmed conflict (coverage needed before the fix) returns the waiting draft and its evidence;
-        a missing, ambiguous or non-conflicting pair abstains (returns None)."""
+        outage. Returns None when the incoming email does not bear on a waiting reply; otherwise a verdict:
+        'conflict' (coverage needed before the fix), 'ok' (the fix is already on or before it) or 'unclear'
+        (a date is missing or ambiguous). A missing or ambiguous date never decides anything by itself."""
         contact = src["from"]
         draft = self._case_draft(contact)
         if not draft:
@@ -1119,12 +1124,25 @@ class Brain:
         year = self.now().year
         need = sorted(set(dates_in(src["text"], year)))
         plan = self._plan_date(draft, contact, year)
+        case = {"action": draft, "need": need[0] if len(need) == 1 else None,
+                "scheduled": next(iter(plan)) if len(plan) == 1 else None, "plan_id": None}
         if len(need) != 1 or len(plan) != 1:  # missing or two competing dates: do not guess
-            return None
-        scheduled = next(iter(plan))
-        if need[0] >= scheduled:  # the fix is on or before the day coverage is needed: no conflict
-            return None
-        return {"action": draft, "need": need[0], "scheduled": scheduled, "plan_id": plan[scheduled]}
+            case["verdict"] = "unclear"
+        elif need[0] < case["scheduled"]:  # the customer needs coverage before the planned fix
+            case["plan_id"] = plan[case["scheduled"]]
+            case["verdict"] = "conflict"
+        else:
+            case["plan_id"] = plan[case["scheduled"]]
+            case["verdict"] = "ok"
+        return case
+
+    def _is_timing_draft(self, p: dict, src: dict) -> bool:
+        """A draft the Brain proposed for THIS email: a reply to the customer, or an internal request to a
+        colleague to move the repair up. Kept only when the date comparison confirms a conflict."""
+        if p.get("kind") != "email":
+            return False
+        to = p.get("to")
+        return to == src["from"] or (to in self.people and src["id"] in (p.get("sources") or []))
 
     def _evidence_lines(self, src: dict, c: dict) -> list[dict]:
         night = NIGHT.search(src["text"])
@@ -1236,21 +1254,21 @@ class Brain:
                                         "quote": str(c["quote"]), "external": "@" in str(src.get("from", ""))}
                     self.audit("brain", "memory candidate", f"{mid} proposed from {sid}, waiting for a person to "
                                f"approve it: \"{c['fact']}\".", visible_to=readers, refs=[mid, sid])
-                conflict = self._timing_conflict(src)
-                if conflict:
-                    contact = src["from"]
-                    kept = [p for p in new_props if not (p.get("kind") == "email" and p.get("to") == contact
-                                                          and p.get("to") not in self.people)]
+                case = self._timing_case(src)
+                if case and case["verdict"] != "conflict":
+                    kept = [p for p in new_props if not self._is_timing_draft(p, src)]
                     if len(kept) != len(new_props):
-                        self.audit("brain", "guard", f"Dropped a replacement reply to {contact} from {sid}: the "
-                                   "customer reply is held for review, so nothing else is sent to that customer.",
-                                   visible_to=readers, refs=[sid])
+                        self.audit("brain", "guard", f"Dropped a draft the Brain proposed for {sid}: the date "
+                                   "comparison found no confirmed conflict, so nothing is sent to the customer or "
+                                   "to a colleague.", visible_to=readers, refs=[sid])
                     new_props = kept
                 for p in new_props:
                     default = notify[0] if notify else readers[0]
                     self.add_proposal(p, default_approver=default, origin=f"new email {sid} ({info.get('mode')})")
-                if conflict:
-                    self._hold_draft(conflict, src)
+                if case and case["verdict"] == "conflict":
+                    self._hold_draft(case, src)
+                elif case:  # no conflict: say so, without deciding anything else
+                    headline = f"{headline} {TIMING_OK if case['verdict'] == 'ok' else TIMING_UNKNOWN}"
             alert_rec = {"source": sid, "headline": headline, "notify": notify, "level": level}
             self.alerts.append(alert_rec)
             for pid in notify:

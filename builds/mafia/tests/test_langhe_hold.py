@@ -128,6 +128,18 @@ class FridayControl(unittest.TestCase):
         self.assertEqual([o["to"] for o in b.outbox], ["agronomo@langheviva.example"])
 
 
+class MissingDateControl(unittest.TestCase):
+    def test_a_missing_forecast_date_declines_to_decide(self):
+        b = B.Brain(model=None)
+        b.sweep()
+        draft = customer_reply(b)
+        r = b.ingest("email-104")                                   # a customer email with no forecast date
+        self.assertEqual(draft["status"], "waiting")               # no definitive timing decision
+        self.assertEqual([a for a in b.actions.values()
+                          if a["status"] == "waiting" and a["approver"] == "paolo"], [draft])
+        self.assertIn("Timing needs confirmation", r["headline"])
+
+
 class QuarterYearGuard(unittest.TestCase):
     def test_offline_a_wrong_period_is_not_answered(self):
         b = B.Brain(model=None)
