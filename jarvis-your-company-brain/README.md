@@ -1,6 +1,6 @@
 # Jarvis – your company brain
 
-> **Judges: set `JARVIS_DATA=data_ariete`** to run the stage demo (Ariete scenario). If it is unset, the app runs on **Filare Labs** (`data_filare/`). Then follow the **Ariete click sequence** in [`CHECKS.md`](CHECKS.md).
+> **Judges: set `JARVIS_DATA=data_ariete`** to run the stage demo (Ariete scenario). Then follow the **Ariete click sequence** in [`CHECKS.md`](CHECKS.md).
 
 **On stage today:** a fictional scenario built on **Ariete Tech Solutions'** public services (AI agents and automations for professional firms, Turin). People, clients, events and numbers are invented; no Ariete data (`data_ariete/`, set with `JARVIS_DATA=data_ariete`). The same app also runs on **Filare Labs**, the team's shared fictional vineyard-sensor company (`data_filare/`, the default). Swapping company is a data swap.
 Jarvis watches the team's email, chat, tasks and docs, keeps a shared memory that people curate, speaks first with a

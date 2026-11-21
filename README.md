@@ -15,7 +15,7 @@ An AI colleague for a small company. It reads the team's email, chat, tasks and 
 
 ## Run the stage demo (Ariete scenario)
 
-**Set `JARVIS_DATA=data_ariete`.** If it is unset, the app runs on Filare Labs, our other fictional test company.
+**Set `JARVIS_DATA=data_ariete`.**
 
 Windows PowerShell, from the repo root:
 ```powershell
