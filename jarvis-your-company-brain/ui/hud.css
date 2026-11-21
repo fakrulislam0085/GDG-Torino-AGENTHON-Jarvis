@@ -510,3 +510,11 @@ div[role="dialog"] h2, div[role="dialog"] [data-testid="stDialogHeader"] { font-
    the whole control gets one thin teal border instead. */
 [data-testid="stSelectbox"] input:focus, [data-testid="stSelectbox"] input:focus-visible { outline: none !important; box-shadow: none !important; }
 [data-testid="stSelectbox"] [role="group"]:focus-within { border-color: var(--cyan) !important; box-shadow: none !important; }
+
+/* Today: the day's numbers as quiet pills under the greeting */
+.stat-pills { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: .7rem; }
+.stat-pills .sp { font-family: var(--sans); font-size: .85rem; color: var(--text-2); background: var(--panel); border: 1px solid var(--line);
+  border-radius: 999px; padding: .28rem .75rem; white-space: nowrap; }
+.stat-pills .sp b { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--text); margin-right: .15rem; }
+.stat-pills .sp.wait { border-color: var(--amber-line); background: var(--amber-tint); color: var(--amber); }
+.stat-pills .sp.wait b { color: var(--amber); }

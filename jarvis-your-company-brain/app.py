@@ -707,11 +707,11 @@ if ss.page == PAGES[0]:
             md(f"<div class='greet'>Good morning, {esc(first(user))}.</div>"
                f"<div class='sub'>{NOW.strftime('%A %d %B').replace(' 0', ' ')} · <span class='num'>{len(items)}</span> things need you"
                + (f" · <span class='num wait'>{len(pending)}</span> waiting for your approval" if pending else "") + "</div>")
-    with h2:
-        cn = tally.counts(user)
-        md("<div class='counters'>" + "".join(
-            f"<div class='ctr{' wait' if k != 'brief' and cn[k] else ''}'><b>{cn[k]}</b><span>{lab}</span></div>"
-            for k, lab in (("brief", "Brief items"), ("review", "To review"), ("actions", "Pending actions"))) + "</div>")
+            # the day's numbers as quiet pills under the greeting (not big figures in the header corner)
+            cn = tally.counts(user)
+            md("<div class='stat-pills'>" + "".join(
+                f"<span class='sp{' wait' if k != 'brief' and cn[k] else ''}'><b>{cn[k]}</b> {lab}</span>"
+                for k, lab in (("brief", "brief items"), ("review", "to review"), ("actions", "pending actions"))) + "</div>")
 
     # ---- Ask Jarvis: one ChatGPT-style pill right under the header; the answer lands right below it, above the brief ----
     with st.container(key="panel-ask"):
