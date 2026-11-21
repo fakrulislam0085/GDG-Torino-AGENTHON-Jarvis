@@ -1,0 +1,19 @@
+{"ts": "2026-11-21T15:25:04", "event": "brief_posted", "user": "francesca", "unprompted": true, "items": 5, "flagged": ["email-008"], "mode": "gemini"}
+{"ts": "2026-11-21T15:25:05", "event": "brief_posted", "user": "silvia", "unprompted": true, "items": 4, "flagged": [], "mode": "gemini"}
+{"ts": "2026-11-21T15:25:05", "event": "brief_posted", "user": "lorenzo", "unprompted": true, "items": 4, "flagged": ["email-008"], "mode": "gemini"}
+{"ts": "2026-11-21T15:25:11", "event": "brief_posted", "user": "giorgia", "unprompted": true, "items": 4, "flagged": ["email-008"], "mode": "gemini"}
+{"ts": "2026-11-21T15:25:12", "event": "brief_posted", "user": "andrea", "unprompted": true, "items": 5, "flagged": ["email-008"], "mode": "gemini"}
+{"ts": "2026-11-21T15:25:13", "event": "brief_posted", "user": "francesca", "unprompted": true, "items": 5, "flagged": ["email-008"], "mode": "gemini"}
+{"ts": "2026-11-21T15:25:13", "event": "brief_posted", "user": "marta", "unprompted": true, "items": 4, "flagged": [], "mode": "gemini"}
+{"ts": "2026-11-21T15:25:14", "event": "brief_posted", "user": "silvia", "unprompted": true, "items": 4, "flagged": [], "mode": "gemini"}
+{"ts": "2026-11-21T15:25:14", "event": "brief_posted", "user": "lorenzo", "unprompted": true, "items": 4, "flagged": ["email-008"], "mode": "gemini"}
+{"ts": "2026-11-21T15:25:14", "event": "brief_posted", "user": "stefano", "unprompted": true, "items": 4, "flagged": [], "mode": "gemini"}
+{"ts": "2026-11-21T15:25:15", "event": "brief_posted", "user": "giorgia", "unprompted": true, "items": 5, "flagged": ["email-008"], "mode": "gemini"}
+{"ts": "2026-11-21T15:25:15", "event": "brief_posted", "user": "stefano", "unprompted": true, "items": 4, "flagged": [], "mode": "gemini"}
+{"ts": "2026-11-21T15:25:16", "event": "action_proposed", "user": "giorgia", "action_id": "act-giorgia-1", "kind": "message_colleague", "to": "andrea", "cites": ["task-004", "chat-007"]}
+{"ts": "2026-11-21T15:25:16", "event": "brief_posted", "user": "marta", "unprompted": true, "items": 4, "flagged": [], "mode": "gemini"}
+{"ts": "2026-11-21T15:25:17", "event": "brief_posted", "user": "andrea", "unprompted": true, "items": 5, "flagged": ["email-008"], "mode": "gemini"}
+{"ts": "2026-11-21T15:25:17", "event": "action_proposed", "user": "silvia", "action_id": "act-silvia-1", "kind": "reply_draft", "to": "roberto@studiorinaldi.example", "cites": ["email-002"]}
+{"ts": "2026-11-21T15:25:19", "event": "action_proposed", "user": "silvia", "action_id": "act-silvia-1", "kind": "reply_draft", "to": "roberto@studiorinaldi.example", "cites": ["email-002"]}
+{"ts": "2026-11-21T15:25:19", "event": "action_proposed", "user": "stefano", "action_id": "act-stefano-1", "kind": "message_colleague", "to": "marta", "cites": ["task-002", "email-001"]}
+{"ts": "2026-11-21T15:25:19", "event": "sweep", "user": null, "people": 7, "trigger": "snapshot"}

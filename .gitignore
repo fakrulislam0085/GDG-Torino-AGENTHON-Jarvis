@@ -16,3 +16,21 @@ desktop.ini
 service-account*.json
 *-credentials.json
 .claude/settings.local.json
+
+# test and tool caches
+.pytest_cache/
+.impeccable/
+
+# runtime state of the apps (demo snapshots ARE committed)
+builds/*/state/
+
+# private team notes, not for the public repo
+docs/sponsor-research.md
+pitch/strategy-deck/
+
+# film production files: only the rendered films, cue sheets and sources are committed
+pitch/*/assets/
+pitch/*/AGENTS.md
+pitch/*/CLAUDE.md
+pitch/*/out/*_silent.mp4
+pitch/*/.hyperframes/

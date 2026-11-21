@@ -1,0 +1,12 @@
+# Design brief: Jarvis · AGENTHON (two versions: A Filare, B PoliPrep problem)
+- Style: apple-gallery
+- Palette: Jarvis app (light build): background near-white #F6F7F9, panels white #FFFFFF, text ink #12161F, secondary #4A5363 (≥4.5:1), accent deep teal #0E7C86, waiting amber #9A6200, blocked red #B42318, approved green #1E7B45. One brand colour (teal) + amber as the single accent.
+- Fonts: display Chakra Petch (600/700) · body IBM Plex Sans (400/500/600) · numbers IBM Plex Sans (plain figures) · mono IBM Plex Mono only for ids/sources
+- Logo: the Jarvis voice orb (rendered still from the app, light version) on cover + close only · file: to be captured from builds/best UI (fallback: builds/arif/docs screenshot of the orb) · NEED if neither renders cleanly
+- Delivery: spoken 3 min (word limit 70 per slide)
+- Light/dark: all light
+- Details on: kicker, small source line on number slides · off: slide numbers, watermark, top bar
+- Photos: real product screenshots of the Jarvis app (builds/best on http://localhost:8504 once finished; Today brief, Memory conflict, Approvals, call card with orb); the workflow diagram builds/arif/docs/jarvis-workflow.png (dark diagram: re-render a light version or place on a dark panel)
+- Audience + goal: AGENTHON jury (Agentic AI for business, sponsor Ariete Tech) · score top 2 · ask = pilot with Ariete
+- Facts source files: pitch/agenthon-deck/facts.md, script-A.md, script-B.md (approved after review), qa-prep.md
+- Output folder: D:\Token Mafia\2026-11-21 GDG AGENTHON\pitch\agenthon-deck\ (two decks: "Jarvis AGENTHON A", "Jarvis AGENTHON B")

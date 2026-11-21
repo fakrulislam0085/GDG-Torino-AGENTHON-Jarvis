@@ -1,0 +1,80 @@
+{
+  "_note": "Fictional scenario built on Ariete Tech Solutions' public services. Not Ariete's data. Only the company name, city, tagline, services, method and public pitch (EU data centres, GDPR, open-weight models, AI Act literacy) are public facts; every person, client, email, chat, task, amount and address here is invented. No real client or personal data. No Stripe file: the Stripe sync is not connected for this company.",
+  "company": {
+    "name": "Ariete Tech Solutions S.r.l.",
+    "short_name": "Ariete Tech",
+    "city": "Torino",
+    "what": "Artificial intelligence for professional firms and SMEs: AI training, mentoring, custom software and automations, and AI agents",
+    "demo_now": "2026-11-21T08:30:00+01:00",
+    "mail_from": "jarvis@ariete-demo.example"
+  },
+  "groups": {
+    "all": "everyone at Ariete Tech",
+    "finance": "finance, contracts and client billing",
+    "tech": "engineering: agents, automations and model hosting",
+    "sales": "accounts and client success",
+    "exec": "CEO: sees every group"
+  },
+  "people": [
+    { "id": "francesca", "name": "Francesca Morello", "role": "CEO", "groups": ["exec", "all"] },
+    { "id": "marta", "name": "Marta Ghiglione", "role": "CFO", "groups": ["finance", "all"] },
+    { "id": "stefano", "name": "Stefano Arduino", "role": "Accountant", "groups": ["finance", "all"] },
+    { "id": "andrea", "name": "Andrea Pautasso", "role": "CTO", "groups": ["tech", "all"] },
+    { "id": "giorgia", "name": "Giorgia Bosio", "role": "AI engineer", "groups": ["tech", "all"] },
+    { "id": "lorenzo", "name": "Lorenzo Bertola", "role": "Automation engineer", "groups": ["tech", "all"] },
+    { "id": "silvia", "name": "Silvia Ferraris", "role": "Account manager", "groups": ["sales", "all"] }
+  ],
+  "access_rule": "A person can see an item if the item's acl contains any of the person's groups, or if the person is in 'exec'. Enforced in code before any model call.",
+  "approvers": {
+    "finance": ["CFO"],
+    "tech": ["CTO", "Automation engineer"],
+    "sales": ["Account manager"]
+  },
+  "strict_approvers": ["finance"],
+  "approval_rule": "The CEO decides everything, and is the only one who decides company-wide facts (acl 'all'). Otherwise you must see the fact and hold an approver role for one of the teams it belongs to. Money facts (finance) always need the CFO.",
+  "contacts": [],
+  "audiences": [
+    { "id": "customers", "name": "Client firms", "size": 18, "channel": "email", "note": "demo number" },
+    { "id": "trial-firms", "name": "Firms in the observation phase", "size": 3, "channel": "email", "note": "Pinerolo, Moncalieri, Chieri (email-009)" }
+  ],
+  "overview": {
+    "_note": "Fictional scenario built on Ariete Tech Solutions' public services. Not Ariete's data.",
+    "about": "Ariete Tech Solutions is the tech company of the Ariete Capital group in Turin: artificial intelligence for professional firms and SMEs. It helps accountants, law firms, financial companies and SMEs with the work they describe as files to open, documents to fill in, deadlines to chase. Fictional scenario built on Ariete Tech Solutions' public services. Not Ariete's data.",
+    "offer": [
+      "AI training, including AI Act AI-literacy courses for staff",
+      "Mentoring (affiancamento): working next to the team while they adopt AI",
+      "Custom software and automations (for example document intake for a firm's pratiche)",
+      "AI agents that work inside the client's everyday tools"
+    ],
+    "how": [
+      "A 4-step method: observation, practical training, mentoring, custom development",
+      "EU data centres and GDPR by design",
+      "Open-weight models on the client's own servers when the data is sensitive",
+      "Updates to a client's automation only in planned windows, with a rollback plan"
+    ],
+    "where": "Torino, with client firms across Piedmont (fictional clients in this demo)",
+    "tools": ["Gmail", "Team chat", "Task board", "Docs", "Zoom"]
+  },
+  "stripe": {
+    "_note": "Not connected for this company: no stripe_charges.json and no target page, so stripe_sync.connected() is false and the sync button stays hidden.",
+    "page": "",
+    "roles": [],
+    "topic": "",
+    "products": {}
+  },
+  "demo": {
+    "default_user": "francesca",
+    "ask_placeholder": "When does the Rinaldi fix go live?",
+    "note_placeholder": "The rollback laptop for Studio Rinaldi is with Lorenzo, not in the office cabinet.",
+    "checks": [
+      { "n": 1, "label": "It speaks first", "page": "today", "user": "lorenzo", "question": "" },
+      { "n": 2, "label": "People curate the memory", "page": "memory", "user": "lorenzo", "question": "When does the Rinaldi fix go live?" },
+      { "n": 3, "label": "It knows who's asking", "page": "today", "user": "marta", "question": "Has Bellini & Co. paid the pilot invoice?" },
+      { "n": 4, "label": "It cites", "page": "today", "user": "marta", "question": "Has Bellini & Co. paid the pilot invoice?" },
+      { "n": 5, "label": "It admits gaps", "page": "today", "user": "francesca", "question": "What is the office Wi-Fi password?" },
+      { "n": 6, "label": "It only proposes", "page": "approvals", "user": "stefano", "question": "" },
+      { "n": 7, "label": "It fits the team's day", "page": "email", "user": "silvia", "question": "" }
+    ],
+    "hint": "Check 2: as Lorenzo, approve mem-p01 and reject mem-p02 in Memory, then ask on Today. Check 3: ask about the Bellini invoice as Marta (CFO), then as Andrea (CTO). Check 6: Stefano approves the payment request."
+  }
+}

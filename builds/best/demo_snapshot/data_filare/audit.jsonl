@@ -1,0 +1,17 @@
+{"ts": "2026-11-21T14:38:26", "event": "brief_posted", "user": "luca", "unprompted": true, "items": 4, "flagged": [], "mode": "gemini"}
+{"ts": "2026-11-21T14:38:26", "event": "brief_posted", "user": "paolo", "unprompted": true, "items": 3, "flagged": [], "mode": "gemini"}
+{"ts": "2026-11-21T14:38:26", "event": "brief_posted", "user": "sara", "unprompted": true, "items": 4, "flagged": ["email-008"], "mode": "gemini"}
+{"ts": "2026-11-21T14:38:26", "event": "brief_posted", "user": "giulia", "unprompted": true, "items": 4, "flagged": [], "mode": "gemini"}
+{"ts": "2026-11-21T14:38:26", "event": "brief_posted", "user": "marco", "unprompted": true, "items": 5, "flagged": ["email-008"], "mode": "gemini"}
+{"ts": "2026-11-21T14:38:28", "event": "brief_posted", "user": "elena", "unprompted": true, "items": 5, "flagged": ["email-008"], "mode": "gemini"}
+{"ts": "2026-11-21T14:39:47", "event": "brief_posted", "user": "davide", "unprompted": true, "items": 4, "flagged": ["email-008"], "mode": "gemini"}
+{"ts": "2026-11-21T14:39:49", "event": "action_proposed", "user": "paolo", "action_id": "act-paolo-1", "kind": "reply_draft", "to": "agronomo@langheviva.example", "cites": ["email-002"]}
+{"ts": "2026-11-21T14:39:49", "event": "action_proposed", "user": "luca", "action_id": "act-luca-1", "kind": "message_colleague", "to": "giulia", "cites": ["task-002", "email-001"]}
+{"ts": "2026-11-21T14:40:28", "event": "action_proposed", "user": "sara", "action_id": "act-sara-1", "kind": "message_colleague", "to": "marco", "cites": ["task-004", "chat-007"]}
+{"ts": "2026-11-21T14:40:28", "event": "sweep", "user": null, "people": 7, "trigger": "snapshot"}
+{"ts": "2026-11-21T14:40:31", "event": "draft_self_check", "user": "luca", "action_id": "act-luca-1", "unsupported": 2}
+{"ts": "2026-11-21T14:40:33", "event": "draft_self_check", "user": "sara", "action_id": "act-sara-1", "unsupported": 1}
+{"ts": "2026-11-21T14:42:06", "event": "draft_self_check", "user": "paolo", "action_id": "act-paolo-1", "unsupported": 1}
+{"ts": "2026-11-21T14:42:35", "event": "draft_self_check", "user": "luca", "action_id": "act-luca-1", "unsupported": 0}
+{"ts": "2026-11-21T14:42:53", "event": "draft_self_check", "user": "sara", "action_id": "act-sara-1", "unsupported": 0}
+{"ts": "2026-11-21T14:43:03", "event": "draft_self_check", "user": "paolo", "action_id": "act-paolo-1", "unsupported": 0}

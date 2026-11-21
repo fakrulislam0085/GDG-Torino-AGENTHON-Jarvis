@@ -1,0 +1,106 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root { --bg:#F6F7F9; --panel:#FFFFFF; --panel-2:#FAFBFC; --text:#12161F; --text-2:#4A5563; --text-3:#5F6B78;
+  --cyan:#0E7C86; --cyan-text:#0B6E77; --line:#DCE3E7; --red:#B42318; --tint:rgba(14,124,134,.06); --tint-2:rgba(14,124,134,.11);
+  --sans:'IBM Plex Sans', system-ui, sans-serif; --mono:'IBM Plex Mono', ui-monospace, monospace; }
+html, body { margin:0; background:transparent; font-family:var(--sans); color:var(--text); }
+.vc { box-sizing:border-box; height:206px; margin:2px; padding:14px 16px; background:var(--panel-2); border:1px solid var(--line);
+  border-radius:10px; display:flex; gap:16px; align-items:center; }
+.dotwrap { flex:none; width:96px; height:96px; display:flex; align-items:center; justify-content:center; }
+.dot { width:56px; height:56px; border-radius:50%; background:radial-gradient(circle at 35% 35%, #4FB3BB, var(--cyan) 70%);
+  box-shadow:0 0 0 0 rgba(14,124,134,.35); transition:transform .15s ease; }
+.vc[data-state="idle"] .dot, .vc[data-state="ended"] .dot { filter:saturate(.35); opacity:.7; }
+.vc[data-state="connecting"] .dot { animation:breathe 1.2s ease-in-out infinite; }
+.vc[data-state="listening"] .dot { animation:ring 2s ease-out infinite; }
+.vc[data-state="speaking"] .dot { animation:pulse .7s ease-in-out infinite alternate, ring 1s ease-out infinite; }
+@keyframes breathe { 50% { opacity:.45; } }
+@keyframes pulse { from { transform:scale(1); } to { transform:scale(1.22); } }
+@keyframes ring { 0% { box-shadow:0 0 0 0 rgba(14,124,134,.40); } 100% { box-shadow:0 0 0 22px rgba(14,124,134,0); } }
+@media (prefers-reduced-motion: reduce) { .dot { animation:none !important; } }
+.body { flex:1; min-width:0; display:flex; flex-direction:column; gap:8px; height:100%; }
+.top { display:flex; align-items:center; gap:10px; }
+.state { font-family:var(--mono); font-size:.78rem; letter-spacing:.08em; text-transform:uppercase; color:var(--cyan-text); }
+.vc[data-state="error"] .state { color:var(--red); }
+.sp { flex:1; }
+button { font-family:var(--sans); font-weight:500; font-size:.9rem; border-radius:8px; padding:.45rem 1rem; cursor:pointer;
+  border:1px solid var(--line); background:var(--panel); color:var(--text); }
+button.primary { background:var(--cyan); border-color:var(--cyan); color:#fff; }
+button:disabled { opacity:.5; cursor:default; }
+button:focus-visible { outline:2px solid var(--cyan); outline-offset:2px; }
+.tx { flex:1; overflow:hidden; display:flex; flex-direction:column; justify-content:flex-end; gap:4px; font-size:.88rem; line-height:1.35; }
+.tx .l { color:var(--text); overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+.tx .l b { font-weight:600; color:var(--cyan-text); }
+.tx .l.you b { color:var(--text-2); }
+.hint { font-size:.82rem; color:var(--text-3); }
+</style></head>
+<body>
+<div class="vc" id="vc" data-state="idle">
+  <div class="dotwrap"><div class="dot" aria-hidden="true"></div></div>
+  <div class="body">
+    <div class="top">
+      <span class="state" id="state" role="status" aria-live="polite">Ready</span><span class="sp"></span>
+      <button class="primary" id="start">Start talking</button>
+      <button id="end" disabled>End</button>
+    </div>
+    <div class="tx" id="tx"><div class="hint" id="hint">Ask about your brief, e.g. “What's most urgent?” Approvals stay in the app. Your browser will ask for the microphone.</div></div>
+  </div>
+</div>
+<script type="module">
+const CFG = __CFG__;
+const vc = document.getElementById('vc'), st = document.getElementById('state'), tx = document.getElementById('tx');
+const bStart = document.getElementById('start'), bEnd = document.getElementById('end');
+const LABEL = { idle:'Ready', connecting:'Connecting…', listening:'Listening', speaking:'Jarvis speaking', ended:'Ended', error:'Voice unavailable' };
+let conv = null, used = false, lines = [];
+function setState(s, msg) { vc.dataset.state = s; st.textContent = msg || LABEL[s] || s; }
+function esc(t) { return String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function addLine(who, text) {
+  if (!text) return;
+  lines.push({ who, text }); lines = lines.slice(-3);
+  tx.innerHTML = lines.map(l => `<div class="l ${l.who === 'You' ? 'you' : ''}"><b>${l.who}:</b> ${esc(l.text)}</div>`).join('');
+}
+function hint(t) { tx.innerHTML = `<div class="hint">${esc(t)}</div>`; }
+function ended(note) {
+  conv = null; bEnd.disabled = true; bStart.disabled = true;
+  setState('ended');
+  hint(note || 'Chat ended. Press “New voice chat” below to talk again.');
+}
+let Conversation = null;
+async function loadSdk() {
+  if (Conversation) return Conversation;
+  try { ({ Conversation } = await import('https://cdn.jsdelivr.net/npm/@elevenlabs/client@1.35.0/+esm')); }
+  catch (e) { ({ Conversation } = await import('https://cdn.jsdelivr.net/npm/@11labs/client@0.2.0/+esm')); }
+  return Conversation;
+}
+bStart.addEventListener('click', async () => {
+  if (used || !CFG.signedUrl) return;
+  used = true; bStart.disabled = true; setState('connecting'); hint('Connecting to Jarvis… allow the microphone if asked.');
+  try {
+    const C = await loadSdk();
+    conv = await C.startSession({
+      signedUrl: CFG.signedUrl,
+      dynamicVariables: CFG.dynamicVariables,
+      onConnect: () => { bEnd.disabled = false; setState('listening'); hint('Connected. Jarvis will greet you.'); },
+      onDisconnect: () => { if (vc.dataset.state !== 'error') ended(); },
+      onError: (m) => { console.warn('voice error', m); },
+      onModeChange: ({ mode }) => { if (!['ended', 'error'].includes(vc.dataset.state)) setState(mode === 'speaking' ? 'speaking' : 'listening'); },
+      onMessage: (p) => { const r = p.source || p.role; addLine(r === 'user' ? 'You' : 'Jarvis', p.message); },
+    });
+  } catch (e) {
+    console.warn('voice start failed', e && e.message);
+    conv = null; bEnd.disabled = true;
+    const mic = e && /permission|denied|notallowed/i.test(String(e.name || '') + String(e.message || ''));
+    setState('error', mic ? 'Microphone blocked' : 'Voice unavailable');
+    hint(mic ? 'Allow the microphone for this page (icon in the address bar), then press “New voice chat”. Or use Play my brief.'
+             : "Voice isn't available right now. Use Play my brief.");
+  }
+});
+bEnd.addEventListener('click', async () => {
+  bEnd.disabled = true;
+  try { if (conv) await conv.endSession(); } catch (e) {}
+  ended();
+});
+window.addEventListener('pagehide', () => { try { conv && conv.endSession(); } catch (e) {} });
+</script>
+</body></html>

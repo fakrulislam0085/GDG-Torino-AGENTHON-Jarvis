@@ -1,0 +1,54 @@
+[
+  {
+    "id": "act-stefano-1",
+    "type": "message_colleague",
+    "proposed_to": "stefano",
+    "to": "marta",
+    "subject": "Payment approval: EuroGPU Cloud invoice CLD-2026-0412",
+    "body": "Hi Marta,\n\nCould you please approve payment for EuroGPU Cloud invoice CLD-2026-0412? The amount is EUR 3,660 (incl. VAT), and it is due this Sunday, 22 November 2026. We have received a second notice for it.\n\nBest regards,\nStefano Arduino\nAriete Tech Solutions S.r.l.",
+    "reason": "Payment task task-002 needs Marta's approval",
+    "cites": [
+      "task-002",
+      "email-001"
+    ],
+    "basis": [
+      "mem-005"
+    ],
+    "status": "awaiting_approval",
+    "created": "2026-11-21T15:25:19"
+  },
+  {
+    "id": "act-giorgia-1",
+    "type": "message_colleague",
+    "proposed_to": "giorgia",
+    "to": "andrea",
+    "subject": "Approval needed: TLS certificate renewal",
+    "body": "Hi Andrea,\n\nCould you please review and approve the task 'Renew TLS certificate on the EU inference server'? It is currently blocked on your approval and is due on 2026-11-23.\n\nThanks,\nGiorgia Bosio\nAriete Tech Solutions S.r.l.",
+    "reason": "Task task-004 is blocked on Andrea",
+    "cites": [
+      "task-004",
+      "chat-007"
+    ],
+    "basis": [],
+    "status": "awaiting_approval",
+    "created": "2026-11-21T15:25:16"
+  },
+  {
+    "id": "act-silvia-1",
+    "type": "reply_draft",
+    "proposed_to": "silvia",
+    "to": "roberto@studiorinaldi.example",
+    "subject": "Re: Intake agent skipping PEC attachments since Monday",
+    "body": "Dear Roberto,\n\nThank you for reaching out. We are actively addressing the document-intake agent issue with the skipped PEC attachments at the OCR step. Per our policy, we are putting an engineer on this stopped automation within one working day to ensure it is resolved before 25 November. I will call you shortly to discuss.\n\nBest regards,\nSilvia Ferraris, Ariete Tech Solutions S.r.l.",
+    "reason": "Reply to roberto@studiorinaldi.example (email-002)",
+    "cites": [
+      "email-002"
+    ],
+    "basis": [
+      "mem-003",
+      "mem-010"
+    ],
+    "status": "awaiting_approval",
+    "created": "2026-11-21T15:25:17"
+  }
+]

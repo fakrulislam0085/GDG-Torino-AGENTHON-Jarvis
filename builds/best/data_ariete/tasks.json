@@ -1,0 +1,9 @@
+[
+  { "id": "task-001", "title": "Fix Studio Rinaldi document intake (pipeline v2.5)", "owner": "lorenzo", "status": "in_progress", "due": "2026-11-24", "source": "chat-003", "acl": ["tech", "sales"] },
+  { "id": "task-002", "title": "Pay EuroGPU Cloud CLD-2026-0412 (EUR 3,660)", "owner": "stefano", "status": "todo", "due": "2026-11-22", "source": "email-001", "acl": ["finance"] },
+  { "id": "task-003", "title": "Collect November timesheets and expense reports", "owner": "marta", "status": "todo", "due": "2026-11-23", "source": "email-007", "acl": ["finance"] },
+  { "id": "task-004", "title": "Renew TLS certificate on the EU inference server", "owner": "giorgia", "status": "blocked", "blocked_by": "Andrea's approval", "due": "2026-11-23", "source": "chat-007", "acl": ["tech"] },
+  { "id": "task-005", "title": "Prepare demo agent for Studio Ferrua", "owner": "silvia", "status": "todo", "due": "2026-11-23", "source": "chat-010", "acl": ["sales", "tech"] },
+  { "id": "task-006", "title": "Call Roberto at Studio Rinaldi about the 28 Nov deadline", "owner": "silvia", "status": "todo", "due": "2026-11-21", "source": "chat-005", "acl": ["sales"] },
+  { "id": "task-007", "title": "Chase 3 expense reports from the Cuneo training day", "owner": "stefano", "status": "todo", "due": "2026-11-22", "source": "chat-009", "acl": ["finance"] }
+]

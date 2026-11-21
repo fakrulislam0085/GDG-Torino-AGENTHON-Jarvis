@@ -1,0 +1,659 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jarvis AGENTHON A</title>
+<!-- Fonts: swap for the brand preset in references/brands.md. Keep display=swap. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* =====================================================================
+   1. TOKENS  — the only place colours and fonts are set.
+   Change these per brand (references/brands.md). Never hard-code a hex
+   colour further down the file.
+   ===================================================================== */
+:root{
+  /* surfaces */
+  --bg:#FAF9F5;          /* light slide background */
+  --surface:#FFFFFF;     /* cards */
+  --line:#E7E4DC;        /* hairlines, card borders */
+  /* text */
+  --ink:#14213D;         /* main text on light */
+  --ink-2:#4A5568;       /* secondary text */
+  --ink-3:#6B7385;       /* captions, footers (still ≥4.5:1 on --bg) */
+  /* brand */
+  --brand:#1B3A6A;       /* headlines, filled boxes, dark slides */
+  --accent:#AC1F25;      /* ONE accent: the twist in a headline, the key number */
+  --accent-soft:#F7E9E8; /* tint of the accent for soft fills */
+  --accent-on-dark:#FF8A8E; /* the accent, lightened to stay readable on --dark-bg (≥3:1) */
+  --on-brand:#FFFFFF;    /* text on --brand */
+  --fill:var(--brand);   /* filled boxes (hero, bar, highlighted card, table head); text on it is white */
+  --dark-bg:#1B3A6A;     /* background of .dark slides */
+  --dark-surface:rgba(255,255,255,.07);
+  --dark-line:rgba(255,255,255,.16);
+  /* status */
+  --ok:#0B7550;  --ok-soft:#E3F4EC;
+  --soon:#8F5200; --soon-soft:#FBF0DC;
+  /* type */
+  --font-display:"Montserrat", "Inter", system-ui, sans-serif;
+  --font-body:"Inter", system-ui, "Segoe UI", sans-serif;
+  --font-mono:"JetBrains Mono", Consolas, monospace;
+  --font-num:var(--font-display); /* big numbers + .fig. Use a font with plain, even figures (Inter, Montserrat). Never Syne */
+  --num-weight:var(--display-weight); --num-tracking:-.03em;
+  --display-weight:800;  /* numbers, stat values */
+  --title-weight:900;    /* cover title, hero number, ghost numbers. Set 800 for fonts without 900 (Syne) */
+  --claim-size:76px; --claim-weight:800; /* headline; wide fonts (Syne) need ~68px / 700 */
+  --rule:var(--accent);  /* the thin top bar on content slides */
+  /* geometry (1920×1080 canvas) */
+  --mx:112px;            /* left/right margin */
+  --mt:96px;             /* top margin */
+  --mb:112px;            /* bottom margin (footer lives inside it) */
+  --gap:28px;
+  --r:22px;              /* card radius */
+  --r-sm:12px;
+  /* style: apple-gallery */
+  --bg:#FFFFFF; --surface:#F5F5F7; --line:#E0E0E0; --ink:#1D1D1F; --ink-2:#333333; --ink-3:#6E6E73;
+  --brand:#1D1D1F; --accent:#0066CC; --accent-soft:#F5F5F7; --accent-on-dark:#2997FF; --dark-bg:#000000; --fill:#1D1D1F;
+  --font-display:"Inter", system-ui, sans-serif; --display-weight:600; --title-weight:600; --claim-weight:600; --claim-size:88px;
+  --font-body:"Inter", system-ui, sans-serif; --font-mono:"Inter", system-ui, sans-serif;
+  --font-num:"Inter", system-ui, sans-serif; --num-weight:600; --num-tracking:-.045em; --r:18px;
+  /* ---- design-brief.md: Jarvis app palette (light) + Chakra Petch / IBM Plex ---- */
+  --bg:#F6F7F9; --surface:#FFFFFF; --line:#DDE2E8; --ink:#12161F; --ink-2:#4A5363; --ink-3:#4A5363;
+  --brand:#12161F; --accent:#0E7C86; --accent-soft:#E2F0F1; --accent-on-dark:#4FC3CC; --on-brand:#FFFFFF;
+  --fill:#0E7C86; --accent-deep:#0A646C; --dark-bg:#12161F; --panel-dark:#05070B;
+  --amber:#9A6200; --amber-soft:#FBF0DC; --red:#B42318; --ok:#1E7B45; --ok-soft:#E4F2EA; --soon:#9A6200; --soon-soft:#FBF0DC;
+  --font-display:"Chakra Petch", system-ui, sans-serif; --display-weight:700; --title-weight:700; --claim-weight:600; --claim-size:80px;
+  --font-body:"IBM Plex Sans", system-ui, sans-serif; --font-mono:"IBM Plex Mono", Consolas, monospace;
+  --font-num:"IBM Plex Sans", system-ui, sans-serif; --num-weight:600; --num-tracking:-.02em; --r:22px;
+}
+
+/* =====================================================================
+   2. CANVAS — fixed 1920×1080 slides. Screen = stacked + scaled preview.
+   Print/PDF = one slide per page, exact size. Do not edit this block.
+   ===================================================================== */
+@page{ size:1920px 1080px; margin:0; }
+*{ box-sizing:border-box; margin:0; padding:0; }
+b,strong{ font-weight:700; }  /* "bolder" would ask for weights the font link may not load */
+html,body{ background:#DEDBD3; }
+body{ font-family:var(--font-body); color:var(--ink); -webkit-font-smoothing:antialiased;
+      text-rendering:optimizeLegibility; font-variant-numeric:lining-nums; }
+.deck{ display:flex; flex-direction:column; align-items:center; gap:40px; padding:40px 0; }
+.slide{ position:relative; width:1920px; height:1080px; overflow:hidden; flex:none;
+        background:var(--bg); color:var(--ink);
+        padding:var(--mt) var(--mx) var(--mb); display:flex; flex-direction:column;
+        zoom:var(--zoom,1); box-shadow:0 10px 40px rgba(0,0,0,.12); }
+@media print{
+  html,body{ background:none; }
+  .deck{ display:block; padding:0; }
+  .slide{ zoom:1; box-shadow:none; break-after:page; page-break-after:always; }
+  .slide:last-child{ break-after:auto; page-break-after:auto; }
+}
+/* Present mode (press P): one slide, fit to window, arrows to move. */
+body.present{ background:#000; overflow:hidden; }
+body.present .deck{ padding:0; gap:0; height:100vh; justify-content:center; }
+body.present .slide{ display:none; box-shadow:none; }
+body.present .slide.current{ display:flex; }
+
+/* =====================================================================
+   3. SLIDE FRAME — kicker, claim, lede, footer, logo, watermark
+   ===================================================================== */
+.top{ display:flex; align-items:center; justify-content:space-between; min-height:40px; margin-bottom:26px; }
+.kicker{ font:700 22px/1 var(--font-body); letter-spacing:.16em; text-transform:uppercase; color:var(--accent); }
+.mark{ height:48px; width:auto; display:block; }            /* logo, top right */
+.mark-text{ font:800 26px/1 var(--font-display); color:var(--brand); display:flex; align-items:center; gap:12px; }
+
+.claim{ font-family:var(--font-display); font-weight:var(--claim-weight); font-size:var(--claim-size); line-height:1.06;
+        letter-spacing:-.022em; color:var(--brand); max-width:1640px; text-wrap:balance; }
+.claim em, .title em{ font-style:normal; color:var(--accent); }
+.claim.lg{ font-size:calc(var(--claim-size) * 1.2); } .claim.sm{ font-size:calc(var(--claim-size) * .84); }
+.claim .br{ display:block; }                                    /* force the two-line "statement / twist" */
+.lede{ font-size:34px; line-height:1.4; color:var(--ink-2); margin-top:22px; max-width:1400px; text-wrap:pretty; }
+.body{ flex:1; display:flex; flex-direction:column; justify-content:center; min-height:0; padding-top:40px; }
+.body.top-align{ justify-content:flex-start; }
+
+.foot{ position:absolute; left:var(--mx); right:var(--mx); bottom:44px; display:flex; justify-content:space-between;
+       align-items:flex-end; gap:40px; font-size:20px; line-height:1.35; color:var(--ink-3); }
+.foot .src{ max-width:1450px; }
+.foot .src a{ color:inherit; }
+.foot .num{ font:500 20px/1 var(--font-mono); letter-spacing:.08em; white-space:nowrap; }
+.watermark{ position:absolute; left:0; right:0; bottom:-.2em; text-align:center; pointer-events:none;
+            font:var(--title-weight) 300px/1 var(--font-display); letter-spacing:-.02em; color:var(--ink); opacity:.035;
+            text-transform:uppercase; white-space:nowrap; }
+.topbar{ position:absolute; top:0; left:0; right:0; height:8px; background:var(--rule); }
+
+/* =====================================================================
+   4. DARK + COVER SLIDES
+   ===================================================================== */
+.slide.dark{ --bg:var(--dark-bg); --surface:var(--dark-surface); --line:var(--dark-line);
+             --ink:#FFFFFF; --ink-2:rgba(255,255,255,.82); --ink-3:rgba(255,255,255,.66);
+             --brand:#FFFFFF; --fill:rgba(255,255,255,.13); --accent:var(--accent-on-dark); --accent-soft:rgba(255,255,255,.1);
+             background:var(--bg); }
+.slide.dark .watermark{ color:#fff; opacity:.05; }
+.slide.cover, .slide.close{ justify-content:center; }
+.title{ font-family:var(--font-display); font-weight:var(--title-weight); font-size:190px; line-height:.95; letter-spacing:-.035em; color:var(--brand); }
+.tagline{ font:600 46px/1.25 var(--font-body); color:var(--ink); margin-top:34px; max-width:1300px; text-wrap:balance; }
+.byline{ font:500 22px/1 var(--font-mono); letter-spacing:.18em; text-transform:uppercase; color:var(--ink-3); margin-top:56px; }
+.cover.center, .close.center{ align-items:center; text-align:center; }
+.cover.center .tagline,.close.center .tagline{ margin-left:auto; margin-right:auto; }
+.glow{ position:absolute; inset:0; pointer-events:none;
+       background:radial-gradient(900px 600px at 82% 12%, rgba(255,255,255,.12), transparent 60%); }
+.rings{ position:absolute; inset:0; pointer-events:none;
+        background:radial-gradient(circle at 50% 50%, transparent 259px, rgba(255,255,255,.07) 260px, transparent 262px),
+                   radial-gradient(circle at 50% 50%, transparent 409px, rgba(255,255,255,.06) 410px, transparent 412px),
+                   radial-gradient(circle at 50% 50%, transparent 559px, rgba(255,255,255,.05) 560px, transparent 562px); }
+
+/* =====================================================================
+   5. LAYOUT HELPERS
+   ===================================================================== */
+.row{ display:flex; gap:var(--gap); align-items:stretch; }
+.grid{ display:grid; gap:var(--gap); }
+.g2{ grid-template-columns:repeat(2,1fr); } .g3{ grid-template-columns:repeat(3,1fr); }
+.g4{ grid-template-columns:repeat(4,1fr); } .g5{ grid-template-columns:repeat(5,1fr); }
+.split{ display:grid; grid-template-columns:1fr 1fr; gap:72px; align-items:center; }
+.split.wide-left{ grid-template-columns:1.25fr .75fr; } .split.wide-right{ grid-template-columns:.8fr 1.2fr; }
+.stack{ display:flex; flex-direction:column; gap:20px; }
+.center-x{ align-self:center; } .grow{ flex:1; }
+.mt-s{ margin-top:20px; } .mt-m{ margin-top:40px; } .mt-l{ margin-top:64px; }
+
+/* =====================================================================
+   6. COMPONENTS
+   ===================================================================== */
+/* Card */
+.card{ background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:40px 42px;
+       display:flex; flex-direction:column; gap:14px; position:relative; }
+.card h3{ font:700 34px/1.2 var(--font-body); color:var(--brand); letter-spacing:-.01em; }
+.card p{ font-size:26px; line-height:1.45; color:var(--ink-2); }
+.card .label{ font:700 20px/1 var(--font-body); letter-spacing:.14em; text-transform:uppercase; color:var(--accent); }
+.card.hl{ background:var(--fill); border-color:var(--fill); --ink:#fff; --ink-2:rgba(255,255,255,.85); color:#fff; }
+.slide.dark .card.hl{ border:3px solid var(--accent); }
+.card.hl h3{ color:#fff; } .card.hl .label{ color:rgba(255,255,255,.75); }
+.card.ring{ border:3px solid var(--accent); }
+.card.edge{ border-left:8px solid var(--accent); }
+.card.soft{ background:var(--accent-soft); border-color:transparent; }
+.card .ghost-num{ position:absolute; top:26px; right:32px; font:var(--num-weight) 104px/1 var(--font-num); color:currentColor; opacity:.1; }
+
+/* Stat */
+.stat{ display:flex; flex-direction:column; gap:10px; }
+.stat .n{ font:var(--num-weight) 104px/1 var(--font-num); letter-spacing:var(--num-tracking); color:var(--brand); }
+.stat .n.xl{ font-size:168px; } .stat .n.sm{ font-size:72px; }
+.stat .n em{ font-style:normal; color:var(--accent); }
+.stat .l{ font:700 28px/1.25 var(--font-body); color:var(--ink); }
+.stat .s{ font:600 20px/1.3 var(--font-mono); letter-spacing:.06em; text-transform:uppercase; color:var(--accent); }
+.stat .d{ font-size:24px; line-height:1.4; color:var(--ink-2); }
+.card.hl .stat .n,.card.hl .stat .l{ color:#fff; }
+
+/* Stat row: big number left, sentence right (Poliverse problem slide) */
+.statrow{ display:grid; grid-template-columns:minmax(300px, max-content) 1fr; align-items:center; gap:36px; padding:30px 44px;
+          background:var(--surface); border:1px solid var(--line); border-left:8px solid var(--accent); border-radius:var(--r); }
+.statrow .n{ font:var(--num-weight) 84px/1 var(--font-num); letter-spacing:var(--num-tracking); color:var(--brand); }
+.statrow p{ font-size:30px; line-height:1.4; color:var(--ink-2); } .statrow p b{ color:var(--ink); }
+
+/* Hero callout: one number that matters, in a filled box */
+.hero{ background:var(--fill); color:#fff; border-radius:var(--r); padding:48px 64px; display:flex;
+       align-items:center; justify-content:space-between; gap:48px; }
+.hero .n{ font:var(--num-weight) 168px/.9 var(--font-num); letter-spacing:calc(var(--num-tracking) - .01em); }
+.hero .n em{ font-style:normal; color:var(--accent-on-dark); }
+.hero .right{ text-align:right; }
+.hero .s{ font:600 20px/1 var(--font-mono); letter-spacing:.16em; text-transform:uppercase; opacity:.72; }
+.hero .t{ font-size:34px; line-height:1.35; margin-top:14px; opacity:.92; }
+
+/* Bar: a narrow filled strip with one message (+ optional tag) */
+.bar{ background:var(--fill); color:#fff; border-radius:var(--r-sm); padding:28px 40px; display:flex;
+      align-items:center; justify-content:space-between; gap:32px; font:600 30px/1.35 var(--font-body); }
+.bar .tag{ background:var(--accent-on-dark); color:var(--dark-bg); border-radius:10px; padding:10px 18px; font:700 20px/1 var(--font-mono); letter-spacing:.08em; white-space:nowrap; }
+.bar .big{ font:var(--num-weight) 64px/1 var(--font-num); letter-spacing:var(--num-tracking); white-space:nowrap; }
+.bar small{ display:block; font:600 20px/1 var(--font-mono); letter-spacing:.16em; text-transform:uppercase; opacity:.6; margin-bottom:10px; }
+
+/* Flow: steps with arrows */
+.flow{ display:flex; align-items:stretch; gap:0; }
+.flow > .card{ flex:1; min-height:300px; justify-content:flex-end; }
+.flow > .arrow{ flex:none; width:64px; display:flex; align-items:center; justify-content:center; color:var(--accent);
+                font:700 40px/1 var(--font-body); }
+.step-n{ font:700 20px/1 var(--font-mono); letter-spacing:.14em; text-transform:uppercase; color:var(--accent); }
+
+/* Chips (status, tags) */
+.chip{ display:inline-flex; align-items:center; gap:10px; border-radius:999px; padding:9px 18px;
+       font:700 20px/1 var(--font-mono); letter-spacing:.08em; text-transform:uppercase; white-space:nowrap;
+       background:var(--accent-soft); color:var(--accent); }
+.chip::before{ content:""; width:10px; height:10px; border-radius:50%; background:currentColor; }
+.chip.live{ background:var(--ok-soft); color:var(--ok); }
+.chip.soon{ background:var(--soon-soft); color:var(--soon); }
+.chip.plain::before{ display:none; }
+.chips{ display:flex; flex-wrap:wrap; gap:14px; }
+
+/* Table */
+.tbl{ width:100%; border-collapse:separate; border-spacing:0; background:var(--surface); border:1px solid var(--line);
+      border-radius:var(--r); overflow:hidden; font-size:26px; }
+.tbl th{ background:var(--fill); color:#fff; text-align:left; font:700 20px/1 var(--font-mono); letter-spacing:.14em;
+         text-transform:uppercase; padding:24px 32px; }
+.tbl td{ padding:24px 32px; border-top:1px solid var(--line); color:var(--ink-2); vertical-align:middle; }
+.tbl td:first-child{ font-weight:700; color:var(--ink); }
+.tbl tr.us td{ background:var(--accent-soft); color:var(--ink); font-weight:600; }
+.tbl tr.us td:first-child{ color:var(--accent); }
+
+/* Market: TAM / SAM / SOM rows */
+.tam{ display:flex; flex-direction:column; gap:20px; }
+.tam .lvl{ display:grid; grid-template-columns:130px 420px 1fr; align-items:center; gap:28px; padding:34px 48px;
+           background:var(--surface); border:1px solid var(--line); border-radius:var(--r); }
+.tam .k{ font:700 30px/1 var(--font-mono); letter-spacing:.1em; color:var(--accent); }
+.tam .v{ font:var(--num-weight) 80px/1 var(--font-num); letter-spacing:var(--num-tracking); color:var(--brand); }
+.tam .t{ font-size:26px; line-height:1.4; color:var(--ink-2); } .tam .t b{ color:var(--ink); }
+.tam .lvl.focus{ background:var(--fill); border-color:var(--fill); }
+.tam .lvl.focus .v,.tam .lvl.focus .t,.tam .lvl.focus .t b{ color:#fff; }
+.tam .lvl.focus .k{ color:#fff; opacity:.75; }
+
+/* 2×2 positioning matrix */
+.matrix{ position:relative; display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr;
+         width:1180px; height:560px; margin:0 auto; border:1px solid var(--line); border-radius:var(--r); overflow:hidden; background:var(--surface); }
+.matrix .q{ display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:32px; gap:10px;
+            border-right:1px solid var(--line); border-bottom:1px solid var(--line); }
+.matrix .q h4{ font:700 30px/1.2 var(--font-body); color:var(--brand); }
+.matrix .q p{ font-size:22px; line-height:1.4; color:var(--ink-3); }
+.matrix .q.us{ background:var(--fill); } .matrix .q.us h4{ color:#fff; font:var(--title-weight) 52px/1 var(--font-display); }
+.matrix .q.us p{ color:rgba(255,255,255,.8); }
+.matrix-wrap{ position:relative; padding:44px 64px; align-self:center; }
+.axis{ position:absolute; font:700 20px/1 var(--font-mono); letter-spacing:.2em; text-transform:uppercase; color:var(--ink-3); white-space:nowrap; }
+.axis.t{ top:6px; left:50%; transform:translateX(-50%); } .axis.b{ bottom:6px; left:50%; transform:translateX(-50%); }
+.axis.l{ left:22px; top:50%; transform:translate(-50%,-50%) rotate(-90deg); } .axis.r{ right:22px; top:50%; transform:translate(50%,-50%) rotate(90deg); color:var(--accent); }
+
+/* Team */
+.person{ display:grid; grid-template-columns:150px 1fr; gap:32px; align-items:start; }
+.person img,.person .ph{ width:150px; height:150px; border-radius:50%; object-fit:cover; background:var(--accent-soft); border:4px solid var(--surface); box-shadow:0 0 0 2px var(--line); }
+.person h3{ font:800 38px/1.15 var(--font-display); color:var(--brand); }
+.person .role{ font:700 20px/1 var(--font-mono); letter-spacing:.14em; text-transform:uppercase; color:var(--accent); margin-top:12px; }
+.person .meta{ font-size:22px; color:var(--ink-3); margin-top:10px; }
+.person .why{ margin-top:22px; font-size:25px; line-height:1.45; color:var(--ink-2); }
+
+/* Timeline / roadmap */
+.timeline{ display:flex; flex-direction:column; gap:18px; }
+.timeline .it{ display:grid; grid-template-columns:150px 1fr; gap:28px; padding:28px 36px; background:var(--surface);
+               border:1px solid var(--line); border-radius:var(--r); align-items:baseline; }
+.timeline .when{ font:700 22px/1 var(--font-mono); letter-spacing:.1em; color:var(--accent); }
+.timeline h4{ font:700 30px/1.2 var(--font-body); color:var(--brand); }
+.timeline p{ font-size:24px; line-height:1.4; color:var(--ink-2); margin-top:6px; }
+.timeline .it.now{ border:3px solid var(--accent); }
+.phases{ display:grid; grid-auto-flow:column; grid-auto-columns:1fr; gap:var(--gap); }
+
+/* Product: phone frame + screenshot frame */
+.phone{ width:380px; aspect-ratio:9/19.5; border-radius:56px; background:#0B0F19; padding:14px; box-shadow:0 30px 60px rgba(0,0,0,.18); flex:none; }
+.phone > .scr{ width:100%; height:100%; border-radius:44px; background:linear-gradient(160deg,#F4F6FA,#DDE3EE); }
+.phone img{ width:100%; height:100%; object-fit:cover; object-position:top; border-radius:44px; display:block; background:#fff; }
+.screen{ border-radius:var(--r); overflow:hidden; border:1px solid var(--line); box-shadow:0 30px 60px rgba(0,0,0,.14); background:var(--surface); }
+.screen .chrome{ height:44px; display:flex; align-items:center; gap:10px; padding:0 18px; background:#EEF0F3; border-bottom:1px solid var(--line); }
+.screen .chrome i{ width:13px; height:13px; border-radius:50%; background:#CBD0D8; }
+.screen img{ display:block; width:100%; height:auto; }
+.caption{ font-size:22px; color:var(--ink-3); margin-top:16px; }
+
+/* Chat transcript (real output, not invented) */
+.chat{ display:flex; flex-direction:column; gap:18px; }
+.msg{ max-width:760px; padding:22px 28px; border-radius:22px; background:var(--surface); border:1px solid var(--line); font-size:26px; line-height:1.42; }
+/* A number inside a headline or sentence: <span class="fig">€9,980</span> */
+.fig{ font-family:var(--font-num); font-weight:var(--num-weight); letter-spacing:var(--num-tracking); font-variant-numeric:lining-nums; }
+.msg .who{ display:block; font:700 20px/1 var(--font-body); color:var(--ink-3); margin-bottom:10px; }
+.msg.them{ align-self:flex-start; border-bottom-left-radius:6px; }
+.msg.us{ align-self:flex-end; background:var(--accent-soft); border-color:transparent; border-bottom-right-radius:6px; }
+.msg.us .who{ color:var(--accent); }
+
+/* Quote */
+.quote{ font:700 64px/1.18 var(--font-display); letter-spacing:-.02em; color:var(--brand); max-width:1500px; text-wrap:balance; }
+.quote::before{ content:"\201C"; color:var(--accent); }
+.quote::after{ content:"\201D"; color:var(--accent); }
+.cite{ font:600 24px/1.3 var(--font-body); color:var(--ink-3); margin-top:28px; }
+
+/* Ecosystem orbit (centre + satellites); position satellites inline with --a (angle) */
+.orbit{ position:relative; width:620px; height:620px; flex:none; }
+.orbit .core{ position:absolute; left:50%; top:50%; width:220px; height:220px; transform:translate(-50%,-50%); border-radius:50%;
+              background:var(--fill); color:#fff; display:flex; align-items:center; justify-content:center; text-align:center;
+              font:var(--title-weight) 40px/1.05 var(--font-display); box-shadow:0 0 0 18px var(--accent-soft); }
+.orbit .sat{ position:absolute; left:50%; top:50%; width:170px; height:170px; border-radius:50%; background:var(--surface);
+             border:3px solid var(--ok); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:8px;
+             font:700 22px/1.15 var(--font-body); color:var(--brand);
+             transform:translate(-50%,-50%) rotate(var(--a)) translate(265px) rotate(calc(-1 * var(--a))); }
+.orbit .sat small{ font:700 20px/1 var(--font-mono); letter-spacing:.1em; color:var(--ok); }
+.orbit .sat.soon{ border-style:dashed; border-color:var(--soon); } .orbit .sat.soon small{ color:var(--soon); }
+.orbit .sat.idea{ border-color:var(--line); color:var(--ink-3); }
+
+/* Bullet list with icons/markers */
+.ticks{ list-style:none; display:flex; flex-direction:column; gap:22px; }
+.ticks li{ display:grid; grid-template-columns:40px 1fr; gap:18px; font-size:28px; line-height:1.4; color:var(--ink-2); }
+.ticks li::before{ content:""; width:16px; height:16px; margin-top:12px; border-radius:50%; background:var(--accent); justify-self:center; }
+.ticks li b{ color:var(--ink); }
+
+/* Missing fact — visible on purpose. The render check counts these. */
+.need{ display:inline-block; border:3px dashed #D7263D; color:#D7263D; background:#FFF0F2; border-radius:10px;
+       padding:4px 12px; font:700 0.8em/1.3 var(--font-mono); }
+
+/* =====================================================================
+   7. DECK-SPECIFIC STYLES — add below. Use the tokens.
+   ===================================================================== */
+/* ---- style: apple-gallery ---- */
+.slide{ align-items:center; text-align:center; }
+.slide.parch{ --bg:#F5F5F7; --surface:#FFFFFF; background:#F5F5F7; }
+.claim{ letter-spacing:-.035em; line-height:1.05; max-width:1500px; }
+.claim em{ color:var(--ink-3); }
+.slide.dark .claim em{ color:#86868B; }
+.eyebrow{ font:600 28px/1.2 var(--font-body); color:var(--ink); margin-bottom:18px; letter-spacing:-.01em; }
+.slide.dark .eyebrow{ color:#fff; }
+.title{ font-size:200px; letter-spacing:-.055em; }
+.tagline{ font-weight:400; color:var(--ink-2); font-size:44px; letter-spacing:-.015em; }
+.link{ font:400 32px/1 var(--font-body); color:var(--accent); margin-top:40px; }
+.slide.dark .link{ color:#2997FF; }
+.tiles{ display:grid; grid-template-columns:repeat(3,1fr); gap:24px; width:100%; }
+.tile{ background:var(--surface); border-radius:var(--r); padding:56px 40px; display:flex; flex-direction:column; align-items:center; gap:14px; }
+.tile .n{ font:600 120px/1 var(--font-num); letter-spacing:-.05em; color:var(--ink); }
+.tile .l{ font:600 28px/1.25 var(--font-body); color:var(--ink); }
+.tile .d{ font:400 23px/1.45 var(--font-body); color:var(--ink-3); }
+.hero-num{ font:600 280px/.9 var(--font-num); letter-spacing:-.06em; color:var(--ink); }
+.hero-num + p{ font:400 34px/1.3 var(--font-body); color:var(--ink-3); margin-top:22px; }
+.tbl.ap{ border:0; background:transparent; font-size:27px; text-align:left; }
+.tbl.ap th{ background:transparent; color:var(--ink-3); font:600 20px/1 var(--font-body); letter-spacing:0; text-transform:none; border-bottom:1px solid var(--line); padding:18px 28px; }
+.tbl.ap td{ border-top:1px solid var(--line); padding:24px 28px; }
+.tbl.ap tr.us td{ background:#fff; font-weight:600; color:var(--ink); } .tbl.ap tr.us td:first-child{ color:var(--accent); }
+.foot{ text-align:left; }
+/* ---- deck-specific ---- */
+b,strong{ font-weight:600; }
+.slide{ justify-content:flex-start; }
+.foot .num{ display:none; }
+.foot .src{ font:400 20px/1.35 var(--font-mono); color:var(--ink-3); }
+.kicker{ font:600 22px/1 var(--font-body); letter-spacing:.16em; color:var(--accent); margin-bottom:22px; }
+.claim{ letter-spacing:-.01em; line-height:1.08; max-width:1640px; }
+.claim em{ color:var(--accent); }
+.title{ font-size:180px; letter-spacing:-.02em; line-height:.95; }
+.tagline{ font:500 46px/1.25 var(--font-body); color:var(--ink); letter-spacing:-.01em; max-width:1240px; }
+.byline{ font:500 22px/1.3 var(--font-body); letter-spacing:.12em; color:var(--ink-2); margin-top:48px; }
+.body{ width:100%; padding-top:48px; }
+.amber{ color:var(--amber); }
+
+/* orb logo (static still of the app's voice orb) */
+.orb{ display:block; margin:0 auto; }
+.cover .orb{ width:380px; height:380px; margin-bottom:8px; }
+.close .orb{ width:150px; height:150px; margin-bottom:10px; }
+
+/* proof / bullet lists */
+.pts{ list-style:none; display:flex; flex-direction:column; gap:22px; text-align:left; }
+.pts li{ display:grid; grid-template-columns:52px 1fr; gap:20px; align-items:center; font:400 32px/1.35 var(--font-body); color:var(--ink); }
+.pts li .ic{ width:52px; height:52px; border-radius:50%; background:var(--accent-soft); color:var(--accent);
+             display:flex; align-items:center; justify-content:center; font:600 24px/1 var(--font-body); color:var(--accent-deep); }
+.pts li.key{ color:var(--amber); font-weight:600; }
+.pts li.key .ic{ background:var(--amber-soft); color:var(--amber); }
+.pts li .need{ font-size:26px; }
+.foot .need{ font-size:20px; }
+.mail .s .need{ font-size:22px; }
+.shot .need{ font-size:30px; padding:10px 20px; }
+
+/* panels */
+.panel{ background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:40px 44px; text-align:left; }
+.split{ text-align:left; }
+
+/* slide 02 A: one email, wrong inbox */
+.mailviz{ display:flex; flex-direction:column; gap:26px; align-items:stretch; }
+.mail{ background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:40px 40px; box-shadow:0 24px 48px rgba(18,22,31,.08);
+       display:grid; grid-template-columns:64px 1fr; gap:22px; align-items:center; }
+.mail .env{ width:64px; height:64px; border-radius:16px; background:var(--amber-soft); display:flex; align-items:center; justify-content:center; }
+.mail .t{ font:600 30px/1.25 var(--font-body); color:var(--ink); }
+.mail .s{ font:400 24px/1.3 var(--font-body); color:var(--ink-2); margin-top:6px; }
+.inboxes{ display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+.inbox{ border:2px dashed #C4CBD4; border-radius:18px; padding:44px 22px; font:500 26px/1.3 var(--font-body); color:var(--ink-2); text-align:center; }
+.inbox.hit{ border:3px solid var(--amber); background:var(--amber-soft); color:var(--amber); font-weight:600; }
+.drop{ text-align:center; font:600 34px/1 var(--font-body); color:var(--amber); }
+
+/* slide 02 B: phone + class tile */
+.bviz{ display:flex; gap:40px; align-items:center; justify-content:center; }
+.phone{ width:300px; height:420px; aspect-ratio:auto; }
+.phone > .scr{ display:flex; flex-direction:column; gap:16px; padding:64px 16px 16px; background:linear-gradient(170deg,#FFFFFF,#E9EEF3); text-align:left; }
+.notif{ background:var(--surface); border-radius:22px; padding:18px 20px; box-shadow:0 10px 24px rgba(18,22,31,.10); border-left:6px solid var(--amber); }
+.notif .who{ font:600 20px/1.2 var(--font-body); color:var(--amber); }
+.notif .t{ font:600 24px/1.3 var(--font-body); color:var(--ink); margin-top:6px; }
+.classtile{ width:330px; background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:30px 30px; text-align:left;
+            box-shadow:0 24px 48px rgba(18,22,31,.08); }
+.classtile .k{ font:600 20px/1 var(--font-body); letter-spacing:.12em; text-transform:uppercase; color:var(--accent); }
+.classtile .when{ font:600 56px/1.05 var(--font-num); color:var(--ink); margin-top:14px; }
+.classtile .who{ font:400 24px/1.3 var(--font-body); color:var(--ink-2); margin-top:10px; }
+.big14{ display:flex; align-items:baseline; gap:22px; }
+.big14 .n{ font:600 150px/.9 var(--font-num); letter-spacing:-.03em; color:var(--amber); }
+
+/* slide 03: dark diagram panel */
+.diagram{ background:var(--panel-dark); border-radius:28px; padding:26px; box-shadow:0 30px 60px rgba(18,22,31,.18); }
+.diagram .crop{ width:100%; aspect-ratio:1920/915; overflow:hidden; border-radius:14px; }
+.diagram img{ width:100%; height:100%; object-fit:cover; object-position:50% 100%; display:block; }
+
+/* slide 04 / screenshots: placeholder frames */
+.screen{ background:var(--surface); }
+.screen .chrome{ background:#E9EDF1; height:40px; }
+.screen{ box-shadow:0 24px 56px rgba(18,22,31,.14); }
+.screen img{ aspect-ratio:1440/765; }
+.shot{ display:flex; align-items:center; justify-content:center; background:repeating-linear-gradient(135deg, var(--bg) 0 18px, var(--surface) 18px 36px); }
+.steps{ list-style:none; display:flex; flex-direction:column; gap:24px; text-align:left; }
+.steps li{ background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:36px 34px; display:grid; grid-template-columns:56px 1fr; gap:20px; align-items:center;
+           font:600 32px/1.25 var(--font-body); color:var(--ink); }
+.steps li .i{ width:56px; height:56px; border-radius:50%; background:var(--accent); color:var(--on-brand); display:flex; align-items:center; justify-content:center; font:600 26px/1 var(--font-num); }
+.steps li.key{ border:3px solid var(--amber); }
+.steps li.key .i{ background:var(--amber); }
+
+/* slide 05: proof grid */
+.proof{ display:grid; grid-template-columns:1fr 1fr; gap:24px; text-align:left; }
+.proof .p{ background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:32px 34px; display:grid; grid-template-columns:52px 1fr; gap:22px; align-items:center;
+           font:500 32px/1.3 var(--font-body); color:var(--ink); min-height:172px; }
+.proof .p .ic{ width:52px; height:52px; border-radius:50%; background:var(--ok-soft); display:flex; align-items:center; justify-content:center; }
+.proof .p .fig{ color:var(--accent-deep); font-weight:600; }
+.proof .p.key{ border:3px solid var(--amber); }
+.proof .p.key .fig{ color:var(--amber); }
+
+/* slide 06: connectors + facts */
+.conn{ display:grid; grid-template-columns:1fr 1fr; gap:24px; text-align:left; }
+.conn .panel{ padding:38px 42px; min-height:220px; }
+.conn .lbl{ font:600 22px/1 var(--font-body); letter-spacing:.12em; text-transform:uppercase; margin-bottom:22px; }
+.conn .live .lbl{ color:var(--ok); } .conn .next .lbl{ color:var(--amber); }
+.conn .chips .chip{ font:500 32px/1 var(--font-body); letter-spacing:0; text-transform:none; padding:16px 28px; }
+.conn .after{ font:400 28px/1.3 var(--font-body); color:var(--ink-2); margin-top:20px; }
+.facts4{ display:grid; grid-template-columns:1.05fr 1fr 1fr 1fr; gap:24px; margin-top:24px; text-align:left; }
+.facts4 .panel{ padding:34px 34px; min-height:270px; font:400 28px/1.38 var(--font-body); color:var(--ink); display:flex; flex-direction:column; justify-content:center; }
+.facts4 .cost{ border:3px solid var(--amber); }
+.facts4 .cost .pre{ font:500 24px/1 var(--font-body); color:var(--ink-2); }
+.facts4 .cost .n{ font:600 96px/1 var(--font-num); letter-spacing:-.02em; color:var(--amber); margin:8px 0 6px; }
+.facts4 .muted{ color:var(--ink-2); }
+
+/* slide 07: team + close line */
+.team3{ display:grid; grid-template-columns:repeat(3,1fr); gap:24px; text-align:left; width:100%; }
+.team3 .panel{ padding:34px 38px; }
+.team3 h3{ font:700 34px/1.15 var(--font-display); color:var(--ink); }
+.team3 p{ font:400 26px/1.38 var(--font-body); color:var(--ink-2); margin-top:10px; }
+.closer{ font:600 56px/1.2 var(--font-display); color:var(--accent); letter-spacing:-.005em; margin-top:56px; text-wrap:balance; }
+.notes{ display:none; }
+.mail .lines i{ display:block; height:14px; border-radius:7px; background:var(--line); margin:10px 0; }
+.mail .lines i:nth-child(1){ width:62%; background:var(--amber-soft); } .mail .lines i:nth-child(3){ width:78%; }
+.flow4{ display:grid; grid-template-columns:1fr 64px 1fr 64px 1fr 64px 1fr; align-items:stretch; width:100%; text-align:left; }
+.flow4 .st{ background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:32px 32px; display:flex; flex-direction:column; gap:14px; min-height:250px; }
+.flow4 .sn{ width:52px; height:52px; border-radius:50%; background:var(--accent-soft); color:var(--accent-deep); display:flex; align-items:center; justify-content:center; font:600 24px/1 var(--font-num); }
+.flow4 h3{ font:700 36px/1.12 var(--font-display); color:var(--ink); margin-top:6px; }
+.flow4 p{ font:400 25px/1.38 var(--font-body); color:var(--ink-2); }
+.flow4 .st.key{ border:3px solid var(--amber); background:var(--amber-soft); box-shadow:0 20px 44px rgba(154,98,0,.14); }
+.flow4 .st.key h3{ color:var(--amber); } .flow4 .st.key .sn{ background:var(--amber); color:var(--on-brand); }
+.flow4 .st.key p{ color:#6B4500; }
+.flow4 .ar{ display:flex; align-items:center; justify-content:center; font:600 44px/1 var(--font-body); color:var(--accent); }
+.pts.two{ display:grid; grid-template-columns:1fr 1fr; gap:26px 72px; margin-top:52px; }
+.pts.two li{ font-size:28px; grid-template-columns:28px 1fr; align-items:start; }
+.pts .ic.dot{ width:16px; height:16px; margin-top:14px; background:var(--accent); justify-self:center; }
+.flow4 .st{ justify-content:center; }
+.flow4 .mini{ display:flex; flex-wrap:wrap; gap:8px; }
+.flow4 .mini span{ font:500 22px/1 var(--font-body); color:var(--accent-deep); background:var(--accent-soft); border-radius:999px; padding:9px 14px; }
+.flow4 .st p + p{ margin-top:-6px; }
+.need{ color:#B42318; border-color:#B42318; }
+
+</style>
+</head>
+<body>
+<main class="deck">
+<section class="slide cover center" data-title="Cover">
+  <div class="body" style="padding-top:0">
+    <svg class="orb" viewBox="0 0 200 200" role="img" aria-label="Jarvis voice orb" data-logo>
+  <defs><radialGradient id="gc" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#0E7C86" stop-opacity=".26"/><stop offset=".42" stop-color="#0E7C86" stop-opacity=".09"/><stop offset="1" stop-color="#0E7C86" stop-opacity="0"/></radialGradient></defs>
+  <circle cx="100" cy="100" r="80" fill="url(#gc)"/>
+  <g fill="none" stroke="#0E7C86" stroke-width="2.4" vector-effect="non-scaling-stroke" stroke-linejoin="round">
+    <ellipse cx="100" cy="100" rx="92" ry="24" transform="rotate(-16 100 100)" stroke-opacity=".6"/>
+    <ellipse cx="100" cy="100" rx="86" ry="38" transform="rotate(28 100 100)" stroke-opacity=".32" stroke-dasharray="6 5"/>
+    <circle cx="100" cy="100" r="54" stroke-opacity=".3"/>
+    <g stroke-opacity=".85"><polygon points="145,74 145,126 100,152 55,126 55,74 100,48"/><polygon points="100,72 124,114 76,114"/>
+    <path d="M100,72 L100,48 M100,72 L145,74 M100,72 L55,74 M124,114 L145,74 M124,114 L145,126 M124,114 L100,152 M76,114 L55,126 M76,114 L55,74 M76,114 L100,152"/></g>
+  </g>
+  <circle cx="187" cy="75" r="3.2" fill="#0E7C86"/>
+</svg>
+    <h1 class="title">Jarvis.</h1>
+    <p class="tagline">The colleague who knows, speaks first, and asks before it acts.</p>
+    <p class="byline">Token Mafia · Agentic AI for business · GDG Torino AGENTHON · 21 November 2026</p>
+  </div>
+  <aside class="notes">Hi, I'm Arif, from Token Mafia. This is Jarvis: a colleague that knows, speaks first, and asks before it acts.</aside>
+</section>
+
+<section class="slide" data-title="Problem">
+  <p class="kicker">The problem</p>
+  <h1 class="claim">Every company already has the answer. <em class="br">It's in someone else's inbox.</em></h1>
+  <div class="body">
+    <div class="split" style="grid-template-columns:1fr 1fr; gap:80px">
+      <div class="mailviz">
+        <div class="mail"><div class="env"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#9A6200" stroke-width="2" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6l8.5 7 8.5-7"/></svg></div><div class="lines"><i></i><i></i><i></i></div></div>
+        <div class="drop">↓</div>
+        <div class="inboxes" style="grid-template-columns:1fr 1fr"><div class="inbox hit">The account manager</div><div class="inbox">The engineer</div></div>
+      </div>
+      <ul class="pts">
+        <li class="key"><span class="ic">1</span><span>A client firm: <span class="fig">60</span> files stuck before the <span class="fig">30</span>&nbsp;November tax deadline</span></li>
+        <li><span class="ic">2</span><span>The email reached the account manager, not the&nbsp;engineer</span></li>
+        <li><span class="ic">3</span><span>Each person needs to know something different</span></li>
+        <li><span class="ic">i</span><span>Our demo: a fictional scenario on Ariete's public&nbsp;services</span></li>
+      </ul>
+    </div>
+  </div>
+  <footer class="foot"><span class="src">Fictional scenario on Ariete's public services. Not Ariete's data.</span><span class="num"></span></footer>
+  <aside class="notes">Our demo company does what Ariete does: AI automations for professional firms. A client writes: the document intake stopped, and sixty client files are stuck before the twenty-eighth of November tax deadline. The email reaches the account manager, not the engineer. Each person needs to know something different, today.</aside>
+</section>
+
+<section class="slide" data-title="Solution">
+  <p class="kicker">How it works</p>
+  <h1 class="claim">It reads everything. <em class="br">People decide what it remembers.</em></h1>
+  <div class="body">
+    <div class="flow4">
+      <div class="st"><h3>Reads</h3><div class="mini"><span>email</span><span>chat</span><span>tasks</span><span>docs</span><span>Stripe</span></div></div>
+      <div class="ar">→</div>
+      <div class="st"><h3>Guard</h3><p>attacks blocked</p></div>
+      <div class="ar">→</div>
+      <div class="st key"><h3>A person approves</h3><p>memory</p></div>
+      <div class="ar">→</div>
+      <div class="st"><h3>Answers &amp; proposes</h3><p>cites sources</p><p>waits for a yes</p></div>
+    </div>
+    <ul class="pts two">
+      <li><span class="ic dot"></span><span>Reads email, chat, tasks and docs (demo copies today), and&nbsp;Stripe</span></li>
+      <li><span class="ic dot"></span><span>Proposes facts. A person approves.</span></li>
+      <li><span class="ic dot"></span><span>Answers only from approved facts, with sources</span></li>
+      <li><span class="ic dot"></span><span>Drafts actions and Zoom meetings. Nothing happens without&nbsp;a&nbsp;yes.</span></li>
+    </ul>
+  </div>
+  <aside class="notes">Jarvis reads the team's tools and proposes facts. A person approves them. It answers only from those, with sources. Nothing leaves without a yes.</aside>
+</section>
+
+<section class="slide" data-title="Live demo">
+  <p class="kicker">Live demo</p>
+  <h1 class="claim">Watch it speak first, say&nbsp;"I&nbsp;don't&nbsp;know", and call&nbsp;me.</h1>
+  <div class="body">
+    <div class="split" style="grid-template-columns:1fr 600px; gap:56px">
+      <div class="screen"><div class="chrome"><i></i><i></i><i></i></div>
+        <img src="assets/app-today.jpg" alt="Jarvis app, Today page: the 08:00 brief"></div>
+      <ol class="steps">
+        <li><span class="i">1</span><span>08:00 · the brief nobody asked&nbsp;for</span></li>
+        <li><span class="i">2</span><span>"I don't know"</span></li>
+        <li class="key"><span class="i">3</span><span>An urgent email · my phone&nbsp;rings</span></li>
+      </ol>
+    </div>
+  </div>
+  <aside class="notes">Let me show you. It's eight in the morning. Nobody asked, but each person already has a morning brief. Here, it proposed two facts. One is right, one has the wrong number. I approve one and reject the other. Now it answers, with the source. Same question about a client's unpaid invoice: the CFO gets the answer, the CTO gets "not for your role". The Wi-Fi password is nowhere, so Jarvis says "I don't know". Now a rival's attack: a fake CEO asks for an urgent payment. Blocked. And now something urgent arrives. My phone is ringing. That's Jarvis. (Answer on speaker, ask "What happened?", then say "Approve it.") It won't approve by phone. Back in the app, the action waits for one tap. I tap it. Only now does it happen.</aside>
+</section>
+
+<section class="slide" data-title="What we built and tested">
+  <p class="kicker">Built and tested today</p>
+  <h1 class="claim">Rival teams will try to break it. <em class="br">The rules live in code.</em></h1>
+  <div class="body">
+    <div class="proof">
+      <div class="p key"><span class="ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1E7B45" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span><span class="fig">7&nbsp;of&nbsp;7</span> jury checks, enforced in code</span></div>
+      <div class="p"><span class="ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1E7B45" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span><span class="fig">63</span> automated tests</span></div>
+      <div class="p"><span class="ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1E7B45" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span>Fake CEO payment: blocked</span></div>
+      <div class="p"><span class="ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1E7B45" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span>A reworded attack: caught by a second AI check</span></div>
+      <div class="p"><span class="ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1E7B45" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span>On the phone: no approvals. "Tap it in the app."</span></div>
+      <div class="p"><span class="ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1E7B45" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span>Our <span class="fig">3</span> attacker agents: all <span class="fig">3</span> builds still pass&nbsp;<span class="fig">7&nbsp;of&nbsp;7</span></span></div>
+    </div>
+  </div>
+  <footer class="foot"><span class="src">Our tests and live runs, 21 November 2026</span><span class="num"></span></footer>
+  <aside class="notes">So the rules live in code, not in the prompt. A reworded attack that our patterns missed was caught by a second AI check.</aside>
+</section>
+
+<section class="slide" data-title="Feasibility">
+  <p class="kicker">Beyond the prototype</p>
+  <h1 class="claim">Built for one company. <em class="br">Ready for any firm.</em></h1>
+  <div class="body">
+    <div class="conn">
+      <div class="panel live"><div class="lbl">Already connected</div>
+        <div class="chips"><span class="chip live">Stripe</span><span class="chip live">Zoom</span><span class="chip live">a real phone line</span></div></div>
+      <div class="panel next"><div class="lbl">Next</div>
+        <div class="chips"><span class="chip soon">Gmail</span><span class="chip soon">Slack</span><span class="chip soon">Notion</span></div>
+        <div class="after">with the same rules</div></div>
+    </div>
+    <div class="facts4">
+      <div class="panel cost"><div class="pre">About</div><div class="n">$0.003</div><div>per morning brief</div></div>
+      <div class="panel">AI runs on Google Vertex AI; finance facts never go to the voice provider</div>
+      <div class="panel">First buyers: small firms, through partners like Ariete (pilot)</div>
+      <div class="panel muted">Market size: not estimated yet</div>
+    </div>
+  </div>
+  <footer class="foot"><span class="src">Demo data · cost measured 21 Nov 2026</span><span class="num"></span></footer>
+  <aside class="notes">Stripe, Zoom and a real phone line already work. Today, a morning brief costs a third of a cent. The first buyers are small firms, through partners like Ariete. We haven't sized the market yet.</aside>
+</section>
+
+<section class="slide close center" data-title="Team, ask and close">
+  <div class="body" style="padding-top:0; align-items:center">
+    <svg class="orb" viewBox="0 0 200 200" role="img" aria-label="Jarvis voice orb" data-logo>
+  <defs><radialGradient id="gxA" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#0E7C86" stop-opacity=".26"/><stop offset=".42" stop-color="#0E7C86" stop-opacity=".09"/><stop offset="1" stop-color="#0E7C86" stop-opacity="0"/></radialGradient></defs>
+  <circle cx="100" cy="100" r="80" fill="url(#gxA)"/>
+  <g fill="none" stroke="#0E7C86" stroke-width="2.4" vector-effect="non-scaling-stroke" stroke-linejoin="round">
+    <ellipse cx="100" cy="100" rx="92" ry="24" transform="rotate(-16 100 100)" stroke-opacity=".6"/>
+    <ellipse cx="100" cy="100" rx="86" ry="38" transform="rotate(28 100 100)" stroke-opacity=".32" stroke-dasharray="6 5"/>
+    <circle cx="100" cy="100" r="54" stroke-opacity=".3"/>
+    <g stroke-opacity=".85"><polygon points="145,74 145,126 100,152 55,126 55,74 100,48"/><polygon points="100,72 124,114 76,114"/>
+    <path d="M100,72 L100,48 M100,72 L145,74 M100,72 L55,74 M124,114 L145,74 M124,114 L145,126 M124,114 L100,152 M76,114 L55,126 M76,114 L55,74 M76,114 L100,152"/></g>
+  </g>
+  <circle cx="187" cy="75" r="3.2" fill="#0E7C86"/>
+</svg>
+    <p class="kicker">The ask</p>
+    <h1 class="claim" style="margin:0 auto 52px"><em>Ariete:</em> let's pilot Jarvis with one of your client firms.</h1>
+    <div class="team3">
+      <div class="panel"><h3>Arif</h3><p>founder, PoliPrep and Life At PoliTO</p></div>
+      <div class="panel"><h3>Hamid and Uluhan</h3><p>engineering students, Politecnico&nbsp;di&nbsp;Torino</p></div>
+      <div class="panel"><h3>Three builds</h3><p>in parallel, the best ideas merged</p></div>
+    </div>
+    <p class="closer">A colleague you trust says "I don't know", and "May I?"</p>
+  </div>
+  <aside class="notes">I run PoliPrep, and I built Jarvis because I live this problem. We built three versions in parallel and merged the best ideas. Ariete builds AI agents for professional firms. Let's pilot Jarvis with one of your clients. Because a colleague you trust says "I don't know", and "May I?"</aside>
+</section>
+</main>
+<script>
+/* Slide numbers "02 / 09", preview zoom, present mode (P / Esc / arrows). */
+(function(){
+  const slides=[...document.querySelectorAll('.slide')], total=String(slides.length).padStart(2,'0');
+  slides.forEach((s,i)=>{ const n=s.querySelector('.num'); if(n && !n.dataset.keep) n.textContent=String(i+1).padStart(2,'0')+' / '+total; });
+  const fit=()=>{ const z=Math.min(1,(innerWidth-80)/1920); document.documentElement.style.setProperty('--zoom', document.body.classList.contains('present') ? Math.min(innerWidth/1920, innerHeight/1080) : z); };
+  let cur=0; const show=i=>{ cur=Math.max(0,Math.min(slides.length-1,i)); slides.forEach((s,j)=>s.classList.toggle('current',j===cur)); };
+  /* shrink long watermark words so they stay inside the slide */
+  document.querySelectorAll('.watermark').forEach(w=>{ let fs=parseFloat(getComputedStyle(w).fontSize);
+    w.style.display='inline-block'; w.style.left='50%'; w.style.right='auto'; w.style.transform='translateX(-50%)';
+    while(w.scrollWidth>1700 && fs>120){ fs-=10; w.style.fontSize=fs+'px'; } });
+  addEventListener('resize',fit); fit();
+  addEventListener('keydown',e=>{
+    const p=document.body.classList.contains('present');
+    if(e.key==='p'||e.key==='P'){ document.body.classList.toggle('present'); show(cur); fit(); }
+    else if(e.key==='Escape'&&p){ document.body.classList.remove('present'); fit(); }
+    else if(p&&['ArrowRight','ArrowDown',' ','PageDown'].includes(e.key)){ e.preventDefault(); show(cur+1); }
+    else if(p&&['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){ e.preventDefault(); show(cur-1); }
+  });
+})();
+</script>
+</body>
+</html>

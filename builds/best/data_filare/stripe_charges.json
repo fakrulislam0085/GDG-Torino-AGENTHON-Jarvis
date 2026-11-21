@@ -1,0 +1,241 @@
+{
+ "_note": "DEMO export in Stripe's charge format. Every id, amount and winery name is invented. No real customers. With STRIPE_API_KEY (a restricted, read-only test-mode key) Jarvis reads the same objects from api.stripe.com instead.",
+ "object": "list",
+ "data": [
+  {
+   "id": "ch_demo_001",
+   "object": "charge",
+   "amount": 720000,
+   "amount_refunded": 0,
+   "currency": "eur",
+   "created": 1790932200,
+   "status": "succeeded",
+   "refunded": false,
+   "description": "Filare Labs yearly subscription (Starter plan)",
+   "metadata": {
+    "product": "starter",
+    "customer_type": "winery"
+   },
+   "billing_details": {
+    "name": "Cascina Bricco Alto (demo)"
+   }
+  },
+  {
+   "id": "ch_demo_002",
+   "object": "charge",
+   "amount": 1440000,
+   "amount_refunded": 0,
+   "currency": "eur",
+   "created": 1791200400,
+   "status": "succeeded",
+   "refunded": false,
+   "description": "Filare Labs yearly subscription (Estate plan)",
+   "metadata": {
+    "product": "estate",
+    "customer_type": "winery"
+   },
+   "billing_details": {
+    "name": "Tenuta Valle Tanaro (demo)"
+   }
+  },
+  {
+   "id": "ch_demo_003",
+   "object": "charge",
+   "amount": 720000,
+   "amount_refunded": 0,
+   "currency": "eur",
+   "created": 1791558300,
+   "status": "succeeded",
+   "refunded": false,
+   "description": "Filare Labs yearly subscription (Starter plan)",
+   "metadata": {
+    "product": "starter",
+    "customer_type": "winery"
+   },
+   "billing_details": {
+    "name": "Azienda Agricola Colle Verde (demo)"
+   }
+  },
+  {
+   "id": "ch_demo_004",
+   "object": "charge",
+   "amount": 720000,
+   "amount_refunded": 0,
+   "currency": "eur",
+   "created": 1791973200,
+   "status": "succeeded",
+   "refunded": false,
+   "description": "Filare Labs yearly subscription (Starter plan)",
+   "metadata": {
+    "product": "starter",
+    "customer_type": "winery"
+   },
+   "billing_details": {
+    "name": "Cantina Sorì del Vento (demo)"
+   }
+  },
+  {
+   "id": "ch_demo_005",
+   "object": "charge",
+   "amount": 1440000,
+   "amount_refunded": 0,
+   "currency": "eur",
+   "created": 1792486500,
+   "status": "succeeded",
+   "refunded": false,
+   "description": "Filare Labs yearly subscription (Estate plan)",
+   "metadata": {
+    "product": "estate",
+    "customer_type": "winery"
+   },
+   "billing_details": {
+    "name": "Vigneti Monte Aribaldo (demo)"
+   }
+  },
+  {
+   "id": "ch_demo_006",
+   "object": "charge",
+   "amount": 720000,
+   "amount_refunded": 720000,
+   "currency": "eur",
+   "created": 1793118600,
+   "status": "succeeded",
+   "refunded": true,
+   "description": "Filare Labs yearly subscription (Starter plan)",
+   "metadata": {
+    "product": "starter",
+    "customer_type": "winery"
+   },
+   "billing_details": {
+    "name": "Cascina delle Rocche (demo)"
+   }
+  },
+  {
+   "id": "ch_demo_007",
+   "object": "charge",
+   "amount": 720000,
+   "amount_refunded": 0,
+   "currency": "eur",
+   "created": 1793699100,
+   "status": "succeeded",
+   "refunded": false,
+   "description": "Filare Labs yearly subscription (Starter plan)",
+   "metadata": {
+    "product": "starter",
+    "customer_type": "winery"
+   },
+   "billing_details": {
+    "name": "Tenuta Bassa Monferrato (demo)"
+   }
+  },
+  {
+   "id": "ch_demo_008",
+   "object": "charge",
+   "amount": 1440000,
+   "amount_refunded": 0,
+   "currency": "eur",
+   "created": 1793974500,
+   "status": "succeeded",
+   "refunded": false,
+   "description": "Filare Labs yearly subscription (Estate plan)",
+   "metadata": {
+    "product": "estate",
+    "customer_type": "winery"
+   },
+   "billing_details": {
+    "name": "Cantina Pian dei Gelsi (demo)"
+   }
+  },
+  {
+   "id": "ch_demo_009",
+   "object": "charge",
+   "amount": 720000,
+   "amount_refunded": 0,
+   "currency": "eur",
+   "created": 1794225600,
+   "status": "succeeded",
+   "refunded": false,
+   "description": "Filare Labs yearly subscription (Starter plan)",
+   "metadata": {
+    "product": "starter",
+    "customer_type": "winery"
+   },
+   "billing_details": {
+    "name": "Azienda Agricola Serra Lunga (demo)"
+   }
+  },
+  {
+   "id": "ch_demo_010",
+   "object": "charge",
+   "amount": 720000,
+   "amount_refunded": 0,
+   "currency": "eur",
+   "created": 1794479700,
+   "status": "succeeded",
+   "refunded": false,
+   "description": "Filare Labs yearly subscription (Starter plan)",
+   "metadata": {
+    "product": "starter",
+    "customer_type": "winery"
+   },
+   "billing_details": {
+    "name": "Vigna del Pozzo (demo)"
+   }
+  },
+  {
+   "id": "ch_demo_011",
+   "object": "charge",
+   "amount": 1440000,
+   "amount_refunded": 0,
+   "currency": "eur",
+   "created": 1794820800,
+   "status": "succeeded",
+   "refunded": false,
+   "description": "Filare Labs yearly subscription (Estate plan)",
+   "metadata": {
+    "product": "estate",
+    "customer_type": "winery"
+   },
+   "billing_details": {
+    "name": "Tenuta Ca' d'Rovere (demo)"
+   }
+  },
+  {
+   "id": "ch_demo_012",
+   "object": "charge",
+   "amount": 720000,
+   "amount_refunded": 0,
+   "currency": "eur",
+   "created": 1795021500,
+   "status": "succeeded",
+   "refunded": false,
+   "description": "Filare Labs yearly subscription (Starter plan)",
+   "metadata": {
+    "product": "starter",
+    "customer_type": "winery"
+   },
+   "billing_details": {
+    "name": "Cascina Mongalletto (demo)"
+   }
+  },
+  {
+   "id": "ch_demo_013",
+   "object": "charge",
+   "amount": 1440000,
+   "amount_refunded": 0,
+   "currency": "eur",
+   "created": 1795089000,
+   "status": "failed",
+   "refunded": false,
+   "description": "Filare Labs yearly subscription (Estate plan)",
+   "metadata": {
+    "product": "estate",
+    "customer_type": "winery"
+   },
+   "billing_details": {
+    "name": "Cantina Rio Freddo (demo)"
+   },
+   "failure_code": "card_declined"
+  }
+ ]
+}

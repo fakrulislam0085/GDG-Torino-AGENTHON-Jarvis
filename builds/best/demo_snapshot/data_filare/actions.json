@@ -1,0 +1,66 @@
+[
+  {
+    "id": "act-luca-1",
+    "type": "message_colleague",
+    "proposed_to": "luca",
+    "to": "giulia",
+    "subject": "Payment Approval: SensorParts Invoice INV-2026-0912",
+    "body": "Hi Giulia,\n\nCould you please approve the payment for SensorParts invoice INV-2026-0912? The amount is EUR 14,640 (incl. VAT), and it is due on Tuesday, 24 November 2026 (second notice).\n\nBest regards,\nLuca Bianchi, Filare Labs S.r.l.",
+    "reason": "Payment task task-002 needs Giulia's approval",
+    "cites": [
+      "task-002",
+      "email-001"
+    ],
+    "basis": [
+      "mem-005"
+    ],
+    "status": "awaiting_approval",
+    "created": "2026-11-21T14:39:49",
+    "self_check": {
+      "status": "ok",
+      "items": []
+    }
+  },
+  {
+    "id": "act-sara-1",
+    "type": "message_colleague",
+    "proposed_to": "sara",
+    "to": "marco",
+    "subject": "Approval needed: Renew staging database certificate",
+    "body": "Hi Marco,\n\nThe task 'Renew staging database certificate' is currently blocked waiting for your approval, with a due date of 2026-11-25. Could you please review and approve it when you get a chance?\n\nBest regards,\nSara Conti, Filare Labs S.r.l.",
+    "reason": "Task task-004 is blocked on Marco",
+    "cites": [
+      "task-004",
+      "chat-007"
+    ],
+    "basis": [],
+    "status": "awaiting_approval",
+    "created": "2026-11-21T14:40:28",
+    "self_check": {
+      "status": "ok",
+      "items": []
+    }
+  },
+  {
+    "id": "act-paolo-1",
+    "type": "reply_draft",
+    "proposed_to": "paolo",
+    "to": "agronomo@langheviva.example",
+    "subject": "Re: 40 sensors offline since Wednesday",
+    "body": "Hi Stefano, thank you for reaching out. Per our policy for outages, we will dispatch an engineer within 2 working days to inspect the issue with your offline sensors on gateway GW-07. We understand the urgency regarding your frost alerts and will keep you closely updated. Best regards, Paolo Gallo, Filare Labs S.r.l.",
+    "reason": "Reply to agronomo@langheviva.example (email-002)",
+    "cites": [
+      "email-002"
+    ],
+    "basis": [
+      "mem-003",
+      "mem-010"
+    ],
+    "status": "awaiting_approval",
+    "created": "2026-11-21T14:39:49",
+    "self_check": {
+      "status": "ok",
+      "items": []
+    }
+  }
+]

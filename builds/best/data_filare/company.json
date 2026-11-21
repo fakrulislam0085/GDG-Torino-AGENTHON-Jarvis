@@ -1,0 +1,78 @@
+{
+  "_note": "Synthetic data for the AGENTHON demo. Filare Labs is a fictional company; every person, client, supplier, amount and address here is made up. No real client or personal data. Copied from the repo-root data/ and extended for the best-of-three build (approvers, overview, audiences, stripe, demo).",
+  "company": {
+    "name": "Filare Labs S.r.l.",
+    "short_name": "Filare Labs",
+    "city": "Torino",
+    "what": "IoT soil and weather sensors for vineyards in Piedmont, sold as a yearly subscription",
+    "demo_now": "2026-11-23T08:30:00+01:00",
+    "mail_from": "jarvis@filarelabs.example"
+  },
+  "groups": {
+    "all": "everyone at Filare Labs",
+    "finance": "finance and accounting",
+    "tech": "engineering and field operations",
+    "sales": "sales and customer success",
+    "exec": "CEO: sees every group"
+  },
+  "people": [
+    { "id": "elena", "name": "Elena Russo", "role": "CEO", "groups": ["exec", "all"] },
+    { "id": "giulia", "name": "Giulia Ferrero", "role": "CFO", "groups": ["finance", "all"] },
+    { "id": "luca", "name": "Luca Bianchi", "role": "Accountant", "groups": ["finance", "all"] },
+    { "id": "marco", "name": "Marco Rossi", "role": "CTO", "groups": ["tech", "all"] },
+    { "id": "sara", "name": "Sara Conti", "role": "Backend engineer", "groups": ["tech", "all"] },
+    { "id": "davide", "name": "Davide Greco", "role": "Field IoT engineer", "groups": ["tech", "all"] },
+    { "id": "paolo", "name": "Paolo Gallo", "role": "Sales lead", "groups": ["sales", "all"] }
+  ],
+  "access_rule": "A person can see an item if the item's acl contains any of the person's groups, or if the person is in 'exec'. Enforced in code before any model call.",
+  "approvers": {
+    "finance": ["CFO"],
+    "tech": ["CTO", "Field IoT engineer"],
+    "sales": ["Sales lead"]
+  },
+  "strict_approvers": ["finance"],
+  "approval_rule": "The CEO decides everything, and is the only one who decides company-wide facts (acl 'all'). Otherwise you must see the fact and hold an approver role for one of the teams it belongs to. Money facts (finance) always need the CFO.",
+  "contacts": [],
+  "audiences": [
+    { "id": "customers", "name": "Winery customers", "size": 24, "channel": "email", "note": "demo number" },
+    { "id": "trial-wineries", "name": "Wineries in trial", "size": 3, "channel": "email", "note": "Roero, Monferrato, Alba (email-009)" }
+  ],
+  "overview": {
+    "about": "Filare Labs makes IoT soil and weather sensors for vineyards in Piedmont. Wineries pay a yearly subscription for the sensors, the gateways and the frost and irrigation alerts.",
+    "offer": [
+      "Yearly sensor subscription (Starter: up to 30 sensors; Estate: up to 80)",
+      "Gateways that collect the sensors' data on site",
+      "Frost and soil-moisture alerts for the agronomist",
+      "Field support: an engineer within 2 working days for an outage"
+    ],
+    "how": [
+      "Sensors in the plots, one gateway for up to 60 sensors",
+      "Firmware updates only in planned windows",
+      "Weekend on-call field support in frost season (November to April)",
+      "A customer can pause a renewal with 30 days' notice"
+    ],
+    "where": "Torino, with customers in the Langhe, Roero and Monferrato",
+    "tools": ["Gmail", "Team chat", "Task board", "Docs", "Stripe", "Zoom"]
+  },
+  "stripe": {
+    "page": "doc-004",
+    "roles": ["CFO"],
+    "topic": "Subscription revenue collected in Q4 2026",
+    "products": { "starter": "Starter plan", "estate": "Estate plan" }
+  },
+  "demo": {
+    "default_user": "elena",
+    "ask_placeholder": "When does the Langhe fix roll out?",
+    "note_placeholder": "The spare gateway for Barbaresco is in Davide's van, not on shelf B.",
+    "checks": [
+      { "n": 1, "label": "It speaks first", "page": "today", "user": "davide", "question": "" },
+      { "n": 2, "label": "People curate the memory", "page": "memory", "user": "davide", "question": "When does the Langhe fix roll out?" },
+      { "n": 3, "label": "It knows who's asking", "page": "today", "user": "giulia", "question": "What is our cash runway?" },
+      { "n": 4, "label": "It cites", "page": "today", "user": "giulia", "question": "What is our cash runway?" },
+      { "n": 5, "label": "It admits gaps", "page": "today", "user": "elena", "question": "What is the office Wi-Fi password?" },
+      { "n": 6, "label": "It only proposes", "page": "approvals", "user": "luca", "question": "" },
+      { "n": 7, "label": "It fits the team's day", "page": "email", "user": "paolo", "question": "" }
+    ],
+    "hint": "Check 2: as Davide, approve mem-p01 and reject mem-p02 in Memory, then ask on Today. Check 3: ask the runway as Giulia (CFO), then as Sara (backend engineer). Check 6: Luca approves the payment request."
+  }
+}
