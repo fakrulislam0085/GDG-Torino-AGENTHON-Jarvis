@@ -18,6 +18,7 @@ import streamlit as st  # noqa: E402
 
 from brain import access, answer, audit, brief, call, hold, llm, memory, phone, propose, store, stripe_sync, voice, watch  # noqa: E402
 from ui import counts as tally  # noqa: E402
+from ui import pipeline as flow  # noqa: E402
 from ui.orb import orb  # noqa: E402
 from ui.voice_chat import voice_chat  # noqa: E402
 
@@ -710,18 +711,18 @@ if ss.page == PAGES[0]:
                     section("New since 08:00", len(b["alerts"]), first_in_panel=True)
                     for i, it in enumerate(b["alerts"]):
                         brief_row(it, user, "al", i)
-                section("Your 08:00 brief", first_in_panel=not b.get("alerts"),
-                        note=f"Posted by Jarvis {esc(b.get('posted_at', ''))}. Nobody asked for it.")
-                for i, it in enumerate(b["items"]):
-                    brief_row(it, user, "br", i)
-                bc1, bc3, bc2, _ = st.columns([1.3, 1.3, 1.9, 0.3])
-                if voice.available() and b["items"]:
-                    bc1.button("Play my brief", key="brief-play", icon=":material/volume_up:", on_click=do_play_brief, args=(user,), width="stretch")
-                if b["items"]:
-                    bc3.button("Talk to Jarvis", key="brief-talk", icon=":material/mic:", on_click=do_talk, args=(user,), width="stretch",
-                               help="A live voice chat with Jarvis about your own brief. Approvals stay in the app.")
-                if pending:
-                    bc2.button(f"Review {len(pending)} waiting for approval", icon=":material/task_alt:", on_click=goto, args=(PAGES[2],), width="stretch")
+                # header row: title + note on the left, Play / Talk on the right (columns stack on narrow widths)
+                bh1, bh2 = st.columns([3, 2], vertical_alignment="bottom")
+                with bh1:
+                    section("Your 08:00 brief", first_in_panel=not b.get("alerts"),
+                            note=f"Posted by Jarvis {esc(b.get('posted_at', ''))}. Nobody asked for it.")
+                with bh2:
+                    with st.container(key="brief-actions", horizontal=True, horizontal_alignment="right", gap="small"):
+                        if voice.available() and b["items"]:
+                            st.button("Play my brief", key="brief-play", icon=":material/volume_up:", on_click=do_play_brief, args=(user,), width="content")
+                        if b["items"]:
+                            st.button("Talk to Jarvis", key="brief-talk", icon=":material/mic:", on_click=do_talk, args=(user,), width="content",
+                                      help="A live voice chat with Jarvis about your own brief. Approvals stay in the app.")
                 vcs = ss.get("voice_chat")
                 if vcs and vcs.get("user") == user and b["items"]:
                     if vcs.get("session") is None:
@@ -754,6 +755,11 @@ if ss.page == PAGES[0]:
                             md("<div class='script-label'>Your brief, read aloud</div>"
                                f"<div class='who'>{len(b['items'])} items in Jarvis's voice. Press Pause any time.</div>")
                             st.button("Close the player", key="brief-hide", icon=":material/close:", on_click=do_hide_brief)
+                for i, it in enumerate(b["items"]):
+                    brief_row(it, user, "br", i)
+                if pending:
+                    bc2, _ = st.columns([1.9, 2.8])
+                    bc2.button(f"Review {len(pending)} waiting for approval", icon=":material/task_alt:", on_click=goto, args=(PAGES[2],), width="stretch")
 
             with st.container(key="panel-ask"):
                 section("Ask Jarvis", first_in_panel=True,
@@ -1020,6 +1026,26 @@ elif ss.page == PAGES[3]:
     items = b.get("alerts", []) + b["items"]
     with h1:
         md("<div class='greet'>Morning email</div><div class='sub'>Where the team meets Jarvis at 08:00, before opening anything else.</div>")
+    pl = flow.pipeline(user)   # every number below is counted through access.visible for this person
+    cards = "".join(f"<div class='src-card'><div class='src-tool'>{esc(s['tool'])}</div><div class='src-n'>{s['n']}</div>"
+                    f"<div class='src-lab'>items you may see · read at <span class='mono'>08:00</span></div>"
+                    f"<span class='pill demo'>demo copy</span></div>" for s in pl["sources"])
+    acts = "".join(f"<span class='act'>{esc(a['tool'])} <span class='via'>{esc(a['via'])}</span> " + ("<span class='pill live'>live with keys</span>" if a["live"] else "<span class='pill off'>not set up</span>") + "</span>"
+                   for a in flow.actions_live())
+    nxt = " · ".join(esc(t) for t in flow.NEXT)
+    steps = [("Read", f"<b>{pl['read']}</b> items you can see"),
+             ("Guard", f"<b>{pl['blocked']}</b> suspicious blocked"),
+             ("Memory", f"<b>{pl['approved']}</b> approved · <b class='wait'>{pl['waiting']}</b> waiting"),
+             ("Your brief", f"<b>{pl['brief']}</b> items, for your role"),
+             ("08:00 email", "preview below · not sent: Jarvis has no send tool")]
+    strip = "<span class='pf-arrow' aria-hidden='true'>→</span>".join(
+        f"<div class='pf-step'><div class='pf-k'>{k}</div><div class='pf-v'>{v}</div></div>" for k, v in steps)
+    md(f"""<div class="howmade hud-panel"><div class="hm-title">How your 08:00 email is made</div>
+<div class="hm-sub">Data from the company's tools, checked, turned into a brief for you, then the 08:00 email. Counts are only what your role may see.</div>
+<div class="src-row">{cards}</div>
+{f"<div class='act-row'><span class='lab'>Actions (they push out, never read)</span>{acts}</div>" if acts else ""}
+<div class="next-row"><span class="lab">next: same rules</span> {nxt}</div>
+<div class="pf-strip">{strip}</div></div>""")
     lis = "".join(f"<li>{esc(i['text'])} <span class='ids'>[{', '.join(i.get('cited', []))}]</span></li>" for i in items)
     n_pending = sum(a["status"] == "awaiting_approval" for a in propose.for_user(user))
     sender = store.company().get("company", {}).get("mail_from", "jarvis@company.example")

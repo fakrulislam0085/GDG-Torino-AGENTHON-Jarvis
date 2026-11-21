@@ -380,3 +380,38 @@ p, li { color: var(--text); }
 .coldopen .co-table { width: 100%; border-collapse: collapse; margin-top: .5rem; font-size: .85rem; background: transparent; }
 .coldopen .co-table th, .coldopen .co-table td { text-align: left; padding: .3rem .5rem; border-bottom: 1px solid var(--line, #e5eaf2); vertical-align: top; }
 .coldopen .co-table tr:last-child td { border-bottom: none; }
+/* ---------- Morning email: "How your 08:00 email is made" ---------- */
+.howmade { padding: 1.2rem 1.4rem 1.1rem; margin: 0 0 1.4rem; max-width: 60rem; }
+.hm-title { font-family: var(--display); font-size: 1.25rem; font-weight: 600; line-height: 1.2; color: var(--text); }
+.hm-sub { color: var(--text-2); font-size: .9rem; margin: .25rem 0 .9rem; line-height: 1.45; }
+.src-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr)); gap: .6rem; }
+.src-card { border: 1px solid var(--line); background: var(--panel-2); border-radius: 2px; padding: .65rem .75rem .7rem;
+  display: flex; flex-direction: column; gap: .15rem; border-top: 2px solid var(--cyan); }
+.src-tool { font-family: var(--display); font-weight: 600; font-size: 1rem; color: var(--text); }
+.src-n { font-family: var(--mono); font-size: 1.5rem; font-weight: 500; line-height: 1.1; color: var(--cyan-text); }
+.src-lab { font-size: .78rem; color: var(--text-2); line-height: 1.35; }
+.howmade .mono { font-family: var(--mono); }
+.pill { display: inline-block; align-self: flex-start; font-family: var(--mono); font-size: .72rem; line-height: 1;
+  padding: .22rem .45rem; border-radius: 999px; border: 1px solid var(--line-2); color: var(--text-2); background: var(--panel); margin-top: .35rem; }
+.pill.demo { border-color: var(--amber-line); color: var(--amber); background: var(--amber-tint); }
+.pill.live { border-color: var(--line-3); color: var(--cyan-text); background: var(--tint); }
+.pill.off { color: var(--text-3); }
+.act-row, .next-row { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem .9rem; margin-top: .75rem; font-size: .86rem; color: var(--text); }
+.act-row .lab, .next-row .lab { font-family: var(--mono); font-size: .74rem; color: var(--text-2); text-transform: uppercase; letter-spacing: .04em; }
+.act { display: inline-flex; align-items: center; gap: .35rem; }
+.act .via { color: var(--text-2); font-size: .8rem; }
+.act .pill { margin-top: 0; }
+.next-row { color: var(--text-3); margin-top: .45rem; }
+.pf-strip { display: flex; flex-wrap: wrap; align-items: stretch; gap: .4rem; margin-top: 1rem; padding-top: .9rem; border-top: 1px solid var(--line); }
+.pf-step { flex: 1 1 8.5rem; border: 1px solid var(--line); background: var(--panel); border-radius: 2px; padding: .5rem .65rem; }
+.pf-step:last-child { border-color: var(--line-3); background: var(--tint); }
+.pf-k { font-family: var(--display); font-weight: 600; font-size: .92rem; color: var(--text); }
+.pf-v { font-size: .8rem; color: var(--text-2); line-height: 1.35; margin-top: .15rem; }
+.pf-v b { font-family: var(--mono); font-weight: 500; color: var(--text); }
+.pf-v b.wait { color: var(--amber); }
+.pf-arrow { align-self: center; color: var(--cyan-text); font-family: var(--mono); font-size: 1rem; }
+@media (max-width: 640px) { .pf-arrow { display: none; } .pf-step { flex-basis: 100%; } }
+
+/* Today: Play / Talk on the brief header row, right-aligned and compact */
+.st-key-brief-actions { justify-content: flex-end; }
+.st-key-panel-brief [data-testid="stColumn"] .section + .who { margin-bottom: .6rem; }
