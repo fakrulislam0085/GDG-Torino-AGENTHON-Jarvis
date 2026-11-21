@@ -239,27 +239,18 @@ def test_decision_receipt_for_archived_budget_claim(demo):
     assert r["record_changed"] is False and r["outcome"].startswith("Claim rejected by Sara")
 
 
-def _newer_claim(store):
-    """A NEWER, plausible-looking claim on the same fact: newer must not mean authoritative."""
-    store.sources["mail-new"] = {"id": "mail-new", "type": "mail", "audience": ["finance", "tech"],
-                                 "ts": "2026-11-22T10:00:00+01:00", "stage": "live", "from": "sara@filare.example",
-                                 "to": "", "recipient_ids": [], "title": "Budget update?",
-                                 "body": "I think the Q1 2027 cloud budget is now EUR 25,000."}
-    store.processed_sources.add("mail-new")
-    from brain import agents, tools as T
-    ctx = T.Ctx(store, "ingest", "system", None, agents.Trace("ingest", "system", "t", ["finance", "tech"], store.clock),
-                source_id="mail-new")
-    key = store.memory["mem-001"]["key"]
-    result = T.call(ctx, "propose_memory", {"key": key, "topic": "Q1 2027 cloud budget",
-                                            "fact": "The Q1 2027 cloud budget is EUR 25,000.",
-                                            "quote": "the Q1 2027 cloud budget is now EUR 25,000"})
-    assert result.get("conflict"), result
-    return result["id"]
+def _newer_claim(client):
+    """Use the same build-local event and ingestion path as the live demo."""
+    response = client.post("/api/events/mail-new")
+    assert response.status_code == 200 and len(response.json()["runs"]) == 1
+    alert = next(a for a in state(client, "sara")["alerts"] if a["source_id"] == "mail-new")
+    assert client.post("/api/events/mail-new").json()["runs"] == []
+    return alert["candidate_id"]
 
 
 def test_newer_claim_needs_authority_not_recency(demo):
     client, store = demo
-    cid = _newer_claim(store)
+    cid = _newer_claim(client)
     # Sara can see the budget but has no authority over it.
     r = client.post(f"/api/memory/{cid}/approve", json={"person": "sara"})
     assert r.status_code == 403 and "Being newer is not enough" in r.json()["detail"]
@@ -272,3 +263,29 @@ def test_newer_claim_needs_authority_not_recency(demo):
     assert client.post(f"/api/memory/{cid}/approve", json={"person": "giulia"}).status_code == 200
     assert store.memory["mem-001"]["status"] == "superseded"
     assert _conflict(client, "giulia")["receipt"]["record_changed"] is True
+
+
+def test_two_receipts_preserve_rejection_after_later_budget_approval(demo):
+    client, store = demo
+    client.post('/api/events/email-006')
+    archive = _conflict(client, 'sara')['candidate_id']
+    assert client.post(f'/api/memory/{archive}/reject', json={'person': 'sara'}).status_code == 200
+    newer = _newer_claim(client)
+    question = 'What is the Q1 2027 cloud budget?'
+    before = ask(client, 'giulia', question)['answer']
+    assert '18,000' in before['text'] and before['citations'][0]['id'] == 'mem-001'
+    assert client.post(f'/api/memory/{newer}/approve', json={'person': 'sara'}).status_code == 403
+    assert client.post(f'/api/memory/{newer}/approve', json={'person': 'giulia'}).status_code == 200
+    receipts = {a['candidate_id']: a['receipt'] for a in state(client, 'giulia')['alerts']}
+    rejected, accepted = receipts[archive], receipts[newer]
+    assert rejected['claim']['status'] == 'rejected'
+    assert rejected['outcome'].startswith('Claim rejected by Sara')
+    assert rejected['record_changed'] is False
+    assert accepted['record_changed'] is True
+    assert accepted['outcome'].startswith('Record replaced after review by Giulia')
+    assert accepted['current']['status'] == 'superseded'
+    assert accepted['claim']['status'] == 'approved'
+    assert store.memory['mem-001']['superseded_by'] == newer
+    after = ask(client, 'giulia', question)['answer']
+    assert '25,000' in after['text'] and after['citations'][0]['id'] == newer
+    assert after['citations'][0]['source_id'] == 'mail-new'

@@ -1,6 +1,6 @@
 # Company Brain — three-minute jury pitch
 
-All companies, people, clients, amounts, messages, and addresses shown below are fictional demo data. Before the timer, click **Reset**, select **Luca Bianchi · Accountant**, and open **🏁 Jury checklist**. Keep the browser zoomed so the checklist and Agent trace are both visible.
+All companies, people, clients, amounts, messages, and addresses shown below are fictional demo data. Before the timer, click **Reset**, select **Luca Bianchi · Accountant**, run the morning sweep once and wait for all seven briefs, then open **🏁 Jury checklist**. Do not rerun the sweep on stage. Keep the browser zoomed so the checklist and Agent trace are both visible.
 
 ## 3-minute spoken script and click track
 
@@ -18,7 +18,7 @@ All companies, people, clients, amounts, messages, and addresses shown below are
 
 > “Company Brain is the colleague who speaks first, answers only from memory the team approved, and asks before it acts. It is built for Filare Labs, a fictional Torino sensor company, using entirely synthetic demo data.”
 
-**Exact click:** Click **Run morning sweep** on checklist item 1.
+**Exact click:** Click **Open Brain DM** on checklist item 1; the morning sweep is already complete.
 
 ### 0:35–2:15 — Live demo: seven checks, then change control
 
@@ -28,7 +28,7 @@ All companies, people, clients, amounts, messages, and addresses shown below are
 
 > “Nobody asked a question. The scheduled sweep speaks first: Luca sees the EUR 14,640 second notice, with evidence, and a draft—not a sent email.”
 
-**Exact clicks:** After the sweep opens **🧠 Brain**, click **✅ Approvals** in the left navigation; click **📤 Outbox** and show **Empty**; click **✅ Approvals** again; click **Approve to mock outbox** on the SensorParts draft; click **📤 Outbox**.
+**Exact clicks:** With the completed morning brief in **🧠 Brain**, click **✅ Approvals** in the left navigation; click **📤 Outbox** and show **Empty**; click **✅ Approvals** again; click **Approve to mock outbox** on the SensorParts draft; click **📤 Outbox**.
 
 **Say exactly:**
 
@@ -66,15 +66,23 @@ All companies, people, clients, amounts, messages, and addresses shown below are
 
 > “The same role-filtered, cited brief meets the team as a direct message or a morning email—not as another dashboard to remember.”
 
-#### 1:40–2:15 — Climax: change control and Decision Receipt
+#### 1:40–2:25 — 45-second climax: authorized change, historical receipts
 
-**Exact clicks:** In the top **✉ Simulate incoming email…** menu, select **Archived cloud budget email**. In the resulting Brain alert, point first to **Company record · approved**, then **Incoming claim · not approved**, then **Decision receipt**, **Can decide**, and **✓ Company record unchanged**. Select **Giulia Ferrero · CFO** in **Viewing as**; click the suggestion **What is the Q1 2027 cloud budget?**; click the citation chip **📎 mem-001 · Q1 2027 cloud budget**.
+**Execution mode:** The local browser rehearsal used **Offline fallback (no model)**, with synthetic emails and a demo persona picker. It was a live UI/API interaction with the deterministic planner, not a live Vertex call. From the first archived-email trigger to the final supported answer, the click-through took **25.4 seconds**, including browser observation overhead and excluding spoken narration. The morning sweep completed before timing. No real messages were sent.
 
-**Say exactly:**
+Start as Sara with both budget events unfired. Use the existing **🏁 Jury checklist** shortcuts throughout:
 
-> “Here is the signature moment. An archived email claims EUR 12,000, but the approved decision is EUR 18,000. Most assistants believe the last thing they read. Ours treats the email as a claim, places both versions side by side, names Giulia, Marco, and Elena as the authorized reviewers, and issues a Decision Receipt: older evidence cannot replace the newer approval, so the company record is unchanged. I ask the budget now: EUR 18,000, cited to the approved record and its source.”
+| Seconds | Click / point | Say |
+|---|---|---|
+| 0–8 | **Simulate archived email** → **Reject claim** as Sara. | “This archived €12,000 estimate conflicts with the approved €18,000. Sara rejects it.” |
+| 8–15 | Checklist → **Ask as Giulia** on Change control. Point to `mem-001`. | “The same budget question still answers €18,000, with its approved citation.” |
+| 15–25 | Checklist → **Simulate newer €25,000 claim as Sara**. Point to the claim and named reviewers; there is no Replace button. | “Now a newer, synthetic €25,000 claim arrives. Sara can inspect it. Recency gives her no authority to replace the record.” |
+| 25–35 | Select **Giulia Ferrero · CFO** → existing **Replace the record**. Point to green **Active company record · approved** and **Company record · superseded**. | “Giulia approves. €25,000 becomes active; €18,000 is superseded.” |
+| 35–45 | Checklist → **Ask as Giulia** again. Point to `M2` (the new memory ID is generated), then scroll to the archived receipt. | “Same question, new approved citation: €25,000. The older receipt still says Sara rejected €12,000. Knowledge changes by decision, and history stays true.” |
 
-### 2:15–2:45 — Feasibility and honest limits
+The seven numbered checklist cards and their flows are unchanged. The star card gains one trigger. The approval endpoint's Sara **403** is verified by tests, rather than by an on-stage API detour. The event is the same `mail-new` claim formerly constructed in `tests/test_filare.py`, now loaded from this build's single local fixture. Shared team data is unchanged. To retain every other spoken segment verbatim, the upgraded walkthrough ends at **3:10**.
+
+### 2:25–2:55 — Feasibility and honest limits
 
 **Exact click:** Click the newest **ask** run in **Agent trace** and point to the tool steps, token counts, cost, and mode label.
 
@@ -82,7 +90,7 @@ All companies, people, clients, amounts, messages, and addresses shown below are
 
 > “This is one FastAPI service. A measured full seven-check demo on Vertex AI in the EU cost between ten and thirteen US cents. Access filtering, citation validation, abstention, approval, and change authority are enforced in code, outside the prompt. Humans approve every memory change and outgoing draft. For production we still need real authentication, persistent storage, connectors, a retention policy, a GDPR DPIA, and an Italian Article 4 workplace-monitoring review. Those are open items, not hidden claims.”
 
-### 2:45–3:00 — Closing
+### 2:55–3:10 — Closing
 
 **Exact click:** Return to **🏁 Jury checklist** and leave the seven checks plus the star moment visible.
 

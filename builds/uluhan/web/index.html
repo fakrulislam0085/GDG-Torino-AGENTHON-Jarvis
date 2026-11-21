@@ -5,148 +5,45 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Company Brain</title>
 <style>
-:root{
-  --bg:#f6f5f2; --panel:#ffffff; --ink:#1d1c1a; --muted:#6b6862; --line:#e4e1da;
-  --side:#2a1f33; --side-ink:#e9e3ef; --side-muted:#a99bb6; --side-active:#4b3a5c;
-  --accent:#5b3cc4; --accent-soft:#eee9fb;
-  --ok:#1f7a4d; --ok-soft:#e5f4ec; --warn:#9a5b00; --warn-soft:#fdf1dc;
-  --bad:#b3261e; --bad-soft:#fbe7e5; --info:#1d5fa8; --info-soft:#e4eefa;
-  --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
-}
-*{box-sizing:border-box}
-body{margin:0;font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif;color:var(--ink);background:var(--bg);height:100vh;display:grid;grid-template-rows:auto 1fr}
-button{font:inherit;cursor:pointer;border-radius:6px;border:1px solid var(--line);background:var(--panel);padding:5px 10px;color:var(--ink)}
-button:hover{border-color:#bdb8ae}
-button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
-button.ok{background:var(--ok);border-color:var(--ok);color:#fff}
-button.ghost{background:transparent}
-button:disabled{opacity:.5;cursor:default}
-header{display:flex;align-items:center;gap:10px;padding:8px 14px;background:#1b1322;color:#fff;flex-wrap:wrap}
-header .brand{font-weight:700;letter-spacing:.2px}
-header .pill{font-size:12px;padding:2px 8px;border-radius:99px;background:#ffffff1f;color:#fff}
-header .pill.gemini{background:#2e7d5b}
-header .pill.offline{background:#a3620a}
-header .spacer{flex:1}
-header select,header button{background:#ffffff14;color:#fff;border-color:#ffffff33}
-header select{font:inherit;padding:5px 8px;border-radius:6px}
-header select option{color:#000}
-.app{display:grid;grid-template-columns:220px 1fr 380px;min-height:0}
-nav{background:var(--side);color:var(--side-ink);padding:12px 8px;overflow:auto}
-nav .ws{font-weight:700;padding:4px 10px 10px}
-nav .who{font-size:12px;color:var(--side-muted);padding:0 10px 12px}
-nav a{display:flex;justify-content:space-between;align-items:center;padding:5px 10px;border-radius:6px;color:var(--side-ink);text-decoration:none;cursor:pointer}
-nav a:hover{background:#ffffff12}
-nav a.active{background:var(--side-active)}
-nav .badge{background:#e0465e;color:#fff;border-radius:99px;font-size:11px;padding:0 6px;min-width:18px;text-align:center}
-nav .sec{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--side-muted);padding:14px 10px 4px}
-main{display:flex;flex-direction:column;min-height:0;background:var(--panel)}
-main .head{padding:12px 18px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:10px}
-main .head h2{margin:0;font-size:16px}
-main .head .sub{color:var(--muted);font-size:13px}
-.scroll{flex:1;overflow:auto;padding:14px 18px}
-.msg{display:grid;grid-template-columns:36px 1fr;gap:10px;margin-bottom:16px}
-.av{width:36px;height:36px;border-radius:8px;display:grid;place-items:center;font-weight:700;color:#fff;background:var(--accent)}
-.av.me{background:#7a6f63}
-.msg .meta{font-size:13px}.msg .meta b{margin-right:6px}.msg .meta span{color:var(--muted);font-size:12px}
-.card{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-top:6px;background:#fff}
-.card.answered{border-left:4px solid var(--ok)}
-.card.restricted{border-left:4px solid var(--warn);background:var(--warn-soft)}
-.card.unknown{border-left:4px solid #8a8780;background:#f3f2ef}
-.card.conflict{border-left:4px solid var(--bad);background:var(--bad-soft)}
-.card.suspicious{border-left:4px solid var(--bad);background:var(--bad-soft)}
-.item{padding:8px 0;border-top:1px solid var(--line)}.item:first-child{border-top:0}
-.item .hl{font-weight:600}
-.item .why{color:#45433f;margin-top:2px}
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
-.chip{font-size:12px;border:1px solid var(--line);border-radius:99px;padding:1px 8px;background:#faf9f7;cursor:pointer;color:#3d3a36}
-.chip:hover{border-color:var(--accent);color:var(--accent)}
-.tag{font-size:11px;border-radius:4px;padding:1px 6px;font-weight:600;display:inline-block}
-.tag.finance{background:var(--info-soft);color:var(--info)}
-.tag.tech{background:#efe7f8;color:#6a3aa5}
-.tag.all{background:#eeece7;color:#55524c}
-.tag.pending{background:var(--warn-soft);color:var(--warn)}
-.tag.approved{background:var(--ok-soft);color:var(--ok)}
-.tag.rejected,.tag.superseded,.tag.withdrawn{background:#eeece7;color:#77736b}
-.proposal{border:1px dashed var(--warn);background:#fffaf0;border-radius:8px;padding:10px 12px;margin-top:8px}
-.proposal pre{white-space:pre-wrap;font:13px/1.45 inherit;margin:6px 0;background:#fff;border:1px solid var(--line);border-radius:6px;padding:8px}
-.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.composer{border-top:1px solid var(--line);padding:10px 18px 14px}
-.composer form{display:flex;gap:8px}
-.composer input{flex:1;font:inherit;padding:9px 12px;border:1px solid #cfcac0;border-radius:8px}
-.suggest{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
-.suggest button{font-size:12px;padding:3px 9px;border-radius:99px;background:#faf9f7}
-.muted{color:var(--muted)}
-.empty{color:var(--muted);padding:24px 0;text-align:center}
-.quote{font-style:italic;color:#4f4c47;border-left:3px solid var(--line);padding-left:8px;margin:6px 0}
-aside{border-left:1px solid var(--line);background:#fbfaf8;display:flex;flex-direction:column;min-height:0}
-aside .head{padding:12px 14px;border-bottom:1px solid var(--line)}
-aside .head h3{margin:0;font-size:14px}
-.runs{padding:8px 10px;border-bottom:1px solid var(--line);max-height:30%;overflow:auto}
-.run{font-size:12px;padding:5px 8px;border-radius:6px;cursor:pointer;display:flex;justify-content:space-between;gap:6px}
-.run:hover{background:#efece6}.run.active{background:var(--accent-soft)}
-.steps{flex:1;overflow:auto;padding:10px 12px}
-.step{display:grid;grid-template-columns:22px 1fr;gap:6px;font-size:12px;margin-bottom:8px}
-.step .k{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:11px;color:#fff;background:#8a8780}
-.step.tool_call .k{background:var(--accent)}.step.tool_result .k{background:#3f8f6a}
-.step.guard .k{background:var(--bad)}.step.fallback .k{background:#a3620a}.step.trigger .k{background:#1b1322}
-.step.model_text .k{background:var(--info)}
-.step.guard .n{color:var(--bad);font-weight:600}
-.step details{margin-top:2px}.step pre{font:11px/1.4 var(--mono);white-space:pre-wrap;word-break:break-word;background:#fff;border:1px solid var(--line);border-radius:4px;padding:6px;margin:4px 0;max-height:180px;overflow:auto}
-.usage{font-size:12px;color:var(--muted);padding:8px 12px;border-top:1px solid var(--line)}
-table{border-collapse:collapse;width:100%;font-size:13px}
-td,th{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
-th{font-size:12px;color:var(--muted);font-weight:600}
-dialog{border:1px solid var(--line);border-radius:10px;max-width:560px;padding:16px 18px}
-dialog::backdrop{background:#0006}
-.receipt{margin-top:8px}
-.receipt .cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.receipt .col{border:1px solid var(--line);border-radius:8px;padding:10px;background:#fff}
-.receipt .col.keep{border-color:var(--ok);background:var(--ok-soft)}
-.receipt .col.claim{border-style:dashed;border-color:var(--bad)}
-.receipt .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700}
-.receipt .val{margin:4px 0;font-size:14px}
-.receipt .amt{font-size:18px;font-weight:800}
-.receipt .col.claim .amt{text-decoration:line-through;text-decoration-color:var(--bad)}
-.receipt ul{margin:6px 0 0 18px;padding:0}
-.receipt .status{display:inline-block;margin-top:8px;padding:3px 10px;border-radius:99px;font-weight:700;font-size:13px}
-.receipt .status.kept{background:var(--ok);color:#fff}
-.receipt .status.changed{background:var(--warn);color:#fff}
-@media (max-width:700px){.receipt .cols{grid-template-columns:1fr}}
-.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#1b1322;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;opacity:0;transition:.2s;pointer-events:none}
-.toast.on{opacity:1}
-.spin{display:inline-block;width:12px;height:12px;border:2px solid #fff6;border-top-color:#fff;border-radius:50%;animation:s 1s linear infinite;vertical-align:-2px}
-.thinking{color:var(--muted);font-size:13px}
-@keyframes s{to{transform:rotate(360deg)}}
-@media (max-width:1100px){.app{grid-template-columns:190px 1fr}aside{display:none}}
-@media (max-width:700px){.app{grid-template-columns:1fr}nav{display:flex;overflow-x:auto;padding:6px;gap:4px}nav .ws,nav .who,nav .sec{display:none}nav a{white-space:nowrap}}
+:root{--bg:#f5f7fb;--panel:#fff;--ink:#17243c;--muted:#66758c;--line:#e5eaf2;--accent:#315ce8;--accent-soft:#edf2ff;--ok:#18775a;--ok-soft:#edf8f2;--warn:#99621b;--warn-soft:#fff7e9;--bad:#b14c45;--bad-soft:#fff3f1;--info:#315ce8;--info-soft:#edf2ff;--mono:ui-monospace,SFMono-Regular,Menlo,monospace}
+*{box-sizing:border-box}body{margin:0;font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:var(--bg);height:100dvh;display:grid;grid-template-rows:auto minmax(0,1fr);letter-spacing:-.2px}button,input,select{font:inherit}button{cursor:pointer;border:1px solid var(--line);border-radius:9px;padding:9px 14px;background:white;color:var(--ink);font-size:14px;font-weight:600;transition:background .16s,border-color .16s,box-shadow .16s}button:hover{background:#f2f5fc;border-color:#becbf0}button.primary,button.ok{background:var(--accent);border-color:var(--accent);color:white;box-shadow:0 3px 7px #315ce818}button.primary:hover,button.ok:hover{background:#244bd0}button.ghost{background:transparent}button:disabled{opacity:.5;cursor:default}button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #93b4ff;outline-offset:3px}a{color:var(--accent)}
+header{display:flex;align-items:center;gap:12px;padding:16px 24px;background:#fff;border-bottom:1px solid var(--line);flex-wrap:wrap;z-index:3}header{justify-content:space-between}.header-identity,.header-actions{display:flex;align-items:center;gap:10px;min-width:0}.header-actions{flex-wrap:wrap}header .brand{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:750;letter-spacing:-.6px;margin-right:10px}.brand-mark{display:grid;place-items:center;width:34px;height:34px;background:var(--accent);color:#fff;border-radius:10px;font-size:21px;font-weight:500}.brand small{display:block;font-size:10px;color:var(--muted);letter-spacing:1.8px;font-weight:600;margin-top:-5px}header .pill{font-size:12px;padding:4px 9px;border-radius:6px;color:var(--muted);background:#f3f5f9;white-space:nowrap}header .pill.offline{background:var(--warn-soft);color:#885b20}header .pill.gemini{background:var(--ok-soft);color:var(--ok)}header .spacer{flex:1}header label{font-size:12px;color:var(--muted)}header select{appearance:none;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%2366758c'%3E%3Cpath d='m3 4 3 3 3-3'/%3E%3C/svg%3E") no-repeat right 10px center;border:1px solid var(--line);border-radius:9px;padding:9px 28px 9px 12px;color:var(--ink);font-size:13px;max-width:225px}#eventSel{max-width:185px}#clock{display:none}.app{display:grid;grid-template-columns:224px minmax(0,1fr);min-height:0;position:relative}nav{padding:28px 14px;background:#fff;border-right:1px solid var(--line);overflow:auto;display:flex;flex-direction:column;gap:4px}nav .ws{padding:0 12px;font-size:15px;font-weight:700}nav .who{padding:3px 12px 20px;color:var(--muted);font-size:12px}nav .sec{padding:22px 12px 8px;font-size:11px;color:#8995a8;letter-spacing:1.5px;text-transform:uppercase;font-weight:650}nav a{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 12px;color:#637087;border-radius:9px;font-size:14px;font-weight:500;cursor:pointer;text-decoration:none}nav a>span:first-child{display:flex;gap:11px;align-items:center}nav a:hover{background:#f6f8fc}nav a.active{background:var(--accent-soft);color:var(--accent);font-weight:650}.nav-label{white-space:nowrap}.nav-icon{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}nav .badge{font-size:11px;min-width:21px;border-radius:5px;text-align:center;background:#e8edf7;color:#687995;padding:0 5px}nav a.active .badge{background:#dce6ff;color:var(--accent)}.nav-foot{margin-top:auto;padding:26px 12px 6px;font-size:12px;color:var(--muted)}.nav-foot strong{color:var(--ink);display:block;font-size:13px}
+main{display:flex;flex-direction:column;min-height:0;min-width:0;background:var(--bg)}main .head{display:flex;align-items:center;gap:12px;padding:20px 38px;border-bottom:1px solid var(--line);background:#ffffffb5;min-height:80px}main .head h2{font-size:18px;letter-spacing:-.5px;margin:0;font-weight:650}main .head .sub{font-size:13px;color:var(--muted);flex:1}.trace-toggle{font-size:12px;color:var(--muted);padding:7px 10px;white-space:nowrap}.scroll{flex:1;overflow:auto;padding:32px 38px 24px;scroll-behavior:smooth}#view>*{max-width:1080px;margin-left:auto;margin-right:auto}.welcome{margin-bottom:30px!important;display:flex;align-items:flex-end;justify-content:space-between;gap:20px}.eyebrow{font-size:11px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--accent)}.welcome h1,.jury-intro h1{font-size:36px;line-height:1.15;letter-spacing:-1.4px;font-weight:650;margin:9px 0}.welcome p,.jury-intro p{color:var(--muted);margin:0;font-size:14px}.welcome .summary{display:flex;gap:24px;padding:12px 0}.summary div{font-size:12px;color:var(--muted);white-space:nowrap}.summary strong{display:block;font-size:24px;line-height:1.3;color:var(--ink);font-weight:600;letter-spacing:-.8px}.msg{display:grid;grid-template-columns:30px minmax(0,1fr);gap:12px;margin-bottom:24px}.av{width:30px;height:30px;display:grid;place-items:center;border-radius:9px;background:var(--accent);color:white;font-size:13px;font-weight:700}.av.me{background:#e0e7f3;color:#5f708c}.meta{font-size:13px;margin-bottom:7px;display:flex;gap:9px;align-items:center;flex-wrap:wrap}.meta span{font-size:12px;color:var(--muted)}.meta a{color:var(--muted);text-decoration:underline;text-underline-offset:3px}.card{border:1px solid var(--line);border-radius:14px;background:white;padding:22px 24px;margin-top:6px;box-shadow:0 3px 12px #182c4b03}.card.answered{border-left:3px solid var(--ok)}.card.unknown,.card.restricted{background:#f0f3f8;border-color:#e2e7ef}.card.conflict{border:1px solid #e8d5ad;border-top:3px solid #c38f34;background:#fff}.card.suspicious{border-color:#eac7c1;background:var(--bad-soft)}.item{padding:20px 0;border-top:1px solid var(--line)}.item:first-child{border-top:0}.item .hl{font-weight:650;font-size:16px}.item .why{color:#66758c;margin-top:5px;font-size:14px}.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:11px}.chip{display:inline-block;cursor:pointer;border-radius:6px;padding:4px 8px;font-size:12px;color:#677995;background:#f3f6fb;border:1px solid #e8edf5}.chip:hover{background:var(--accent-soft);border-color:#b3c7ff;color:var(--accent)}.tag{display:inline-block;border-radius:5px;padding:3px 7px;font-size:12px;font-weight:600}.tag.finance,.tag.tech{background:#edf2ff;color:#536caa}.tag.all{background:#eef2f6;color:#66758c}.tag.pending{background:var(--warn-soft);color:var(--warn)}.tag.approved{background:var(--ok-soft);color:var(--ok)}.tag.rejected,.tag.superseded,.tag.withdrawn{background:#f0f2f6;color:#7a8596}.proposal{border:1px solid #e9d8b8;background:#fffaf1;border-radius:10px;padding:18px;margin:16px 0 0;font-size:14px}.proposal pre{background:#fff;border:1px solid #eee5d5;border-radius:8px;padding:14px;white-space:pre-wrap;font:14px/1.6 inherit}.draft-preview{margin:12px 0}.draft-preview summary{cursor:pointer;font-size:14px;font-weight:600}.proposal>.row:last-child{margin-top:14px}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.muted{color:var(--muted)}.empty{border:1px dashed #ccd7e9;border-radius:14px;padding:40px 24px;text-align:center;color:var(--muted);background:#ffffff80}.quote{border-left:2px solid #cbd5e6;padding:6px 12px;margin:12px 0;color:var(--muted);font-size:14px}.composer{background:#fff;border-top:1px solid var(--line);padding:16px 38px 20px}.composer form{display:flex;gap:10px;max-width:1080px;margin:auto}.composer input{min-width:0;flex:1;background:#f7f9fc;border:1px solid #e1e7f0;border-radius:10px;padding:13px 16px;font-size:15px}.composer button.primary{padding:10px 24px}.suggest{display:flex;gap:7px;flex-wrap:wrap;margin:0 auto 12px;max-width:1080px}.suggest button{padding:5px 9px;border-radius:6px;font-size:12px;font-weight:450;color:#6b7c95;background:#fff}.composer-note{font-size:11px;text-align:center;color:#8a96a9;margin-top:9px}
+aside{display:none;position:absolute;right:0;top:0;bottom:0;width:340px;background:#fff;border-left:1px solid var(--line);z-index:4;box-shadow:-12px 0 32px #17243c0a;flex-direction:column;min-height:0}.trace-open aside{display:flex}.trace-open{grid-template-columns:224px minmax(0,1fr) 340px}.trace-open main{grid-column:2}.trace-open nav{grid-column:1}aside .head{padding:20px;border-bottom:1px solid var(--line)}aside .head h3{margin:0 0 4px;font-size:16px}.runs{padding:12px;border-bottom:1px solid var(--line);max-height:28%;overflow:auto}.run{padding:9px;border-radius:7px;font-size:12px;display:flex;justify-content:space-between;gap:7px;cursor:pointer}.run:hover,.run.active{background:var(--accent-soft)}.steps{padding:18px;overflow:auto;flex:1}.step{display:grid;grid-template-columns:20px minmax(0,1fr);gap:8px;font-size:12px;margin-bottom:14px}.step .k{width:20px;height:20px;background:#c9d2df;color:#fff;border-radius:6px;display:grid;place-items:center;font-size:11px}.step.tool_call .k{background:var(--accent)}.step.guard .k{background:var(--bad)}.step.tool_result .k{background:var(--ok)}.step details{margin-top:4px}.step pre{font:11px/1.5 var(--mono);word-break:break-word;white-space:pre-wrap;max-height:180px;overflow:auto;border:1px solid var(--line);border-radius:6px;padding:8px;background:#f6f8fc}.usage{font-size:12px;padding:15px;color:var(--muted);border-top:1px solid var(--line)}table{width:100%;border-collapse:collapse;background:#fff;font-size:14px}th,td{padding:13px 16px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}th{font-size:12px;color:var(--muted);font-weight:600;background:#f8faff}dialog{width:min(640px,92vw);border:1px solid var(--line);border-radius:18px;padding:28px;color:var(--ink);box-shadow:0 24px 80px #17243c30}dialog pre,.proposal pre{font-family:inherit;line-height:1.6}dialog::backdrop{background:#12254266;backdrop-filter:blur(4px)}
+.receipt{margin-top:16px}.receipt .cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}.receipt .col{background:#f7f9fc;border:1px solid #e3e8f0;border-radius:10px;padding:20px}.receipt .col.keep{background:var(--ok-soft);border-color:#bddfcc}.receipt .col.claim{background:#faf6f5;border-color:#e4d4d1}.receipt .lbl{font-size:11px;letter-spacing:.9px;text-transform:uppercase;font-weight:700;color:var(--muted)}.receipt .keep .lbl{color:var(--ok)}.receipt .val{font-size:15px;line-height:1.8;margin:10px 0}.receipt .amt{font-size:25px;font-weight:700;letter-spacing:-.8px;color:var(--ink);white-space:nowrap}.receipt .amt~.amt{font-size:inherit;font-weight:inherit;letter-spacing:inherit}.receipt .claim .amt{text-decoration:line-through;text-decoration-color:#b6807a;color:#9a7470}.receipt ul{padding-left:20px;margin:10px 0;font-size:14px;color:var(--muted)}.receipt .status{display:inline-block;font-size:12px;font-weight:650;border-radius:6px;padding:5px 9px;margin-top:16px}.receipt .status.kept,.receipt .status.changed{background:var(--ok-soft);color:var(--ok)}.receipt details{margin-top:16px;border-top:1px solid var(--line);padding-top:14px}.receipt summary{cursor:pointer;font-size:14px;font-weight:600}.decision-heading{font-size:18px;font-weight:650;letter-spacing:-.3px}.brief-label{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px}.jury-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.jury-grid>.card{margin:0;display:flex;flex-direction:column;gap:9px}.jury-grid .why{font-size:14px;color:var(--muted)}.jury-grid .row:last-of-type{margin-top:auto!important;padding-top:8px}.jury-grid .star{grid-column:1/-1;border-color:#cbd8ff;background:linear-gradient(120deg,#fff,#f0f4ff)}.jury-intro{margin-bottom:28px!important}.jury-grid .check-number{width:28px;height:28px;border-radius:8px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:13px;font-weight:700}.jury-grid .muted{font-size:13px!important}.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);border:1px solid #364969;border-radius:10px;padding:12px 18px;background:#1b2e4b;color:#fff;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20;box-shadow:0 8px 30px #17243c25}.toast.on{opacity:1}.spin{display:inline-block;border:2px solid #93a8e5;border-top-color:white;border-radius:50%;width:13px;height:13px;animation:s .8s linear infinite}.thinking{color:var(--muted);font-size:14px}@keyframes s{to{transform:rotate(360deg)}}
+@media(min-width:1500px){.app.trace-open{grid-template-columns:224px minmax(0,1fr) 340px}}
+@media(max-width:1300px){header{gap:12px}.header-identity,.header-actions{width:100%}.header-identity .brand{margin-right:auto}.header-actions label{margin-left:auto}.header-identity>.demo-label{display:none}}
+@media(max-width:1200px){header{padding:12px 18px;gap:8px}.header-identity>.demo-label{display:none}header .brand{font-size:16px;margin-right:auto}header .spacer{display:none}header label{margin-left:auto}.app{grid-template-columns:200px minmax(0,1fr)}.trace-open{grid-template-columns:200px minmax(0,1fr)}.scroll{padding:24px}main .head{padding:18px 24px}.composer{padding:14px 24px}main .head .sub{display:none}.trace-toggle{margin-left:auto}}
+@media(max-width:760px){.header-identity{flex-wrap:wrap}.header-actions{gap:8px}header{padding:12px 14px}header .brand{flex:1}header #mode{font-size:11px}header #sweepBtn{order:2}header #eventSel{order:3;flex:1;max-width:100%;min-width:130px}header label{order:4;font-size:0}header label select{font-size:12px;max-width:170px}header #resetBtn{order:5}.app,.trace-open{grid-template-columns:68px minmax(0,1fr)}nav{padding:18px 8px}nav .ws,nav .who,nav .sec,nav .nav-foot,nav .nav-label,nav .badge{display:none}nav a{padding:13px;justify-content:center}nav a>span:first-child{gap:0}.scroll{padding:20px 14px}main .head{padding:16px 14px;min-height:65px}main .head h2{font-size:16px}.welcome{display:block}.welcome h1,.jury-intro h1{font-size:28px}.welcome .summary{gap:28px}.msg{grid-template-columns:minmax(0,1fr);gap:6px}.msg>.av{display:none}.card{padding:18px}.receipt .cols{grid-template-columns:1fr}.receipt .col{padding:16px}.receipt .amt{font-size:23px}.composer{padding:12px 14px}.suggest{max-height:70px;overflow:auto}.composer-note{display:none}.jury-grid{grid-template-columns:1fr}aside{width:min(340px,calc(100vw - 68px))}.trace-open main{grid-column:2}.summary strong{font-size:23px}table{display:block;overflow:auto}header .pill{max-width:180px;overflow:hidden;text-overflow:ellipsis}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
 </style>
 </head>
 <body>
 <header>
-  <span class="brand">🧠 Company Brain</span>
-  <span class="pill" title="All companies, people and messages are fictional">DEMO DATA · fictional company</span>
+  <div class="header-identity"><span class="brand"><span class="brand-mark">f</span><span>Company Brain<small>FILARE WORKSPACE</small></span></span>
+  <span class="pill demo-label" title="All companies, people and messages are fictional">Synthetic demo</span>
   <span class="pill" id="mode">…</span>
   <span class="pill" id="clock">…</span>
-  <span class="spacer"></span>
+  </div><div class="header-actions">
   <button id="sweepBtn" title="The scheduled background job. Nobody asks the brain anything.">⏰ Run morning sweep</button>
   <select id="eventSel" title="Simulate an email arriving"><option value="">✉ Simulate incoming email…</option></select>
   <label class="row" style="gap:6px">Viewing as
     <select id="personSel"></select>
   </label>
-  <button class="ghost" id="resetBtn">Reset</button>
+  <button class="ghost" id="resetBtn">Reset</button></div>
 </header>
 <div class="app">
   <nav id="nav"></nav>
   <main>
-    <div class="head"><h2 id="title"></h2><span class="sub" id="subtitle"></span></div>
+    <div class="head"><h2 id="title"></h2><span class="sub" id="subtitle"></span><button class="trace-toggle" id="traceToggle" aria-expanded="false" aria-controls="tracePanel">Agent trace</button></div>
     <div class="scroll" id="view"></div>
     <div class="composer" id="composer">
       <div class="suggest" id="suggest"></div>
-      <form id="askForm"><input id="q" autocomplete="off" placeholder="Ask the brain…"><button class="primary">Ask</button></form>
+      <form id="askForm"><input id="q" autocomplete="off" placeholder="Ask a question. Get an approved, sourced answer." aria-label="Ask the brain"><button class="primary">Ask</button></form><div class="composer-note">Approved knowledge only. Your access is checked before every answer.</div>
     </div>
   </main>
-  <aside>
-    <div class="head"><h3>Agent trace</h3><div class="muted" style="font-size:12px">Every tool call, every refused action, and what it cost.</div></div>
+  <aside id="tracePanel">
+    <div class="head"><div class="row" style="justify-content:space-between"><h3>Agent trace</h3><button id="closeTrace" aria-label="Close agent trace">×</button></div><div class="muted" style="font-size:12px">Every tool call, every refused action, and what it cost.</div></div>
     <div class="runs" id="runs"></div>
     <div class="steps" id="steps"><div class="empty">Run the sweep or ask a question.</div></div>
     <div class="usage" id="usage"></div>
@@ -220,10 +117,10 @@ function render() {
   const openAlerts = S.alerts.filter(a => !a.closed).length;
   const nav = [["dm", "🧠 Brain", (S.brief ? 0 : 0) + openAlerts], ["email", "📧 Morning email", S.brief ? 1 : 0], ["memory", "📚 Memory review", S.candidates.length],
     ["approvals", "✅ Approvals", pend], ["outbox", "📤 Outbox", 0], ["sources", "🗂 Sources", 0], ["audit", "🧾 Audit log", 0], ["jury", "🏁 Jury checklist", 0]];
-  $("#nav").innerHTML = `<div class="ws">${esc(S.company.split(" (")[0])}</div><div class="who">Demo persona · ${esc(S.person.name)}</div>
-    <div class="sec">Direct messages</div>` + nav.map(([k, l, n], i) =>
-    (i === 1 ? `<div class="sec">Brain</div>` : "") +
-    `<a data-view="${k}" class="${view === k ? "active" : ""}"><span>${l}</span>${n ? `<span class="badge">${n}</span>` : ""}</a>`).join("");
+  const iconPaths = {dm:'M4 4h16v12H9l-5 4V4Z',email:'M3 5h18v14H3V5Zm0 1 9 7 9-7',memory:'M4 4h7v16H4V4Zm9 0h7v16h-7V4Z',approvals:'m7 12 3 3 7-7 M5 3h14v18H5V3Z',outbox:'M4 14h4l2 3h4l2-3h4 M4 14l3-9h10l3 9v6H4v-6Z',sources:'M3 6h7l2 3h9v11H3V6Z',audit:'M6 3h12v18H6V3Zm3 5h6m-6 4h6m-6 4h4',jury:'M5 3v18m0-16h14l-3 4 3 4H5'};
+  $("#nav").innerHTML = `<div class="ws">${esc(S.company.split(" (")[0])}</div><div class="who">Your company, in context.</div><div class="sec">Workspace</div>` + nav.map(([k, l, n], i) =>
+    (i === 5 ? `<div class="sec">Knowledge & trust</div>` : "") +
+    `<a data-view="${k}" role="button" tabindex="0" aria-label="${esc(l.replace(/^\S+\s/, ''))}" class="${view === k ? "active" : ""}"><span><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="${iconPaths[k]}"/></svg><span class="nav-label">${esc(l.replace(/^\S+\s/, ''))}</span></span>${n ? `<span class="badge">${n}</span>` : ""}</a>`).join("") + `<div class="nav-foot"><strong>People make the decisions.</strong>Brain brings the evidence.<br><br>Synthetic data · Mock outbox</div>`;
   $("#composer").style.display = view === "dm" ? "" : "none";
   $("#suggest").innerHTML = SUGGEST.map(q => `<button type="button" data-q="${esc(q)}">${esc(q)}</button>`).join("");
   ({dm: renderDM, email: renderEmail, memory: renderMemory, approvals: renderApprovals, outbox: renderOutbox, sources: renderSources, audit: renderAudit, jury: renderJury})[view]();
@@ -241,26 +138,27 @@ function proposalBox(p) {
       ? `<div class="muted">↩ Withdrawn by the brain at ${time(p.decided_at)}: the fact it quoted was replaced, so this draft is stale.</div>`
       : `<div class="muted">${p.status === "approved" ? "✅ Approved" : "✖ Rejected"} by ${esc(p.decided_by)} at ${time(p.decided_at)}${p.status === "approved" ? " · in Outbox (mock)" : ""}</div>`;
   return `<div class="proposal"><div class="row"><span class="tag ${esc(p.status)}">${esc(p.status)}</span><b>Draft email</b> to ${esc(p.to)}</div>
-    <div><b>${esc(p.subject)}</b></div><pre>${esc(p.body)}</pre><div class="muted" style="font-size:12px">Why: ${esc(p.reason)}</div>${chips(p.citations)}${btns}</div>`;
+    <details class="draft-preview"><summary>Read draft · ${esc(p.subject)}</summary><pre>${esc(p.body)}</pre><div class="muted" style="font-size:12px">Why: ${esc(p.reason)}</div></details>${chips(p.citations)}${btns}</div>`;
 }
 
 const amounts = t => esc(t).replace(/((?:EUR|€)\s?\d{1,3}(?:[.,]\d{3})*)/g, '<span class="amt">$1</span>');
 function receiptCard(a) {
   const r = a.receipt, cur = r.current, cl = r.claim;
+  const activeClaim = r.record_changed && cl.status === "approved";
   const srcChips = list => `<div class="chips">${list.map(x => `<span class="chip" data-src="${esc(x.source_id)}">📎 ${esc(x.label)} · ${esc(x.date)}</span>`).join("")}</div>`;
-  return `<div class="msg"><div class="av">🧠</div><div><div class="meta"><b>Brain</b><span>${time(a.created_at)} · change control, unprompted</span></div>
-    <div class="card conflict"><b>⚠ A message contradicts an approved company fact. I did not change it.</b>
+  return `<div class="msg"><div class="av">f</div><div><div class="meta"><b>Brain</b><span>${time(a.created_at)} · change control, unprompted</span></div>
+    <div class="card conflict"><div class="eyebrow">Change control</div><div class="decision-heading">${r.record_changed ? "A new decision. A clear record." : cl.status === "rejected" ? "Claim rejected. History preserved." : "A new claim needs a decision."}</div><div class="muted" style="font-size:14px;margin-top:4px">${r.record_changed ? "Accepted by an authorized reviewer." : "Incoming evidence stays separate from approved knowledge."}</div>
     <div class="receipt"><div class="cols">
-      <div class="col keep"><div class="lbl">Company record · ${cur.status === "approved" ? "approved" : esc(cur.status)}</div>
+      <div class="col ${cur.status === "approved" ? "keep" : ""}"><div class="lbl">Company record · ${cur.status === "approved" ? "approved" : esc(cur.status)}</div>
         <div class="val">${amounts(cur.fact)}</div>
         <div class="muted" style="font-size:12px">Approved by ${esc(cur.approved_by)} · ${esc(cur.approved_on)}</div>${srcChips(cur.sources)}</div>
-      <div class="col claim"><div class="lbl">Incoming claim · ${esc(cl.status === "candidate" ? "not approved" : cl.status)}</div>
+      <div class="col ${activeClaim ? "keep" : cl.status === "rejected" ? "claim" : ""}"><div class="lbl">${activeClaim ? "Active company record" : "Incoming claim"} · ${esc(cl.status === "candidate" ? "not approved" : cl.status)}</div>
         <div class="val">${amounts(cl.fact)}</div>
         <div class="muted" style="font-size:12px">Dated ${esc(cl.dated)}</div>${srcChips(cl.sources)}</div>
     </div>
-    <div style="margin-top:8px"><b>Decision receipt</b><ul>${r.reasons.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>
+    <details><summary>Decision receipt · Why this outcome?</summary><ul>${r.reasons.map(x => `<li>${esc(x)}</li>`).join("")}</ul></details>
     <div class="muted" style="font-size:12px;margin-top:4px">Can decide: ${r.reviewers.map(esc).join(", ")}</div>
-    <span class="status ${r.record_changed ? "changed" : "kept"}">${r.record_changed ? "Record changed after review" : "✓ Company record unchanged"}</span>
+    <span class="status ${r.record_changed ? "changed" : "kept"}">${r.record_changed ? "Record changed after review" : "✓ Record unchanged by this claim"}</span>
     <span class="muted" style="font-size:12px;margin-left:6px">${esc(r.outcome)}</span>
     ${r.you_can_reject ? `<div class="row" style="margin-top:8px"><button data-mem="${esc(cl.id)}" data-act="reject">Reject claim</button>
       ${r.you_can_approve ? `<button data-mem="${esc(cl.id)}" data-act="approve">Replace the record</button>` : `<span class="muted" style="font-size:12px">You can't replace this record.</span>`}</div>` : ""}
@@ -268,21 +166,21 @@ function receiptCard(a) {
 }
 
 function renderDM() {
-  setHead("🧠 Brain", `Direct messages with ${S.person.name}`);
+  setHead("Brain", `Direct messages with ${S.person.name}`);
   const props = Object.fromEntries(S.proposals.map(p => [p.id, p]));
-  let h = "";
+  let h = `<section class="welcome"><div><div class="eyebrow">Your daily workspace</div><h1>Your day, in focus.</h1><p>Good morning, ${esc(S.person.name.split(" ")[0])}. Here’s what needs your attention.</p></div><div class="summary"><div><strong>${S.brief?.items.length || 0}</strong>Brief items</div><div><strong>${S.candidates.length}</strong>To review</div><div><strong>${S.proposals.filter(p => p.status === "pending").length}</strong>Pending actions</div></div></section>`;
   if (!S.brief) h += `<div class="empty">No brief yet. At the scheduled time the brain sweeps email, chat and tasks and writes to each person on its own.<br><br>
     <button class="primary" id="sweep2">⏰ Run morning sweep</button></div>`;
   else {
     const b = S.brief;
-    h += `<div class="msg"><div class="av">🧠</div><div><div class="meta"><b>Brain</b><span>${time(b.generated_at)} · morning brief, unprompted · <a href="#" data-run="${b.run_id}">trace</a></span></div>
-      <div class="card">${S.voice ? `<div class="row" style="margin-bottom:6px"><button data-voice="1">🔊 Play voice brief</button><span class="muted" style="font-size:12px">ElevenLabs · read from this brief only</span></div>` : ""}<div>Good morning ${esc(S.person.name.split(" ")[0])}. ${b.items.length ? `${b.items.length} thing${b.items.length > 1 ? "s" : ""} need${b.items.length > 1 ? "" : "s"} you today:` : "Nothing needs you today."}</div>
+    h += `<div class="msg"><div class="av">f</div><div><div class="meta"><b>Brain</b><span>${time(b.generated_at)} · morning brief, unprompted · <a href="#" data-run="${b.run_id}">trace</a></span></div>
+      <div class="card">${S.voice ? `<div class="row" style="margin-bottom:6px"><button data-voice="1">🔊 Play voice brief</button><span class="muted" style="font-size:12px">ElevenLabs · read from this brief only</span></div>` : ""}<div><div class="brief-label">Morning brief · ${time(b.generated_at)}</div>Good morning ${esc(S.person.name.split(" ")[0])}. ${b.items.length ? `${b.items.length} thing${b.items.length > 1 ? "s" : ""} need${b.items.length > 1 ? "" : "s"} you today:` : "Nothing needs you today."}</div>
       ${b.items.map((it, i) => `<div class="item"><div class="hl">${i + 1}. ${esc(it.headline)}</div><div class="why">${esc(it.why)}</div>${chips(it.citations)}${proposalBox(props[it.proposal_id])}</div>`).join("")}
       </div></div></div>`;
   }
   for (const a of S.alerts) {
     if (a.kind === "conflict" && a.receipt) { h += receiptCard(a); continue; }
-    h += `<div class="msg"><div class="av">🧠</div><div><div class="meta"><b>Brain</b><span>${time(a.created_at)} · ${a.kind === "conflict" ? "memory conflict" : "suspicious message"}, unprompted</span></div>
+    h += `<div class="msg"><div class="av">f</div><div><div class="meta"><b>Brain</b><span>${time(a.created_at)} · ${a.kind === "conflict" ? "memory conflict" : "suspicious message"}, unprompted</span></div>
       <div class="card ${a.kind}"><b>${a.kind === "conflict" ? "⚠ This contradicts what we know" : "⛔ I did not act on this message"}</b><div class="why">${esc(a.text)}</div>
       ${chips([{source_id: a.source_id, id: a.source_id, label: "Incoming source"}])}
       ${a.kind === "conflict" && !a.closed ? `<div class="row" style="margin-top:6px"><button data-view-go="memory">Review in Memory</button></div>` : ""}
@@ -290,16 +188,16 @@ function renderDM() {
   }
   for (const m of conversation(person)) {
     if (m.who === "me") h += `<div class="msg"><div class="av me">${esc(S.person.name[0])}</div><div><div class="meta"><b>${esc(S.person.name)}</b><span>${time(m.clock)}</span></div><div>${esc(m.text)}</div></div></div>`;
-    else if (m.thinking) h += `<div class="msg"><div class="av">🧠</div><div class="thinking">Searching memory you're allowed to see…</div></div>`;
+    else if (m.thinking) h += `<div class="msg"><div class="av">f</div><div class="thinking">Searching memory you're allowed to see…</div></div>`;
     else {
       const a = m.answer, lbl = {answered: "", restricted: "🔒 Restricted", unknown: "🤷 I don't know"}[a.status];
-      h += `<div class="msg"><div class="av">🧠</div><div><div class="meta"><b>Brain</b><span>${time(m.clock)} · <a href="#" data-run="${m.run}">trace</a></span></div>
+      h += `<div class="msg"><div class="av">f</div><div><div class="meta"><b>Brain</b><span>${time(m.clock)} · <a href="#" data-run="${m.run}">trace</a></span></div>
         <div class="card ${a.status}">${lbl ? `<b>${lbl}</b><br>` : ""}${esc(a.text)}${chips(a.citations)}
         ${(a.citations || []).filter(c => c.fact && c.fact !== a.text).map(c => `<div class="quote">Approved fact ${esc(c.id)}: ${esc(c.fact)}</div>`).join("")}</div></div></div>`;
     }
   }
   $("#view").innerHTML = h;
-  $("#view").scrollTop = 1e9;
+  $("#view").scrollTop = conversation(person).length || S.alerts.length ? 1e9 : 0;
 }
 
 function memCard(m, actions) {
@@ -314,18 +212,18 @@ function memCard(m, actions) {
       <span class="muted">Only approved items can be used in answers.</span></div>` : ""}</div>`;
 }
 function renderMemory() {
-  setHead("📚 Memory review", "The brain proposes. People decide what it remembers.");
+  setHead("Memory review", "The brain proposes. People decide what it remembers.");
   $("#view").innerHTML = `<h3>Waiting for review (${S.candidates.length})</h3>` +
     (S.candidates.length ? S.candidates.map(m => memCard(m, true)).join("") : `<div class="empty">Nothing to review.</div>`) +
     `<h3>Approved memory you can see (${S.memory.filter(m => m.status === "approved").length})</h3>` + S.memory.map(m => memCard(m, false)).join("") +
     (S.decided_candidates.length ? `<h3>Rejected</h3>` + S.decided_candidates.map(m => memCard(m, false)).join("") : "");
 }
 function renderApprovals() {
-  setHead("✅ Approvals", "Actions the brain drafted. Nothing happens until a person approves.");
+  setHead("Approvals", "Actions the brain drafted. Nothing happens until a person approves.");
   $("#view").innerHTML = S.proposals.length ? S.proposals.slice().reverse().map(proposalBox).join("") : `<div class="empty">No proposals for ${esc(S.person.role)}.</div>`;
 }
 function renderEmail() {
-  setHead("📧 Morning email", `The same brief, delivered to ${S.person.name}'s inbox`);
+  setHead("Morning email", `The same brief, delivered to ${S.person.name}'s inbox`);
   const b = S.brief;
   if (!b) { $("#view").innerHTML = `<div class="empty">No email yet. It is sent by the scheduled morning sweep, not on request.</div>`; return; }
   const props = Object.fromEntries(S.proposals.map(p => [p.id, p]));
@@ -341,23 +239,23 @@ function renderEmail() {
 }
 
 function renderOutbox() {
-  setHead("📤 Outbox", "Mock outbox: approved emails land here. Nothing leaves the demo.");
+  setHead("Outbox", "Mock outbox: approved emails land here. Nothing leaves the demo.");
   $("#view").innerHTML = S.outbox.length ? S.outbox.map(o => `<div class="card"><div class="row"><span class="tag approved">approved by ${esc(o.approved_by)}</span> to <b>${esc(o.to)}</b> <span class="muted">${time(o.at)}</span></div>
     <div><b>${esc(o.subject)}</b></div><pre style="white-space:pre-wrap">${esc(o.body)}</pre><div class="muted">${esc(o.note)}</div></div>`).join("") : `<div class="empty">Empty. Approve a draft to see it here.</div>`;
 }
 function renderSources() {
-  setHead("🗂 Sources", `Email, chat, tasks and docs ${S.person.name} may see`);
+  setHead("Sources", `Email, chat, tasks and docs ${S.person.name} may see`);
   $("#view").innerHTML = `<table><tr><th>Id</th><th>Type</th><th>When</th><th>From</th><th>Title</th><th>Audience</th></tr>` +
     S.sources.map(s => `<tr><td><span class="chip" data-src="${esc(s.id)}">${esc(s.id)}</span></td><td>${esc(s.type)}</td><td>${esc(s.ts.replace("T", " "))}</td><td>${esc(s.from)}</td><td>${esc(s.title)}</td><td>${tag(s.audience)}</td></tr>`).join("") + `</table>`;
 }
 function renderAudit() {
-  setHead("🧾 Audit log", "Who did what, on which input, and who approved it");
+  setHead("Audit log", "Who did what, on which input, and who approved it");
   $("#view").innerHTML = `<table><tr><th>#</th><th>Clock</th><th>Actor</th><th>Action</th><th>Target</th><th>Detail</th></tr>` +
     S.audit.map(a => `<tr><td>${a.i}</td><td>${time(a.clock)}</td><td>${esc(a.actor)}</td><td>${esc(a.action)}</td><td>${esc(a.target)}</td><td>${esc(a.detail)}</td></tr>`).join("") + `</table>`;
 }
 
 function renderJury() {
-  setHead("🏁 Jury checklist", "Run the seven checks, then finish with the signature change-control moment.");
+  setHead("Jury checklist", "Run the seven checks, then finish with the signature change-control moment.");
   const checks = [
     {n: "1", title: "It speaks first", do: "Run the morning sweep, then open Brain DM.",
       buttons: [["sweep", "Run morning sweep"], ["dm", "Open Brain DM"]], expected: "An unprompted, role-specific morning brief appears before anyone asks a question."},
@@ -373,13 +271,13 @@ function renderJury() {
       buttons: [["approvals-luca", "Open Approvals as Luca"], ["outbox-luca", "Check empty Outbox"]], expected: "The draft waits for Luca; Outbox stays empty until a person approves it."},
     {n: "7", title: "It fits the day", do: "Open Brain DM, the Morning email view, and the voice brief button.",
       buttons: [["dm", "Open Brain DM"], ["email", "Open Morning email"], ["voice", "Play voice brief"]], expected: "The same sourced brief fits DM, email, and—when configured—voice delivery."},
-    {n: "★", title: "Change control", do: "Simulate “Archived cloud budget email” (email-006), inspect the receipt, then ask as Giulia: “What is the Q1 2027 cloud budget?”",
-      buttons: [["email-006", "Simulate archived email"], ["budget-giulia", "Ask as Giulia"]], expected: "The receipt keeps the approved record unchanged; the answer is EUR 18,000 citing mem-001."}
+    {n: "★", title: "Change control", do: "Reject the archived €12,000 claim. Ask as Giulia for €18,000, then simulate the synthetic €25,000 claim as Sara. Sara cannot replace it; switch to Giulia and use Replace the record. Ask the same budget question again.",
+      buttons: [["email-006", "Simulate archived email"], ["budget-giulia", "Ask as Giulia"], ["mail-new", "Simulate newer €25,000 claim as Sara"]], expected: "Before approval: EUR 18,000 citing mem-001. After Giulia approves: EUR 25,000 active, EUR 18,000 superseded, and the new citation. The archive receipt stays rejected."}
   ];
-  $("#view").innerHTML = checks.map(c => `<div class="card"><div class="row"><span class="tag ${c.n === "★" ? "finance" : "all"}">${esc(c.n)}</span><b>${esc(c.title)}</b></div>
+  $("#view").innerHTML = `<section class="jury-intro"><div class="eyebrow">The live walkthrough</div><h1>Trust, demonstrated.</h1><p>Seven checks. Real controls. One clear decision trail.</p></section><div class="jury-grid">` + checks.map(c => `<div class="card ${c.n === "★" ? "star" : ""}"><div class="row"><span class="check-number">${esc(c.n)}</span><b>${esc(c.title)}</b></div>
     <div class="why"><b>${esc("Do:")}</b> ${esc(c.do)}</div>
     <div class="row" style="margin-top:8px">${c.buttons.filter(([action]) => action !== "voice" || S.voice).map(([action, label]) => `<button data-jury="${esc(action)}">${esc(label)}</button>`).join("")}</div>
-    <div class="muted" style="margin-top:7px"><b>${esc("Expected:")}</b> ${esc(c.expected)}</div></div>`).join("");
+    <div class="muted" style="margin-top:7px"><b>${esc("Look for:")}</b> ${esc(c.expected)}</div></div>`).join("") + `</div>`;
 }
 
 function renderRuns() {
@@ -454,10 +352,14 @@ document.addEventListener("click", async e => {
     if (action === "outbox-luca") return as("luca", "outbox");
     if (action === "voice") return withBusy(t, playVoiceBrief);
     if (action === "email-006") return withBusy(t, async () => { const r = await api("/api/events/email-006", {method: "POST"}); activeRun = r.runs[0]?.id || null; view = "dm"; await load(); toast(r.note || "Email received and processed"); });
+    if (action === "mail-new") {
+      await as("sara", "dm");
+      return withBusy(t, async () => { const r = await api("/api/events/mail-new", {method: "POST"}); activeRun = r.runs[0]?.id || null; await load(); toast(r.note || "Synthetic claim received for review"); });
+    }
     if (action === "budget-giulia") return as("giulia", "dm", "What is the Q1 2027 cloud budget?");
   }
   if (t.dataset.voice) return withBusy(t, playVoiceBrief);
-  if (t.dataset.run) { e.preventDefault(); return showRun(t.dataset.run); }
+  if (t.dataset.run) { e.preventDefault(); toggleTrace(true); return showRun(t.dataset.run); }
   if (t.dataset.view || t.dataset.viewGo) { view = t.dataset.view || t.dataset.viewGo; return render(); }
   if (t.dataset.q) return ask(t.dataset.q);
   if (t.id === "sweep2") return sweep(t);
@@ -470,6 +372,16 @@ document.addEventListener("click", async e => {
   }
   if (t.dataset.mem) return withBusy(t, async () => { await api(`/api/memory/${t.dataset.mem}/${t.dataset.act}`, {method: "POST", body: {person}}); toast(`${t.dataset.mem} ${t.dataset.act}d by ${S.person.name}`); await load(); });
   if (t.dataset.prop) return withBusy(t, async () => { await api(`/api/proposals/${t.dataset.prop}/${t.dataset.act}`, {method: "POST", body: {person}}); toast(t.dataset.act === "approve" ? "Approved: moved to Outbox (mock)" : "Rejected: nothing sent"); await load(); });
+});
+function toggleTrace(open) {
+  $(".app").classList.toggle("trace-open", open);
+  $("#traceToggle").setAttribute("aria-expanded", String(open));
+}
+$("#traceToggle").addEventListener("click", () => toggleTrace(!$(".app").classList.contains("trace-open")));
+$("#closeTrace").addEventListener("click", () => toggleTrace(false));
+document.addEventListener("keydown", e => {
+  if ((e.key === "Enter" || e.key === " ") && e.target.matches("nav a")) { e.preventDefault(); e.target.click(); }
+  if (e.key === "Escape") toggleTrace(false);
 });
 $("#askForm").addEventListener("submit", e => { e.preventDefault(); ask($("#q").value); });
 $("#sweepBtn").addEventListener("click", e => sweep(e.currentTarget));

@@ -143,12 +143,15 @@ class Store:
         if reviewers:
             reasons.append("Being newer would not be enough either: only " + ", ".join(who(p["id"]) for p in reviewers)
                            + " can change an approved fact.")
-        if old["status"] == "approved" and new["status"] == "rejected":
-            outcome = f"Claim rejected by {who(new.get('decided_by'))}. Company record unchanged."
-        elif old["status"] == "approved":
+        replaced_by_claim = old.get("superseded_by") == new["id"] and new["status"] in ("approved", "superseded")
+        if new["status"] == "rejected":
+            outcome = f"Claim rejected by {who(new.get('decided_by'))}. Company record unchanged by this claim."
+        elif replaced_by_claim:
+            outcome = f"Record replaced after review by {who(new.get('decided_by'))}."
+        elif new["status"] == "candidate":
             outcome = "Awaiting a decision. Company record unchanged."
         else:
-            outcome = f"Record replaced after review by {who(new.get('decided_by'))}."
+            outcome = "This claim did not replace the referenced record."
         return {
             "current": {"id": old["id"], "fact": old["fact"], "status": old["status"], "approved_by": who(old.get("decided_by")),
                         "approved_on": old_date, "sources": sources(old)},
@@ -156,7 +159,7 @@ class Store:
                       "sources": new_src},
             "reasons": reasons,
             "reviewers": [who(p["id"]) for p in reviewers] if reviewers else ["anyone who can see this fact"],
-            "record_changed": old["status"] != "approved",
+            "record_changed": replaced_by_claim,
             "outcome": outcome,
             "you_can_approve": (new["status"] == "candidate" and not stale and self.may_revise(person_id, old)),
             "you_can_reject": new["status"] == "candidate",

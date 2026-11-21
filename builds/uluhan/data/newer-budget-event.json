@@ -1,0 +1,22 @@
+{
+  "id": "mail-new",
+  "label": "Synthetic newer cloud budget claim · EUR 25,000",
+  "source": {
+    "id": "mail-new",
+    "type": "mail",
+    "audience": ["finance", "tech"],
+    "ts": "2026-11-22T10:00:00+01:00",
+    "stage": "live",
+    "from": "sara@filare.example",
+    "to": "",
+    "recipient_ids": [],
+    "title": "Budget update? · synthetic demo claim",
+    "body": "I think the Q1 2027 cloud budget is now EUR 25,000."
+  },
+  "fallback_candidates": [{
+    "key": "cloud.budget.q1.2027",
+    "topic": "Q1 2027 cloud budget",
+    "fact": "The Q1 2027 cloud budget is EUR 25,000.",
+    "quote": "the Q1 2027 cloud budget is now EUR 25,000"
+  }]
+}
