@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Company Brain</title>
+<style>
+:root{--bg:#f5f7fb;--panel:#fff;--ink:#17243c;--muted:#66758c;--line:#e5eaf2;--accent:#315ce8;--accent-soft:#edf2ff;--ok:#18775a;--ok-soft:#edf8f2;--warn:#99621b;--warn-soft:#fff7e9;--bad:#b14c45;--bad-soft:#fff3f1;--info:#315ce8;--info-soft:#edf2ff;--mono:ui-monospace,SFMono-Regular,Menlo,monospace}
+*{box-sizing:border-box}body{margin:0;font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:var(--bg);height:100dvh;display:grid;grid-template-rows:auto minmax(0,1fr);letter-spacing:-.2px}button,input,select{font:inherit}button{cursor:pointer;border:1px solid var(--line);border-radius:9px;padding:9px 14px;background:white;color:var(--ink);font-size:14px;font-weight:600;transition:background .16s,border-color .16s,box-shadow .16s}button:hover{background:#f2f5fc;border-color:#becbf0}button.primary,button.ok{background:var(--accent);border-color:var(--accent);color:white;box-shadow:0 3px 7px #315ce818}button.primary:hover,button.ok:hover{background:#244bd0}button.ghost{background:transparent}button:disabled{opacity:.5;cursor:default}button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #93b4ff;outline-offset:3px}a{color:var(--accent)}
+header{display:flex;align-items:center;gap:12px;padding:16px 24px;background:#fff;border-bottom:1px solid var(--line);flex-wrap:wrap;z-index:3}header{justify-content:space-between}.header-identity,.header-actions{display:flex;align-items:center;gap:10px;min-width:0}.header-actions{flex-wrap:wrap}header .brand{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:750;letter-spacing:-.6px;margin-right:10px}.brand-mark{display:grid;place-items:center;width:34px;height:34px;background:var(--accent);color:#fff;border-radius:10px;font-size:21px;font-weight:500}.brand small{display:block;font-size:10px;color:var(--muted);letter-spacing:1.8px;font-weight:600;margin-top:-5px}header .pill{font-size:12px;padding:4px 9px;border-radius:6px;color:var(--muted);background:#f3f5f9;white-space:nowrap}header .pill.offline{background:var(--warn-soft);color:#885b20}header .pill.gemini{background:var(--ok-soft);color:var(--ok)}header .spacer{flex:1}header label{font-size:12px;color:var(--muted)}header select{appearance:none;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%2366758c'%3E%3Cpath d='m3 4 3 3 3-3'/%3E%3C/svg%3E") no-repeat right 10px center;border:1px solid var(--line);border-radius:9px;padding:9px 28px 9px 12px;color:var(--ink);font-size:13px;max-width:225px}#eventSel{max-width:185px}#clock{display:none}.app{display:grid;grid-template-columns:224px minmax(0,1fr);min-height:0;position:relative}nav{padding:28px 14px;background:#fff;border-right:1px solid var(--line);overflow:auto;display:flex;flex-direction:column;gap:4px}nav .ws{padding:0 12px;font-size:15px;font-weight:700}nav .who{padding:3px 12px 20px;color:var(--muted);font-size:12px}nav .sec{padding:22px 12px 8px;font-size:11px;color:#8995a8;letter-spacing:1.5px;text-transform:uppercase;font-weight:650}nav a{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 12px;color:#637087;border-radius:9px;font-size:14px;font-weight:500;cursor:pointer;text-decoration:none}nav a>span:first-child{display:flex;gap:11px;align-items:center}nav a:hover{background:#f6f8fc}nav a.active{background:var(--accent-soft);color:var(--accent);font-weight:650}.nav-label{white-space:nowrap}.nav-icon{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}nav .badge{font-size:11px;min-width:21px;border-radius:5px;text-align:center;background:#e8edf7;color:#687995;padding:0 5px}nav a.active .badge{background:#dce6ff;color:var(--accent)}.nav-foot{margin-top:auto;padding:26px 12px 6px;font-size:12px;color:var(--muted)}.nav-foot strong{color:var(--ink);display:block;font-size:13px}
+main{display:flex;flex-direction:column;min-height:0;min-width:0;background:var(--bg)}main .head{display:flex;align-items:center;gap:12px;padding:20px 38px;border-bottom:1px solid var(--line);background:#ffffffb5;min-height:80px}main .head h2{font-size:18px;letter-spacing:-.5px;margin:0;font-weight:650}main .head .sub{font-size:13px;color:var(--muted);flex:1}.trace-toggle{font-size:12px;color:var(--muted);padding:7px 10px;white-space:nowrap}.scroll{flex:1;overflow:auto;padding:32px 38px 24px;scroll-behavior:smooth}#view>*{max-width:1080px;margin-left:auto;margin-right:auto}.welcome{margin-bottom:30px!important;display:flex;align-items:flex-end;justify-content:space-between;gap:20px}.eyebrow{font-size:11px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--accent)}.welcome h1,.jury-intro h1{font-size:36px;line-height:1.15;letter-spacing:-1.4px;font-weight:650;margin:9px 0}.welcome p,.jury-intro p{color:var(--muted);margin:0;font-size:14px}.welcome .summary{display:flex;gap:24px;padding:12px 0}.summary div{font-size:12px;color:var(--muted);white-space:nowrap}.summary strong{display:block;font-size:24px;line-height:1.3;color:var(--ink);font-weight:600;letter-spacing:-.8px}.msg{display:grid;grid-template-columns:30px minmax(0,1fr);gap:12px;margin-bottom:24px}.av{width:30px;height:30px;display:grid;place-items:center;border-radius:9px;background:var(--accent);color:white;font-size:13px;font-weight:700}.av.me{background:#e0e7f3;color:#5f708c}.meta{font-size:13px;margin-bottom:7px;display:flex;gap:9px;align-items:center;flex-wrap:wrap}.meta span{font-size:12px;color:var(--muted)}.meta a{color:var(--muted);text-decoration:underline;text-underline-offset:3px}.card{border:1px solid var(--line);border-radius:14px;background:white;padding:22px 24px;margin-top:6px;box-shadow:0 3px 12px #182c4b03}.card.answered{border-left:3px solid var(--ok)}.card.unknown,.card.restricted{background:#f0f3f8;border-color:#e2e7ef}.card.conflict{border:1px solid #e8d5ad;border-top:3px solid #c38f34;background:#fff}.card.suspicious{border-color:#eac7c1;background:var(--bad-soft)}.item{padding:20px 0;border-top:1px solid var(--line)}.item:first-child{border-top:0}.item .hl{font-weight:650;font-size:16px}.item .why{color:#66758c;margin-top:5px;font-size:14px}.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:11px}.chip{display:inline-block;cursor:pointer;border-radius:6px;padding:4px 8px;font-size:12px;color:#677995;background:#f3f6fb;border:1px solid #e8edf5}.chip:hover{background:var(--accent-soft);border-color:#b3c7ff;color:var(--accent)}.tag{display:inline-block;border-radius:5px;padding:3px 7px;font-size:12px;font-weight:600}.tag.finance,.tag.tech{background:#edf2ff;color:#536caa}.tag.all{background:#eef2f6;color:#66758c}.tag.pending{background:var(--warn-soft);color:var(--warn)}.tag.approved{background:var(--ok-soft);color:var(--ok)}.tag.rejected,.tag.superseded,.tag.withdrawn{background:#f0f2f6;color:#7a8596}.proposal{border:1px solid #e9d8b8;background:#fffaf1;border-radius:10px;padding:18px;margin:16px 0 0;font-size:14px}.proposal pre{background:#fff;border:1px solid #eee5d5;border-radius:8px;padding:14px;white-space:pre-wrap;font:14px/1.6 inherit}.draft-preview{margin:12px 0}.draft-preview summary{cursor:pointer;font-size:14px;font-weight:600}.proposal>.row:last-child{margin-top:14px}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.muted{color:var(--muted)}.empty{border:1px dashed #ccd7e9;border-radius:14px;padding:40px 24px;text-align:center;color:var(--muted);background:#ffffff80}.quote{border-left:2px solid #cbd5e6;padding:6px 12px;margin:12px 0;color:var(--muted);font-size:14px}.composer{background:#fff;border-top:1px solid var(--line);padding:16px 38px 20px}.composer form{display:flex;gap:10px;max-width:1080px;margin:auto}.composer input{min-width:0;flex:1;background:#f7f9fc;border:1px solid #e1e7f0;border-radius:10px;padding:13px 16px;font-size:15px}.composer button.primary{padding:10px 24px}.suggest{display:flex;gap:7px;flex-wrap:wrap;margin:0 auto 12px;max-width:1080px}.suggest button{padding:5px 9px;border-radius:6px;font-size:12px;font-weight:450;color:#6b7c95;background:#fff}.composer-note{font-size:11px;text-align:center;color:#8a96a9;margin-top:9px}
+aside{display:none;position:absolute;right:0;top:0;bottom:0;width:340px;background:#fff;border-left:1px solid var(--line);z-index:4;box-shadow:-12px 0 32px #17243c0a;flex-direction:column;min-height:0}.trace-open aside{display:flex}.trace-open{grid-template-columns:224px minmax(0,1fr) 340px}.trace-open main{grid-column:2}.trace-open nav{grid-column:1}aside .head{padding:20px;border-bottom:1px solid var(--line)}aside .head h3{margin:0 0 4px;font-size:16px}.runs{padding:12px;border-bottom:1px solid var(--line);max-height:28%;overflow:auto}.run{padding:9px;border-radius:7px;font-size:12px;display:flex;justify-content:space-between;gap:7px;cursor:pointer}.run:hover,.run.active{background:var(--accent-soft)}.steps{padding:18px;overflow:auto;flex:1}.step{display:grid;grid-template-columns:20px minmax(0,1fr);gap:8px;font-size:12px;margin-bottom:14px}.step .k{width:20px;height:20px;background:#c9d2df;color:#fff;border-radius:6px;display:grid;place-items:center;font-size:11px}.step.tool_call .k{background:var(--accent)}.step.guard .k{background:var(--bad)}.step.tool_result .k{background:var(--ok)}.step details{margin-top:4px}.step pre{font:11px/1.5 var(--mono);word-break:break-word;white-space:pre-wrap;max-height:180px;overflow:auto;border:1px solid var(--line);border-radius:6px;padding:8px;background:#f6f8fc}.usage{font-size:12px;padding:15px;color:var(--muted);border-top:1px solid var(--line)}table{width:100%;border-collapse:collapse;background:#fff;font-size:14px}th,td{padding:13px 16px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}th{font-size:12px;color:var(--muted);font-weight:600;background:#f8faff}dialog{width:min(640px,92vw);border:1px solid var(--line);border-radius:18px;padding:28px;color:var(--ink);box-shadow:0 24px 80px #17243c30}dialog pre,.proposal pre{font-family:inherit;line-height:1.6}dialog::backdrop{background:#12254266;backdrop-filter:blur(4px)}
+.receipt{margin-top:16px}.receipt .cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}.receipt .col{background:#f7f9fc;border:1px solid #e3e8f0;border-radius:10px;padding:20px}.receipt .col.keep{background:var(--ok-soft);border-color:#bddfcc}.receipt .col.claim{background:#faf6f5;border-color:#e4d4d1}.receipt .lbl{font-size:11px;letter-spacing:.9px;text-transform:uppercase;font-weight:700;color:var(--muted)}.receipt .keep .lbl{color:var(--ok)}.receipt .val{font-size:15px;line-height:1.8;margin:10px 0}.receipt .amt{font-size:25px;font-weight:700;letter-spacing:-.8px;color:var(--ink);white-space:nowrap}.receipt .amt~.amt{font-size:inherit;font-weight:inherit;letter-spacing:inherit}.receipt .claim .amt{text-decoration:line-through;text-decoration-color:#b6807a;color:#9a7470}.receipt ul{padding-left:20px;margin:10px 0;font-size:14px;color:var(--muted)}.receipt .status{display:inline-block;font-size:12px;font-weight:650;border-radius:6px;padding:5px 9px;margin-top:16px}.receipt .status.kept,.receipt .status.changed{background:var(--ok-soft);color:var(--ok)}.receipt details{margin-top:16px;border-top:1px solid var(--line);padding-top:14px}.receipt summary{cursor:pointer;font-size:14px;font-weight:600}.decision-heading{font-size:18px;font-weight:650;letter-spacing:-.3px}.brief-label{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px}.jury-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.jury-grid>.card{margin:0;display:flex;flex-direction:column;gap:9px}.jury-grid .why{font-size:14px;color:var(--muted)}.jury-grid .row:last-of-type{margin-top:auto!important;padding-top:8px}.jury-grid .star{grid-column:1/-1;border-color:#cbd8ff;background:linear-gradient(120deg,#fff,#f0f4ff)}.jury-intro{margin-bottom:28px!important}.jury-grid .check-number{width:28px;height:28px;border-radius:8px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:13px;font-weight:700}.jury-grid .muted{font-size:13px!important}.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);border:1px solid #364969;border-radius:10px;padding:12px 18px;background:#1b2e4b;color:#fff;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20;box-shadow:0 8px 30px #17243c25}.toast.on{opacity:1}.spin{display:inline-block;border:2px solid #93a8e5;border-top-color:white;border-radius:50%;width:13px;height:13px;animation:s .8s linear infinite}.thinking{color:var(--muted);font-size:14px}@keyframes s{to{transform:rotate(360deg)}}
+@media(min-width:1500px){.app.trace-open{grid-template-columns:224px minmax(0,1fr) 340px}}
+@media(max-width:1300px){header{gap:12px}.header-identity,.header-actions{width:100%}.header-identity .brand{margin-right:auto}.header-actions label{margin-left:auto}.header-identity>.demo-label{display:none}}
+@media(max-width:1200px){header{padding:12px 18px;gap:8px}.header-identity>.demo-label{display:none}header .brand{font-size:16px;margin-right:auto}header .spacer{display:none}header label{margin-left:auto}.app{grid-template-columns:200px minmax(0,1fr)}.trace-open{grid-template-columns:200px minmax(0,1fr)}.scroll{padding:24px}main .head{padding:18px 24px}.composer{padding:14px 24px}main .head .sub{display:none}.trace-toggle{margin-left:auto}}
+@media(max-width:760px){.header-identity{flex-wrap:wrap}.header-actions{gap:8px}header{padding:12px 14px}header .brand{flex:1}header #mode{font-size:11px}header #sweepBtn{order:2}header #eventSel{order:3;flex:1;max-width:100%;min-width:130px}header label{order:4;font-size:0}header label select{font-size:12px;max-width:170px}header #resetBtn{order:5}.app,.trace-open{grid-template-columns:68px minmax(0,1fr)}nav{padding:18px 8px}nav .ws,nav .who,nav .sec,nav .nav-foot,nav .nav-label,nav .badge{display:none}nav a{padding:13px;justify-content:center}nav a>span:first-child{gap:0}.scroll{padding:20px 14px}main .head{padding:16px 14px;min-height:65px}main .head h2{font-size:16px}.welcome{display:block}.welcome h1,.jury-intro h1{font-size:28px}.welcome .summary{gap:28px}.msg{grid-template-columns:minmax(0,1fr);gap:6px}.msg>.av{display:none}.card{padding:18px}.receipt .cols{grid-template-columns:1fr}.receipt .col{padding:16px}.receipt .amt{font-size:23px}.composer{padding:12px 14px}.suggest{max-height:70px;overflow:auto}.composer-note{display:none}.jury-grid{grid-template-columns:1fr}aside{width:min(340px,calc(100vw - 68px))}.trace-open main{grid-column:2}.summary strong{font-size:23px}table{display:block;overflow:auto}header .pill{max-width:180px;overflow:hidden;text-overflow:ellipsis}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+/* ---- additions for the mix: warnings, call screen, orb ---- */
+.warnbox{background:var(--bad-soft);border:1px solid #eac7c1;color:#7f2f29;border-radius:10px;padding:10px 14px;margin:12px 0;font-size:14px}.warnbox ul{margin:4px 0 0;padding-left:18px}
+.tag.waiting{background:var(--warn-soft);color:var(--warn)}.tag.danger{background:var(--bad-soft);color:var(--bad)}.tag.outsider{background:#f3ecff;color:#6a45b3}.tag.sample{background:#eef2f6;color:#66758c}
+.pill.paused{background:var(--warn-soft);color:#885b20}
+textarea{width:100%;font:inherit;font-size:14px;border:1px solid #d9e0ec;border-radius:9px;padding:10px 12px;min-height:96px;background:#fff;color:var(--ink)}
+input[type=text]{min-width:0;flex:1;background:#f7f9fc;border:1px solid #e1e7f0;border-radius:9px;padding:9px 12px;font-size:14px;color:var(--ink)}
+label.f{display:block;font-size:12px;color:var(--muted);margin:12px 0 4px}
+.card.ok{border-left:3px solid var(--ok)}.card.warn{border-left:3px solid #c38f34}.card.danger{border-left:3px solid var(--bad);background:var(--bad-soft)}
+.meeting{border:1px solid #cfe0f5;background:#f3f8ff;border-radius:10px;padding:14px 16px;margin:12px 0;font-size:14px}
+.callcard{border:1px solid var(--line);border-radius:14px;background:#fff;padding:22px 24px;margin-bottom:18px}
+#callLayer{position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 30%,#1b2e4bf2,#0c1628f7);backdrop-filter:blur(6px);padding:20px;overflow:auto}
+#callLayer.on{display:flex}
+.phone{width:min(560px,100%);color:#e8eefc;text-align:center}
+.phone h2{font-size:26px;margin:14px 0 4px;letter-spacing:-.6px}.phone .who{color:#9fb2d4;font-size:14px}.phone .why{margin:14px auto;max-width:460px;color:#cdd9f3;font-size:15px}
+.phone .script{background:#ffffff12;border:1px solid #ffffff22;border-radius:14px;padding:16px 18px;margin:16px 0;text-align:left;font-size:16px;line-height:1.6}
+.phone .row{justify-content:center}.phone button{border-color:#ffffff33;background:#ffffff14;color:#fff}.phone button:hover{background:#ffffff26}
+.phone button.answer{background:#18775a;border-color:#18775a}.phone button.decline{background:#b14c45;border-color:#b14c45}
+.phone .fixes{text-align:left;margin-top:12px}.phone .fixes .proposal{background:#ffffff0f;border-color:#ffffff22;color:#e8eefc}.phone .fixes .proposal pre{background:#0000002a;border-color:#ffffff1a;color:#e8eefc}.phone .fixes .muted,.phone .fixes .tag{color:#b8c6e3}
+.phone .fixes .tag.waiting,.phone .fixes .tag.approved{background:#ffffff1f;color:#e8eefc}
+.orb{width:170px;height:170px;display:block;margin:0 auto}
+.live-dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#43d19e;margin-right:6px;animation:s 1.4s ease-in-out infinite alternate}
+@keyframes pulse{to{opacity:.35}}.live-dot{animation:pulse 1s ease-in-out infinite alternate}
+</style>
+</head>
+<body>
+<header>
+  <div class="header-identity"><span class="brand"><span class="brand-mark">f</span><span>Company Brain<small>FILARE WORKSPACE</small></span></span>
+  <span class="pill demo-label" title="All companies, people and messages are fictional">Synthetic demo</span>
+  <span class="pill" id="mode">…</span>
+  <span class="pill" id="clock">…</span>
+  </div><div class="header-actions">
+  <button id="sweepBtn" title="The scheduled background job. Nobody asks the brain anything.">⏰ Run morning sweep</button>
+  <select id="eventSel" title="Simulate a source message arriving"><option value="">✉ Simulate incoming message…</option></select>
+  <button id="pasteBtn" title="Type or paste your own email and see if you can trick the Brain">✍ Paste an email…</button>
+  <label class="row" style="gap:6px">Viewing as
+    <select id="personSel"></select>
+  </label>
+  <button class="ghost" id="resetBtn" style="display:none" title="CEO only. Open the page with ?admin=1">Reset</button></div>
+</header>
+<div class="app">
+  <nav id="nav"></nav>
+  <main>
+    <div class="head"><h2 id="title"></h2><span class="sub" id="subtitle"></span><button class="trace-toggle" id="traceToggle" aria-expanded="false" aria-controls="tracePanel">Agent trace</button></div>
+    <div class="scroll" id="view"></div>
+    <div class="composer" id="composer">
+      <div class="suggest" id="suggest"></div>
+      <form id="askForm"><input id="q" autocomplete="off" placeholder="Ask a question. Get an approved, sourced answer." aria-label="Ask the brain"><button class="primary">Ask</button></form><div class="composer-note">Approved knowledge only. Your access is checked before every answer.</div>
+    </div>
+  </main>
+  <aside id="tracePanel">
+    <div class="head"><div class="row" style="justify-content:space-between"><h3>Agent trace</h3><button id="closeTrace" aria-label="Close agent trace">×</button></div><div class="muted" style="font-size:12px">Every step, every refused action, and what it cost.</div></div>
+    <div class="runs" id="runs"></div>
+    <div class="steps" id="steps"><div class="empty">Run the sweep or ask a question.</div></div>
+    <div class="usage" id="usage"></div>
+  </aside>
+</div>
+<dialog id="dlg"><div id="dlgBody"></div><div class="row" style="justify-content:flex-end;margin-top:12px"><button onclick="dlg.close()">Close</button></div></dialog>
+<div id="callLayer"></div>
+<div class="toast" id="toast"></div>
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const SUGGEST = ["When does the Langhe fix roll out?", "What is our cash runway?", "What is the Q1 2027 cloud budget?", "What's the office Wi-Fi password?"];
+const URLP = new URLSearchParams(location.search);
+const store = { get(k){ try { return localStorage.getItem(k); } catch { return null; } }, set(k,v){ try { localStorage.setItem(k,v); } catch {} } };
+let S = null, person = location.hash.slice(1) || URLP.get("as") || "davide", view = URLP.get("view") || "dm", activeRun = null, busy = false, thinking = null;
+let showAllMem = false, lastSig = "", lastDmCount = -1, sweeping = false;
+const drafts = {}, reasons = {}, speech = {}, dismissed = new Set();
+let callSig = "", orbRaf = 0, orbSpeaking = false, curAudio = null;
+
+async function api(path, body) {
+  const r = await fetch(path, body === undefined ? {} : {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({user: person, ...body})});
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || r.statusText);
+  return j;
+}
+function toast(t) { const el = $("#toast"); el.textContent = t; el.classList.add("on"); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove("on"), 3200); }
+const tag = a => (a || []).map(x => `<span class="tag ${esc(x)}">${esc(x)}</span>`).join(" ");
+const time = c => esc((c || "").slice(11, 16));
+const ICON = {mem: "🧠", email: "✉", chat: "#", task: "☑", doc: "📄", act: "✋", call: "📞", run: "▶"};
+const chips = ids => `<div class="chips">${(ids || []).map(id => `<span class="chip" data-ref="${esc(id)}" title="Open the source">${ICON[String(id).split("-")[0]] || "📎"} ${esc(id)}</span>`).join("")}</div>`;
+const warnBox = (list, title) => list && list.length ? `<div class="warnbox"><b>⚠ ${esc(title)}</b><ul>${list.map(w => `<li>${esc(w)}</li>`).join("")}</ul></div>` : "";
+const personName = id => (S && S.people.find(p => p.id === id)?.name) || id;
+
+async function load(quiet) {
+  const selected = person;
+  let state;
+  try { state = await api(`/api/state?user=${encodeURIComponent(selected)}`); }
+  catch (e) { if (!quiet) toast("⚠ " + e.message); throw e; }
+  if (person !== selected) return;
+  const sig = JSON.stringify(state);
+  if (quiet && sig === lastSig) return;
+  lastSig = sig; S = state;
+  const el = document.activeElement;
+  const typing = el && /INPUT|TEXTAREA|SELECT/.test(el.tagName) && el.id !== "q" && el.closest("#view, dialog");
+  if (typing && quiet) { renderChrome(); renderCall(); return; }  // never wipe what someone is typing
+  render();
+}
+
+/* ---------------------------------------------------------------- chrome */
+function renderChrome() {
+  $("#mode").textContent = S.mode === "gemini" ? (S.llm.paused ? "Gemini paused: plain rules for a moment" : `Gemini live · ${S.llm.model}`) : "Offline fallback (no model)";
+  $("#mode").className = "pill " + (S.llm.paused ? "paused" : S.mode); $("#mode").title = S.llm.last_error ? "Last model error: " + S.llm.last_error : "";
+  location.hash = person;
+  $("#clock").textContent = "🕗 " + S.clock.replace("T", " ").slice(0, 16);
+  $("#personSel").innerHTML = S.people.map(p => `<option value="${p.id}" ${p.id === person ? "selected" : ""}>${esc(p.name)} · ${esc(p.role)}</option>`).join("");
+  const running = S.sweep === "running" || sweeping;
+  $("#sweepBtn").disabled = running; $("#sweepBtn").innerHTML = running ? `<span class="spin"></span> sweeping…` : "⏰ Run morning sweep";
+  $("#eventSel").innerHTML = `<option value="">✉ Simulate incoming message…</option>` + S.incoming.map(e => `<option value="${esc(e.id)}" ${e.arrived ? "disabled" : ""}>${e.arrived ? "✓ " : ""}${esc(e.button)}</option>`).join("");
+  $("#resetBtn").style.display = URLP.get("admin") && S.me.groups.includes("exec") ? "" : "none";
+  const pendMem = S.memory.filter(m => m.can_review).length, decide = S.actions.filter(a => a.can_decide).length;
+  const ring = S.calls.filter(c => c.status === "ringing").length;
+  const nav = [["dm", "🧠 Brain", 0], ["email", "📧 Morning email", S.dms.some(m => m.kind === "brief") ? 1 : 0], ["calls", "📞 Calls", ring],
+    ["memory", "📚 Memory review", pendMem], ["approvals", "✅ Approvals", decide], ["outbox", "📤 Outbox", 0], ["sources", "🗂 Sources", 0],
+    ["audit", "🧾 Audit log", 0], ["jury", "🏁 Jury checklist", 0]];
+  const iconPaths = {dm:'M4 4h16v12H9l-5 4V4Z',email:'M3 5h18v14H3V5Zm0 1 9 7 9-7',calls:'M6 3h4l2 5-2.5 1.5a11 11 0 0 0 5 5L16 12l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2',memory:'M4 4h7v16H4V4Zm9 0h7v16h-7V4Z',approvals:'m7 12 3 3 7-7 M5 3h14v18H5V3Z',outbox:'M4 14h4l2 3h4l2-3h4 M4 14l3-9h10l3 9v6H4v-6Z',sources:'M3 6h7l2 3h9v11H3V6Z',audit:'M6 3h12v18H6V3Zm3 5h6m-6 4h6m-6 4h4',jury:'M5 3v18m0-16h14l-3 4 3 4H5'};
+  $("#nav").innerHTML = `<div class="ws">${esc(S.company.split(" S.r.l.")[0])}</div><div class="who">Your company, in context.</div><div class="sec">Workspace</div>` + nav.map(([k, l, n], i) =>
+    (i === 5 ? `<div class="sec">Knowledge & trust</div>` : "") +
+    `<a data-view="${k}" role="button" tabindex="0" aria-label="${esc(l.replace(/^\S+\s/, ''))}" class="${view === k ? "active" : ""}"><span><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="${iconPaths[k]}"/></svg><span class="nav-label">${esc(l.replace(/^\S+\s/, ''))}</span></span>${n ? `<span class="badge">${n}</span>` : ""}</a>`).join("") + `<div class="nav-foot"><strong>People make the decisions.</strong>The Brain brings the evidence.<br><br>Synthetic data · Mock outbox</div>`;
+  $("#composer").style.display = view === "dm" ? "" : "none";
+  $("#suggest").innerHTML = SUGGEST.map(q => `<button type="button" data-q="${esc(q)}">${esc(q)}</button>`).join("");
+}
+function render() {
+  if (!S) return;
+  renderChrome();
+  ({dm: renderDM, email: renderEmail, calls: renderCalls, memory: renderMemory, approvals: renderApprovals, outbox: renderOutbox, sources: renderSources, audit: renderAudit, jury: renderJury})[view]();
+  renderRuns(); renderCall();
+}
+function setHead(t, s) { $("#title").textContent = t; $("#subtitle").textContent = s; }
+function setView(html, toBottom) {
+  const el = $("#view"); el.innerHTML = html;
+  for (const [id, v] of Object.entries(drafts)) { const t = el.querySelector(`textarea[data-draft="${id}"]`); if (t) t.value = v; }
+  for (const [id, v] of Object.entries(reasons)) { const t = el.querySelector(`input[data-reason="${id}"]`); if (t) t.value = v; }
+  if (toBottom) el.scrollTop = 1e9;
+}
+
+/* ---------------------------------------------------------------- actions (drafts, meetings, tasks) */
+function actionBox(a) {
+  if (!a) return "";
+  const kind = {email: "Draft email", task: "Task change", meeting: "Meeting"}[a.kind] || a.kind;
+  const sample = a.origin.includes("offline") ? ` <span class="tag sample" title="Offline mode: this text was written by hand for the demo, not by the model">pre-written sample</span>` : "";
+  let body = "";
+  if (a.kind === "email") body = `<div class="muted" style="margin:8px 0 4px">To <b>${esc(a.to_name)}</b> · ${esc(a.subject)}</div>` +
+    (a.can_decide ? `<textarea data-draft="${a.id}">${esc(a.body)}</textarea>` : `<pre>${esc(a.body)}</pre>`);
+  else if (a.kind === "meeting" && a.meeting) body = `<div class="meeting">📅 <b>${esc(a.meeting.topic)}</b><br>${esc(a.meeting.start.replace("T", " "))} · ${a.meeting.minutes} min · with ${a.meeting.with.map(personName).map(esc).join(", ")}<br><span class="muted">Created only after you approve. Without Zoom keys the link is a labelled demo link.</span></div>`;
+  else if (a.kind === "task" && a.task_id) body = `<div class="muted" style="margin:8px 0">On approval ${chips([a.task_id])} is unblocked for ${esc(personName(a.owner))}.</div>`;
+  let foot;
+  if (a.status === "waiting" && a.can_decide) {
+    const label = a.kind === "email" ? "Approve (mock send)" : a.kind === "meeting" ? "Approve and create meeting" : "Approve";
+    foot = `<div class="row"><button class="ok" data-act="${a.id}" data-d="approve">${label}</button><input type="text" data-reason="${a.id}" placeholder="Reason (optional, saved in the log)"><button data-act="${a.id}" data-d="reject">Reject</button></div><div class="muted" style="font-size:12px;margin-top:6px">Nothing moves until you approve.</div>`;
+  } else if (a.status === "waiting") foot = `<div class="row"><span class="tag waiting">⏳ waiting for ${esc(a.approver_name)}</span><span class="muted" style="font-size:12px">Only ${esc(a.approver_name)} can decide. Switch persona to try.</span></div>`;
+  else if (a.status === "approved") foot = `<div class="muted">✅ Approved by ${esc(personName(a.decided_by))} at ${time(a.decided_at)}${a.edited_by ? " after editing the draft" : ""} · ${a.kind === "email" ? "in Outbox (mock)" : a.kind === "meeting" ? "see Calls" : "done"}</div>`;
+  else foot = `<div class="muted">✖ Rejected by ${esc(personName(a.decided_by))} at ${time(a.decided_at)}${a.reason ? " · “" + esc(a.reason) + "”" : ""}</div>`;
+  return `<div class="proposal"><div class="row"><span class="tag ${esc(a.status)}">${esc(a.status)}</span><b>${esc(kind)}</b> · ${esc(a.title)}${sample}</div>
+    <div class="muted" style="font-size:13px;margin-top:6px">Decides: <b>${esc(a.approver_name)}</b> · ${esc(a.origin)} · ${time(a.created_at)}</div>
+    <div class="muted" style="font-size:13px;margin-top:4px">Why: ${esc(a.why)}</div>${chips(a.sources)}
+    ${warnBox(a.warnings, "Self-check: read this carefully before you approve")}${body}${foot}</div>`;
+}
+
+/* ---------------------------------------------------------------- Brain DM */
+function latestBrief() { return [...S.dms].reverse().find(m => m.kind === "brief"); }
+function briefCard(b) {
+  speech[b.id] = [b.title, b.headline.text, ...b.sections.map(s => s.title + ". " + s.bullets.map(x => x.text).join(". "))].join(". ");
+  const acts = Object.fromEntries(S.actions.map(a => [a.id, a]));
+  const items = b.sections.map(sec => `<div class="brief-label" style="margin-top:18px">${esc(sec.title)}</div>` + sec.bullets.map(it => {
+    const act = it.cites.map(c => acts[c]).find(Boolean);
+    return `<div class="item"><div class="hl">${it.level === "danger" ? "⚠ " : ""}${esc(it.text.replace(/^Approve or reject: /, ""))}</div>${act ? "" : chips(it.cites)}${act ? actionBox(act) : ""}</div>`;
+  }).join("")).join("");
+  return `<div class="card"><div class="row" style="margin-bottom:8px"><button data-speak="${esc(b.id)}">🔊 ${S.voice ? "Play voice brief" : "Read aloud"}</button><span class="muted" style="font-size:12px">${S.voice ? "ElevenLabs" : "your browser's voice"} · from this brief only</span></div>
+    <div class="brief-label">Morning brief · ${time(b.at)}</div><div style="font-size:17px;font-weight:650">${esc(b.headline.text)}</div>${chips(b.headline.cites)}
+    ${items || "<p>Nothing needs you today.</p>"}</div>`;
+}
+function renderDM() {
+  setHead("Brain", `Direct messages with ${S.me.name}`);
+  const first = S.me.name.split(" ")[0], brief = latestBrief();
+  const toReview = S.memory.filter(m => m.can_review).length, pend = S.actions.filter(a => a.can_decide).length;
+  let h = `<section class="welcome"><div><div class="eyebrow">Your daily workspace</div><h1>Your day, in focus.</h1><p>Good morning, ${esc(first)}. Here’s what needs your attention.</p></div><div class="summary"><div><strong>${brief ? brief.sections.reduce((n, x) => n + x.bullets.length, 0) : 0}</strong>Brief items</div><div><strong>${toReview}</strong>To review</div><div><strong>${pend}</strong>Pending actions</div></div></section>`;
+  if (!S.dms.length) h += `<div class="empty">${S.sweep === "running" ? "The Brain is reading this morning's email, chat and tasks…" : "No brief yet. At the scheduled time the Brain sweeps email, chat and tasks and writes to each person on its own."}<br><br><button class="primary" data-jury="sweep">⏰ Run morning sweep</button></div>`;
+  for (const m of S.dms) {
+    if (m.kind === "brief") h += `<div class="msg"><div class="av">f</div><div><div class="meta"><b>Brain</b><span>${time(m.at)} · morning brief, unprompted${m.run ? ` · <a href="#" data-run="${esc(m.run)}">trace</a>` : ""}</span></div>${briefCard(m)}</div></div>`;
+    else if (m.kind === "alert") { const lvl = {danger: "suspicious", warn: "warn", ok: "ok"}[m.level] || "warn";
+      h += `<div class="msg"><div class="av">f</div><div><div class="meta"><b>Brain</b><span>${time(m.at)} · ${lvl === "suspicious" ? "alert" : "update"}, unprompted</span></div><div class="card ${lvl === "suspicious" ? "danger" : lvl}"><b>${lvl === "suspicious" ? "⚠ " : lvl === "ok" ? "✅ " : "🔔 "}</b>${esc(m.headline)}${m.cites && m.cites.length ? chips(m.cites) : ""}</div></div></div>`; }
+    else if (m.kind === "question") h += `<div class="msg"><div class="av me">${esc(S.me.name[0])}</div><div><div class="meta"><b>${esc(S.me.name)}</b><span>${time(m.at)}</span></div><div>${esc(m.text)}</div></div></div>`;
+    else if (m.kind === "answer") { const lbl = {answered: "", restricted: "🔒 Not for your role", unknown: "🤷 I don't know", pending: "⏳ Waiting for a person's approval"}[m.status];
+      h += `<div class="msg"><div class="av">f</div><div><div class="meta"><b>Brain</b><span>${time(m.at)}${m.run ? ` · <a href="#" data-run="${esc(m.run)}">trace</a>` : ""}</span></div><div class="card ${m.status === "answered" ? "answered" : "unknown"}">${lbl ? `<b>${lbl}</b><br>` : ""}${esc(m.text)}${chips(m.cites)}
+        ${(m.facts || []).map(f => `<div class="quote">Approved fact, word for word: ${esc(f)}</div>`).join("")}</div></div></div>`; }
+  }
+  if (thinking) h += `<div class="msg"><div class="av me">${esc(S.me.name[0])}</div><div><div class="meta"><b>${esc(S.me.name)}</b></div><div>${esc(thinking)}</div></div></div><div class="msg"><div class="av">f</div><div class="thinking">Searching the approved memory you're allowed to see…</div></div>`;
+  const grew = S.dms.length !== lastDmCount; lastDmCount = S.dms.length;
+  const lastMsg = S.dms[S.dms.length - 1];
+  setView(h, (grew && lastMsg && lastMsg.kind !== "brief") || !!thinking);  // a fresh brief stays at the top
+}
+function renderEmail() {
+  setHead("Morning email", `The same brief, delivered to ${S.me.name}'s inbox`);
+  const b = latestBrief();
+  if (!b) return setView(`<div class="empty">No email yet. It is sent by the scheduled morning sweep, not on request.</div>`);
+  const acts = Object.fromEntries(S.actions.map(a => [a.id, a]));
+  setView(`<div class="card" style="max-width:720px"><div class="muted" style="font-size:13px">From: <b>Company Brain</b> &lt;brain@filare.example&gt;<br>To: ${esc(S.me.name)}<br>Date: ${esc(b.at.replace("T", " ").slice(0, 16))}</div>
+    <h3 style="margin:10px 0 4px">${esc(b.title)}</h3><p><b>${esc(b.headline.text)}</b></p>
+    ${b.sections.map(s => `<p style="margin-bottom:2px"><b>${esc(s.title)}</b></p><ol>${s.bullets.map(x => `<li style="margin-bottom:8px">${esc(x.text)}${chips(x.cites)}${x.cites.some(c => acts[c]) ? `<div class="muted" style="font-size:12px">Waiting for your OK in Approvals. Nothing is sent until you approve.</div>` : ""}</li>`).join("")}</ol>`).join("")}
+    <p class="muted" style="font-size:12px">Demo data. This email is a mock-up: nothing is sent. Generated from approved memory you are allowed to see.</p></div>`);
+}
+
+/* ---------------------------------------------------------------- memory */
+function memCard(m, actions) {
+  const sources = (m.source_items || []).map(s => `<div class="quote"><b>${esc(s.id)} · ${esc(s.title)}</b><br>${esc(s.text)}</div>`).join("");
+  const reasonPh = m.warnings && m.warnings.length ? "Reason (required to approve despite the warning)" : "Why reject? (e.g. the source says 38k)";
+  return `<div class="card ${m.warnings && m.warnings.length ? "danger" : ""}"><div class="row">${tag(m.acl)} <span class="tag ${m.status === "pending" ? "waiting" : m.status === "approved" ? "approved" : "rejected"}">${esc(m.status === "pending" ? "pending" : m.status)}</span>
+    ${m.external ? `<span class="tag outsider" title="This note comes from an outside sender: it is their claim, not a verified fact">claim by an outsider</span>` : ""}<b>${esc(m.id)}</b> <span class="muted">${esc(m.proposed_by || (m.approved_by ? "approved by " + personName(m.approved_by) : ""))}</span></div>
+    <div style="margin-top:6px;font-size:16px">${esc(m.fact)}</div>${warnBox(m.warnings, "Check against the source before you approve")}${actions ? sources : chips(m.sources)}
+    ${m.reason ? `<div class="muted" style="font-size:12px">Reason: ${esc(m.reason)}</div>` : ""}
+    ${actions && m.can_review ? `<div class="row" style="margin-top:8px"><button class="ok" data-mem="${m.id}" data-d="approve">Approve</button><input type="text" data-reason="${m.id}" placeholder="${reasonPh}"><button data-mem="${m.id}" data-d="reject">Reject</button></div><div class="muted" style="font-size:12px;margin-top:6px">Only approved items can be used in answers.</div>` : actions ? `<div class="muted">You can't review this one: you can't see all its sources.</div>` : ""}</div>`;
+}
+function renderMemory() {
+  setHead("Memory review", "The Brain proposes. People decide what it remembers.");
+  const pend = S.memory.filter(m => m.status === "pending").sort((a, b) => b.warnings.length - a.warnings.length);
+  const shown = showAllMem ? pend : pend.slice(0, 5), ok = S.memory.filter(m => m.status === "approved"), no = S.memory.filter(m => m.status === "rejected");
+  setView(`<h3>Waiting for review (${pend.length})</h3>` + (shown.length ? shown.map(m => memCard(m, true)).join("") : `<div class="empty">Nothing to review.</div>`) +
+    (pend.length > 5 ? `<div class="row"><button data-showall="1">${showAllMem ? "Show only the top 5 (warnings first)" : `Show all ${pend.length} notes`}</button><span class="muted">Notes with warnings come first. The Brain proposes at most 8 new notes per sweep.</span></div>` : "") +
+    `<h3>Approved memory you can see (${ok.length})</h3>` + ok.map(m => memCard(m, false)).join("") + (no.length ? `<h3>Rejected</h3>` + no.map(m => memCard(m, false)).join("") : ""));
+}
+
+/* ---------------------------------------------------------------- approvals, outbox, calls */
+function renderApprovals() {
+  setHead("Approvals", "Actions the Brain drafted. Nothing happens until a person approves.");
+  const list = [...S.actions].sort((a, b) => (b.can_decide - a.can_decide) || (a.status === "waiting" ? -1 : 1));
+  setView(`<div class="quote" style="margin-top:0">The Brain has <b>no tool to send, pay or change anything</b>. It can only propose. Each proposal names the one person who decides, and you can edit a draft before approving it.</div>` +
+    (list.length ? list.map(actionBox).join("") : `<div class="empty">No proposals for ${esc(S.me.role)}.</div>`));
+}
+function renderOutbox() {
+  setHead("Outbox", "Mock outbox: approved emails and meetings land here. Nothing leaves the demo.");
+  setView((S.outbox.length ? S.outbox.map(o => `<div class="card"><div class="row"><span class="tag approved">approved by ${esc(personName(o.approved_by))}</span> to <b>${esc(personName(o.to))}</b> <span class="muted">${time(o.sent_at)}</span></div><div><b>${esc(o.subject)}</b></div><pre style="white-space:pre-wrap;font:inherit">${esc(o.body)}</pre></div>`).join("") : `<div class="empty">Empty. Approve a draft to see it here.</div>`) +
+    (S.meetings.length ? `<h3>Meetings</h3>` + S.meetings.map(meetingCard).join("") : ""));
+}
+function meetingCard(m) {
+  return `<div class="meeting">📅 <b>${esc(m.topic)}</b> · ${esc(m.start.replace("T", " "))} · ${m.minutes} min · with ${m.with.map(personName).map(esc).join(", ")}<br>Approved by ${esc(personName(m.approved_by))} · <a href="${esc(m.join_url)}" target="_blank" rel="noopener">${esc(m.join_url)}</a><br><span class="muted">${esc(m.note)}</span></div>`;
+}
+function renderCalls() {
+  setHead("Calls", "When something urgent arrives, the Brain phones the CEO. A call only informs: every fix waits for a click.");
+  const acts = Object.fromEntries(S.actions.map(a => [a.id, a]));
+  const mine = S.calls.map(c => `<div class="callcard"><div class="row"><span class="tag ${c.status === "ringing" ? "danger" : c.status === "answered" ? "approved" : "rejected"}">${esc(c.status)}</span><b>📞 Call about ${esc(c.source)}</b><span class="muted">${time(c.created_at)} · ${esc(c.mode)}</span></div>
+    <p class="why" style="color:var(--muted)">${esc(c.why)}</p><div class="quote">${esc(c.script)}</div>
+    <div class="row">${c.status === "ringing" ? `<button class="ok" data-call-open="${esc(c.id)}">Open the call</button>` : `<button data-speak="${esc(c.id)}">🔊 Hear the script again</button>`}
+      ${S.phone.ready ? `<button data-dial="${esc(c.id)}">📱 Call my real phone (${esc(S.phone.to)})</button>` : ""}</div>
+    ${c.real_call ? `<div class="muted" style="font-size:12px;margin-top:6px">Real call: ${esc(c.real_call.status)}${c.real_call.error ? " · " + esc(c.real_call.error) : ""}</div>` : ""}
+    ${c.actions.map(id => acts[id] ? actionBox(acts[id]) : "").join("")}</div>`).join("");
+  setView((mine || `<div class="empty">No calls for ${esc(S.me.name)}. Only the CEO is called. Switch to Elena Russo and use <b>✉ Simulate incoming message → URGENT: frost tonight</b>.<br><br>${S.phone.ready ? "Real phone calls are configured." : "Real phone calls need ElevenLabs and Twilio keys (see the README); the in-app call screen works without them."}</div>`) +
+    (S.meetings.length ? `<h3>Approved meetings</h3>` + S.meetings.map(meetingCard).join("") : ""));
+}
+
+/* ---------------------------------------------------------------- sources, audit */
+function renderSources() {
+  setHead("Sources", `Email, chat, tasks and docs ${S.me.name} may see`);
+  setView(`<table><tr><th>Id</th><th>Type</th><th>When</th><th>From</th><th>Title</th><th>Audience</th></tr>` + S.sources.map(s => `<tr><td><span class="chip" data-ref="${esc(s.id)}">${esc(s.id)}</span></td><td>${esc(s.type)}</td><td>${esc(s.ts.replace("T", " ").slice(0, 16))}</td><td>${esc(s.from)}</td><td>${s.flag ? `<span class="tag danger">flagged</span> ` : ""}${esc(s.title)}</td><td>${tag(s.audience)}</td></tr>`).join("") +
+    S.tasks.map(t => `<tr><td><span class="chip" data-ref="${esc(t.id)}">${esc(t.id)}</span></td><td>task</td><td>${esc(t.due)}</td><td>${esc(personName(t.owner))}</td><td>${esc(t.title)} <span class="muted">(${esc(t.status)})</span></td><td>${tag(t.acl)}</td></tr>`).join("") + `</table>`);
+}
+function renderAudit() {
+  setHead("Audit log", "Who did what, on which input, and who approved it");
+  const u = S.llm;
+  setView(`<div class="quote" style="margin-top:0">${u.calls} Gemini calls so far · ${u.input_tokens + u.output_tokens} tokens · $${u.cost_usd}</div><table><tr><th>#</th><th>Clock</th><th>Actor</th><th>Action</th><th>Detail</th><th>Refs</th></tr>` +
+    [...S.log].reverse().map(a => `<tr><td>${a.id}</td><td>${time(a.at)}</td><td>${esc(personName(a.actor))}</td><td>${esc(a.event)}</td><td>${esc(a.detail)}</td><td>${(a.refs || []).slice(0, 4).map(r => `<span class="chip" data-ref="${esc(r)}">${esc(r)}</span>`).join(" ")}</td></tr>`).join("") + `</table>`);
+}
+
+/* ---------------------------------------------------------------- jury checklist */
+function renderJury() {
+  setHead("Jury checklist", "Run the seven checks, then the two extras only this mix has.");
+  const checks = [
+    {n: "1", title: "It speaks first", do: "Run the morning sweep, then open Brain DM.", buttons: [["sweep", "Run morning sweep"], ["dm", "Open Brain DM"]], expected: "An unprompted, role-specific morning brief appears before anyone asks."},
+    {n: "2", title: "People curate memory", do: "As Davide, open Memory review: approve mem-p01, reject mem-p02 (the red box says 83,000 is not in its source). Then ask “When does the Langhe fix roll out?”", buttons: [["memory-davide", "Review as Davide"], ["rollout-davide", "Ask as Davide"]], expected: "Before approval: “I don't know”. After: Thursday 26 Nov at 07:00, citing the approved note."},
+    {n: "3", title: "It knows who is asking", do: "Ask “What is our cash runway?” as Giulia, then as Sara.", buttons: [["runway-giulia", "Ask as Giulia"], ["runway-sara", "Ask as Sara"]], expected: "Giulia gets the approved answer; Sara is told it is not for her role."},
+    {n: "4", title: "It cites", do: "Look at the chips and the word-for-word approved fact under every answer.", buttons: [["dm", "Open Brain DM"]], expected: "Every answer shows its sources; click a chip to open it."},
+    {n: "5", title: "It admits gaps", do: "Ask: “What's the office Wi-Fi password?”", buttons: [["wifi", "Ask about Wi-Fi"]], expected: "“I don't know”, with no citation."},
+    {n: "6", title: "It only proposes", do: "As Luca, open Approvals, edit the SensorParts draft, check the Outbox is empty, then approve.", buttons: [["approvals-luca", "Open Approvals as Luca"], ["outbox-luca", "Check Outbox"]], expected: "The draft waits for Luca; the Outbox stays empty until he approves."},
+    {n: "7", title: "It fits the day", do: "Open Brain DM, the Morning email, and play the voice brief.", buttons: [["dm", "Brain DM"], ["email", "Morning email"], ["voice", "Play voice brief"]], expected: "The same sourced brief fits chat, email and voice."},
+    {n: "★", title: "It phones the CEO", do: "Simulate “URGENT: frost tonight” and open Elena's Calls. Answer the call, then approve the fix and the meeting on the call screen.", buttons: [["urgent", "Simulate the urgent email"], ["calls-elena", "Open Elena's calls"]], expected: "The Brain rings Elena with a short script, prepares a message to Davide and a meeting, and does nothing until she approves.", star: true},
+    {n: "↗", title: "Try to break it", do: "Paste your own email (a fraud request, a reworded injection) as any person.", buttons: [["paste", "Paste an email…"]], expected: "Flagged, no memory, no action, no call. A person is always the last line of defence."},
+  ];
+  setView(`<section class="jury-intro"><div class="eyebrow">The live walkthrough</div><h1>Trust, demonstrated.</h1><p>Seven checks. Real controls. A call to the CEO that still waits for a click.</p></section><div class="jury-grid">` + checks.map(c => `<div class="card ${c.star ? "star" : ""}"><div class="row"><span class="check-number">${esc(c.n)}</span><b>${esc(c.title)}</b></div>
+    <div class="why"><b>Do:</b> ${esc(c.do)}</div><div class="row" style="margin-top:8px">${c.buttons.map(([a, l]) => `<button data-jury="${esc(a)}">${esc(l)}</button>`).join("")}</div>
+    <div class="muted" style="margin-top:7px"><b>Look for:</b> ${esc(c.expected)}</div></div>`).join("") + `</div>`);
+}
+
+/* ---------------------------------------------------------------- agent trace */
+function renderRuns() {
+  $("#runs").innerHTML = S.runs.length ? S.runs.map(r => `<div class="run ${r.id === activeRun ? "active" : ""}" data-run="${esc(r.id)}"><span>${{ask: "💬", brief: "☀️", draft: "✉", ingest: "📥", call: "📞"}[r.agent] || "•"} ${esc(r.agent)} · ${esc(r.trigger.slice(0, 28))}</span><span class="muted">${r.mode === "gemini" ? "G" : "off"} · ${(r.ms / 1000).toFixed(1)}s</span></div>`).join("") : `<div class="muted" style="font-size:12px;padding:4px">No runs yet.</div>`;
+  if (!activeRun && S.runs.length) showRun(S.runs[0].id); else if (activeRun) showRun(activeRun);
+}
+function showRun(id) {
+  const r = S.runs.find(x => x.id === id); if (!r) return;
+  activeRun = id; document.querySelectorAll(".run").forEach(e => e.classList.toggle("active", e.dataset.run === id));
+  const icon = {trigger: "▶", tool_call: "→", tool_result: "←", guard: "!", fallback: "↯", model_text: "✎", final: "✓"};
+  $("#steps").innerHTML = r.steps.map(s => `<div class="step ${s.kind}"><div class="k">${icon[s.kind] || "·"}</div><div><div class="n">${esc(s.note)}</div></div></div>`).join("");
+  const u = r.usage;
+  $("#usage").innerHTML = `${esc(r.mode === "gemini" ? (r.model || "gemini") : "offline rules")} · ${u.input_tokens} in / ${u.output_tokens} out tokens · <b>$${Number(u.cost_usd || 0).toFixed(4)}</b> · ${(r.ms / 1000).toFixed(1)}s`;
+}
+function toggleTrace(open) { $(".app").classList.toggle("trace-open", open); $("#traceToggle").setAttribute("aria-expanded", String(open)); }
+
+/* ---------------------------------------------------------------- the call to the CEO */
+function drawOrb(canvas) {
+  cancelAnimationFrame(orbRaf);
+  const ctx = canvas.getContext("2d"), W = canvas.width; let t = 0, level = 0.1;
+  const frame = () => {
+    t += 0.03; level += ((orbSpeaking ? 0.55 + 0.45 * Math.sin(t * 5.3) * Math.sin(t * 2.1) : 0.12) - level) * 0.12;
+    ctx.clearRect(0, 0, W, W); const c = W / 2, R = W * (0.27 + level * 0.1);
+    const g = ctx.createRadialGradient(c, c, R * 0.2, c, c, W * 0.5); g.addColorStop(0, `rgba(90,150,255,${0.35 + level * 0.4})`); g.addColorStop(1, "rgba(90,150,255,0)");
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, W);
+    const core = ctx.createRadialGradient(c - R * 0.3, c - R * 0.3, R * 0.1, c, c, R); core.addColorStop(0, "#d6e6ff"); core.addColorStop(0.5, "#5b8cff"); core.addColorStop(1, "#243e9c");
+    ctx.beginPath(); ctx.arc(c, c, R, 0, 7); ctx.fillStyle = core; ctx.fill();
+    for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.ellipse(c, c, R * 1.25, R * (0.35 + 0.1 * i), t * (0.6 + 0.3 * i) + i, 0, 7); ctx.strokeStyle = `rgba(190,215,255,${0.25 + level * 0.4})`; ctx.lineWidth = 1.5; ctx.stroke(); }
+    orbRaf = requestAnimationFrame(frame);
+  };
+  frame();
+}
+function renderCall() {
+  const layer = $("#callLayer"), acts = Object.fromEntries(S.actions.map(a => [a.id, a]));
+  const c = S.calls.find(x => (x.status === "ringing" && !dismissed.has(x.id)) || (x.status === "answered" && layer.dataset.open === x.id));
+  if (!c) { if (layer.classList.contains("on")) { layer.classList.remove("on"); cancelAnimationFrame(orbRaf); layer.innerHTML = ""; callSig = ""; } return; }
+  const sig = c.id + c.status + c.actions.map(id => acts[id]?.status).join(",");
+  if (sig === callSig) return; callSig = sig; layer.dataset.open = c.id; layer.classList.add("on");
+  const src = S.sources.find(s => s.id === c.source);
+  if (c.status === "ringing") {
+    layer.innerHTML = `<div class="phone"><canvas class="orb" id="orb" width="340" height="340"></canvas><div class="who">Incoming call · Company Brain</div><h2>${esc(S.me.name.split(" ")[0])}, something urgent came in</h2>
+      <div class="why">${esc(src ? src.title : c.source)}</div><div class="row" style="margin-top:20px;gap:18px"><button class="answer" data-call-answer="${esc(c.id)}">📞 Answer</button><button class="decline" data-call-decline="${esc(c.id)}">Decline</button></div>
+      <p class="who" style="margin-top:16px">A call only informs. Nothing happens until you approve it.</p></div>`;
+  } else {
+    layer.innerHTML = `<div class="phone"><canvas class="orb" id="orb" width="340" height="340"></canvas><div class="who"><span class="live-dot"></span>Call in progress · Company Brain</div><h2>${esc(src ? src.title : c.source)}</h2><div class="why">${esc(c.why)}</div>
+      <div class="script">${esc(c.script)}</div><div class="row"><button data-speak="${esc(c.id)}">🔊 Hear it again</button><button class="decline" data-call-end="${esc(c.id)}">Hang up</button></div>
+      <div class="fixes"><div class="who" style="margin:14px 0 6px">What the Brain prepared. Tap to approve here, never by voice:</div>${c.actions.map(id => acts[id] ? actionBox(acts[id]) : "").join("") || '<div class="who">Nothing to approve.</div>'}</div></div>`;
+  }
+  drawOrb($("#orb"));
+}
+async function speak(id) {
+  const text = speech[id] || (S.calls.find(c => c.id === id) || {}).script || "";
+  orbSpeaking = true; if (curAudio) { curAudio.pause(); curAudio = null; } speechSynthesis.cancel();
+  try {
+    const r = await fetch("/api/voice", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({user: person, id})});
+    if (r.ok) { const a = curAudio = new Audio(URL.createObjectURL(await r.blob())); a.onended = () => { orbSpeaking = false; }; await a.play(); return; }
+  } catch {}
+  try { const u = new SpeechSynthesisUtterance(text); u.lang = "en-GB"; u.onend = () => { orbSpeaking = false; }; u.onerror = () => { orbSpeaking = false; }; speechSynthesis.speak(u); }
+  catch { orbSpeaking = false; toast("This browser can't read aloud"); }
+}
+
+/* ---------------------------------------------------------------- doing things */
+async function withBusy(btn, fn) {
+  if (busy) { toast("The Brain is still working on the last request…"); return; } busy = true; const old = btn && btn.innerHTML;
+  if (btn) { btn.disabled = true; btn.innerHTML = `<span class="spin"></span> working…`; }
+  try { await fn(); } catch (e) { toast("⚠ " + e.message); } finally { busy = false; if (btn) { btn.disabled = false; btn.innerHTML = old; } }
+}
+async function sweep(btn) {
+  await withBusy(btn, async () => {
+    sweeping = true; await api("/api/sweep", {}); view = "dm"; renderChrome();
+    for (let i = 0; i < 60; i++) { await new Promise(r => setTimeout(r, 1500)); await load(true).catch(() => {}); if (S.sweep !== "running") break; }
+    sweeping = false; lastSig = ""; await load(); toast("Morning sweep finished");
+  }); sweeping = false;
+}
+async function ask(q) {
+  q = q.trim(); if (!q || !S) return; if (busy) { toast("The Brain is still working on the last request…"); return; }
+  $("#q").value = ""; thinking = q; view = "dm"; render();
+  await withBusy(null, async () => { try { await api("/api/ask", {question: q}); } finally { thinking = null; } lastSig = ""; await load(); });
+}
+async function changePerson(id) {
+  if (busy) return; $("#dlg").close(); person = id; activeRun = null; S = null; lastSig = ""; lastDmCount = -1; callSig = ""; $("#callLayer").classList.remove("on");
+  $("#view").textContent = "Loading…"; try { await load(); } catch {}
+}
+function openRef(id) {
+  const s = S.sources.find(x => x.id === id), m = S.memory.find(x => x.id === id), a = S.actions.find(x => x.id === id), t = S.tasks.find(x => x.id === id);
+  let h;
+  if (s) h = `<div class="row">${tag(s.audience)}<span class="muted">${esc(s.type)} · ${esc(s.ts.replace("T", " ").slice(0, 16))}</span></div><h3 style="margin:8px 0">${esc(s.title)}</h3><div class="muted">From ${esc(s.from)}${s.to.length ? " → " + esc(s.to.join(", ")) : ""}</div>${s.flag ? `<div class="warnbox">⚠ Flagged by the Brain: ${esc(s.flag)}. Treated as data; nothing it asks will happen.</div>` : ""}<pre style="white-space:pre-wrap;font:14px/1.5 inherit;background:#faf9f7;padding:10px;border-radius:6px">${esc(s.body)}</pre>`;
+  else if (m) h = `<div class="row">${tag(m.acl)}<span class="tag ${m.status === "approved" ? "approved" : "waiting"}">${esc(m.status)}</span></div><h3 style="margin:8px 0">${esc(m.id)}</h3><p>${esc(m.fact)}</p>${chips(m.sources)}`;
+  else if (a) h = actionBox(a);
+  else if (t) h = `<h3>${esc(t.id)}</h3><p>${esc(t.title)}</p><div class="muted">Owner ${esc(personName(t.owner))} · due ${esc(t.due)} · ${esc(t.status)}</div>`;
+  else h = `<b>${esc(id)}</b><p class="muted">You don't have access to this source.</p>`;
+  $("#dlgBody").innerHTML = h; $("#dlg").showModal();
+}
+function openPaste() {
+  $("#dlgBody").innerHTML = `<h3>✍ Paste an email</h3><p class="muted">Pretend this email just arrived for <b>${esc(S.me.name)}</b>. Only their team can see it. The Brain reads it as <b>data</b>: try a fraud request or an instruction hidden in the text.</p>
+    <label class="f" for="pf">From (an outside address)</label><input type="text" id="pf" value="supplier@example.com" maxlength="200"><label class="f" for="ps">Subject</label><input type="text" id="ps" maxlength="200" placeholder="Subject"><label class="f" for="pb">Message</label><textarea id="pb" maxlength="2000" placeholder="Write or paste the email…"></textarea>
+    <div class="row" style="margin-top:12px"><button class="primary" id="pastego">Deliver it</button></div>`;
+  $("#dlg").showModal();
+}
+async function simulate(id) {
+  if (!id) return;
+  await withBusy(null, async () => {
+    const r = await api("/api/simulate", {id}); view = r.call ? "calls" : "dm"; if (r.call) person = "elena";
+    activeRun = null; lastSig = ""; await load();
+    toast(r.call ? "The Brain is phoning the CEO (Elena)…" : r.level === "danger" ? "Flagged as suspicious: nothing was done" : "Message received and processed");
+  });
+}
+
+document.addEventListener("click", async e => {
+  const t = e.target.closest("[data-view],[data-run],[data-ref],[data-mem],[data-act],[data-q],[data-speak],[data-jury],[data-showall],[data-call-open],[data-call-answer],[data-call-decline],[data-call-end],[data-dial],#pastego");
+  if (!t) return;
+  const d = t.dataset;
+  if (d.jury) {
+    const go = v => { view = v; render(); };
+    const as = async (id, v, q) => { await changePerson(id); if (v) go(v); if (q) await ask(q); };
+    const a = d.jury;
+    if (a === "sweep") return sweep(t);
+    if (a === "dm" || a === "email") return go(a);
+    if (a === "memory-davide") return as("davide", "memory");
+    if (a === "rollout-davide") return as("davide", "dm", "When does the Langhe fix roll out?");
+    if (a === "runway-giulia") return as("giulia", "dm", "What is our cash runway?");
+    if (a === "runway-sara") return as("sara", "dm", "What is our cash runway?");
+    if (a === "wifi") { go("dm"); return ask("What's the office Wi-Fi password?"); }
+    if (a === "approvals-luca") return as("luca", "approvals");
+    if (a === "outbox-luca") return as("luca", "outbox");
+    if (a === "voice") { const b = latestBrief(); return b ? speak(b.id) : toast("Run the morning sweep first"); }
+    if (a === "urgent") return simulate("email-103");
+    if (a === "calls-elena") return as("elena", "calls");
+    if (a === "paste") return openPaste();
+  }
+  if (d.speak) return speak(d.speak);
+  if (d.run) { e.preventDefault(); toggleTrace(true); activeRun = d.run; return showRun(d.run); }
+  if (d.view) { view = d.view; return render(); }
+  if (d.showall) { showAllMem = !showAllMem; return render(); }
+  if (d.q) return ask(d.q);
+  if (d.ref) return openRef(d.ref);
+  if (d.callOpen) { dismissed.delete(d.callOpen); callSig = ""; renderCall(); return; }
+  if (d.callAnswer) return withBusy(t, async () => { await api("/api/call/answer", {id: d.callAnswer}); callSig = ""; lastSig = ""; await load(); speak(d.callAnswer); });
+  if (d.callDecline) return withBusy(t, async () => { await api("/api/call/end", {id: d.callDecline, decision: "declined"}); dismissed.add(d.callDecline); $("#callLayer").dataset.open = ""; callSig = ""; lastSig = ""; await load(); });
+  if (d.callEnd) return withBusy(t, async () => { orbSpeaking = false; speechSynthesis.cancel(); if (curAudio) curAudio.pause(); await api("/api/call/end", {id: d.callEnd}); $("#callLayer").dataset.open = ""; callSig = ""; lastSig = ""; await load(); });
+  if (d.dial) return withBusy(t, async () => { await api("/api/call/dial", {id: d.dial}); lastSig = ""; await load(); toast("Dialing your real phone…"); });
+  if (d.mem) return withBusy(t, async () => { try { await api("/api/memory", {id: d.mem, decision: d.d, reason: reasons[d.mem] || ""}); delete reasons[d.mem]; toast(d.d === "approve" ? "Approved: the Brain can now use it" : "Rejected: it will never be used"); } finally { lastSig = ""; await load(); } });
+  if (d.act) return withBusy(t, async () => {
+    const ta = document.querySelector(`textarea[data-draft="${d.act}"]`);
+    try { await api("/api/action", {id: d.act, decision: d.d, body: ta ? ta.value : null, reason: reasons[d.act] || ""}); delete drafts[d.act]; delete reasons[d.act]; callSig = ""; toast(d.d === "approve" ? "Approved and logged" : "Rejected and logged"); } finally { lastSig = ""; await load(); }
+  });
+  if (t.id === "pastego") return withBusy(t, async () => {
+    const r = await api("/api/inbound", {from: $("#pf").value, subject: $("#ps").value, body: $("#pb").value});
+    $("#dlg").close(); view = "dm"; lastSig = ""; await load(); toast(r.call ? "The Brain is phoning the CEO…" : r.level === "danger" ? "Flagged as suspicious: nothing was done" : "Delivered: the Brain read it");
+  });
+});
+document.addEventListener("input", e => { if (e.target.dataset.draft) drafts[e.target.dataset.draft] = e.target.value; if (e.target.dataset.reason) reasons[e.target.dataset.reason] = e.target.value; });
+document.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.matches("nav a")) { e.preventDefault(); e.target.click(); } if (e.key === "Escape") toggleTrace(false); });
+$("#traceToggle").addEventListener("click", () => toggleTrace(!$(".app").classList.contains("trace-open")));
+$("#closeTrace").addEventListener("click", () => toggleTrace(false));
+$("#askForm").addEventListener("submit", e => { e.preventDefault(); ask($("#q").value); });
+$("#sweepBtn").addEventListener("click", e => sweep(e.currentTarget));
+$("#pasteBtn").addEventListener("click", () => S && openPaste());
+$("#personSel").addEventListener("change", e => changePerson(e.target.value));
+$("#eventSel").addEventListener("change", e => { const id = e.target.value; e.target.value = ""; simulate(id); });
+$("#resetBtn").addEventListener("click", () => { if (!confirm("Reset the demo to its starting data?")) return; withBusy(null, async () => { await api("/api/reset", {}); Object.keys(drafts).forEach(k => delete drafts[k]); activeRun = null; view = "dm"; lastSig = ""; lastDmCount = -1; dismissed.clear(); await new Promise(r => setTimeout(r, 800)); await load(); toast("Demo reset"); }); });
+load().catch(() => {});
+setInterval(() => { if (!busy && !document.hidden) load(true).catch(() => {}); }, 3000);
+</script>
+</body>
+</html>
