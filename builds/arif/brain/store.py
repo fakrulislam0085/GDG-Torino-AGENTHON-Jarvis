@@ -1,4 +1,4 @@
-"""Shared fake company (repo-root data/) + this build's runtime state (builds/ari/state/)."""
+"""Company data (builds/arif/data_poliprep/ by default; BRAIN_DATA=filare uses the repo-root fake company) + runtime state."""
 from __future__ import annotations
 
 import json
@@ -11,7 +11,7 @@ from pathlib import Path
 
 BUILD = Path(__file__).resolve().parents[1]
 REPO = BUILD.parents[1]
-DATA = REPO / "data"
+DATA = REPO / "data" if os.getenv("BRAIN_DATA", "poliprep") == "filare" else BUILD / "data_poliprep"
 STATE = Path(os.getenv("BRAIN_STATE_DIR", BUILD / "state"))
 
 
@@ -44,7 +44,23 @@ def company() -> dict:
 
 
 def people() -> dict:
+    """App users (they log in, they have groups)."""
     return {p["id"]: p for p in company().get("people", [])}
+
+
+def team() -> dict:
+    """Users + contacts (e.g. tutors): anyone Jarvis may draft a message to."""
+    out = {c["id"]: c for c in company().get("contacts", [])}
+    out.update(people())
+    return out
+
+
+def company_name() -> str:
+    return company().get("company", {}).get("name", "the company")
+
+
+def demo_events() -> dict:
+    return _read(DATA / "demo_events.json", {})
 
 
 def _docs() -> list:
@@ -60,7 +76,7 @@ def _docs() -> list:
                 k, v = line.split(":", 1)
                 meta[k.strip()] = v.strip()
         acl = [a.strip() for a in meta.get("acl", "[]").strip("[]").split(",") if a.strip()]
-        out.append({"id": meta["id"], "kind": "doc", "title": meta.get("title", f.stem),
+        out.append({"id": meta["id"], "kind": "notion" if meta["id"].startswith("notion") else "doc", "title": meta.get("title", f.stem),
                     "date": meta.get("updated", ""), "text": m.group(2).strip(), "acl": acl})
     return out
 
@@ -80,6 +96,17 @@ def sources() -> list:
         t = _clean(t)
         items.append({"id": t["id"], "kind": "task", "title": t["title"], "text": t["title"], "acl": t["acl"],
                       "date": t.get("due", ""), "author": t["owner"], **{k: t[k] for k in t if k not in ("id", "title", "acl")}})
+    for fname, kind in (("calendar.json", "calendar"), ("canva.json", "canva"), ("instagram.json", "instagram")):
+        for x in _read(DATA / fname, []):
+            x = _clean(x)
+            items.append({"id": x["id"], "kind": kind, "title": x["title"], "text": x["text"], "acl": x["acl"],
+                          "date": x["date"], "author": x.get("author", "")})
+    for x in _read(STATE / "stripe_syncs.json", []):
+        items.append({"id": x["id"], "kind": "stripe", "title": x["title"], "text": x["text"], "acl": x["acl"],
+                      "date": x["date"], "author": "stripe"})
+    for n in notes():
+        items.append({"id": n["id"], "kind": "note", "title": n["title"], "text": n["text"], "acl": n["acl"],
+                      "date": n["date"], "author": n["author"]})
     items.extend(_docs())
     return items
 
@@ -172,3 +199,30 @@ def calls() -> list:
 
 def save_calls(items: list) -> None:
     _write(STATE / "calls.json", items)
+
+
+def notes() -> list:
+    """Knowledge people typed in themselves (not from Gmail/Notion): each note is a citable source."""
+    return _read(STATE / "notes.json", [])
+
+
+def save_notes(items: list) -> None:
+    _write(STATE / "notes.json", items)
+
+
+def audiences() -> dict:
+    """Groups Jarvis may draft announcements to (e.g. a cohort of students). Fake data in the demo."""
+    return {a["id"]: a for a in company().get("audiences", [])}
+
+
+def label(recipient: str) -> str:
+    """Human name for any recipient id: a person, a tutor, a student group, or an email address."""
+    if recipient in team():
+        return team()[recipient]["name"]
+    if recipient in audiences():
+        a = audiences()[recipient]
+        return f"{a['name']} ({a['size']})"
+    src = source_by_id().get(recipient)
+    if src and src["kind"] == "notion":
+        return src["title"]
+    return recipient

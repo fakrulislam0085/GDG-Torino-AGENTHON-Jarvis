@@ -1,14 +1,20 @@
 [theme]
-base = "light"
-primaryColor = "#8A5A12"
-backgroundColor = "#F5F0E6"
-secondaryBackgroundColor = "#EDE5D5"
-textColor = "#1E1A14"
-borderColor = "#D9CEB8"
+base = "dark"
+primaryColor = "#5CE1E6"
+backgroundColor = "#05070B"
+secondaryBackgroundColor = "#0B121A"
+textColor = "#E6F1F5"
+linkColor = "#5CE1E6"
+borderColor = "#1D3A44"
+showWidgetBorder = true
 font = "IBM Plex Sans:https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap"
-headingFont = "Newsreader:https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap"
+headingFont = "Chakra Petch:https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600&display=swap"
 codeFont = "IBM Plex Mono:https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap"
-baseRadius = "6px"
+baseRadius = "2px"
+
+[theme.sidebar]
+backgroundColor = "#070C12"
+secondaryBackgroundColor = "#0B121A"
 
 [client]
 toolbarMode = "minimal"

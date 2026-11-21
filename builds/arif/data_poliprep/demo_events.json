@@ -1,0 +1,28 @@
+{
+  "new_email": {
+    "id": "email-010",
+    "date": "2026-11-23T08:40:00+01:00",
+    "from": "applicant.serbia@student-mail.example",
+    "to": [
+      "ulu"
+    ],
+    "subject": "Black Friday question",
+    "body": "Hi, I saw the Black Friday post. If I buy CEnT-S today for €399, can I still watch the classes that already happened? I'm from Serbia and I'll take the February test.",
+    "acl": [
+      "marketing"
+    ]
+  },
+  "urgent_email": {
+    "id": "email-011",
+    "date": "2026-11-23T08:55:00+01:00",
+    "from": "maria",
+    "to": [
+      "arif"
+    ],
+    "subject": "URGENT: I can't run tomorrow's 09:00 Maths live",
+    "body": "Arif, there's a national train strike and I'm stuck in Milan until tomorrow afternoon, so I can't run tomorrow's 09:00 CEnT-S Maths live. 14 students are booked and it's Black Friday week. We may have to cancel unless someone covers it today. Can Anna take it? Maria",
+    "acl": [
+      "exec"
+    ]
+  }
+}

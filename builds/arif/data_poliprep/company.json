@@ -1,0 +1,107 @@
+{
+  "_note": "Real company context (PoliPrep, poliprep.com) with invented events. Every email, chat message, design comment, DM and number marked demo is made up. Maria, Anna, Ulu and Arif are the team's real first names, used with their OK; Sara is invented; Hamid is the team's real first name, used with his OK; Maria and Anna are the tutors (app users with the Tutor role). No real student, parent or client data.",
+  "company": {
+    "name": "PoliPrep",
+    "city": "Torino",
+    "what": "Cohort courses for Italian university admission tests (CEnT-S, TOLC-I, TEST ARCHED), sold on poliprep.com",
+    "demo_now": "2026-11-23T08:00:00+01:00"
+  },
+  "groups": {
+    "all": "everyone at PoliPrep",
+    "exec": "CEO: sees every group",
+    "finance": "CFO: payments, refunds, costs",
+    "tech": "CTO: website and exam engine",
+    "marketing": "Social media: Instagram, Canva, email campaigns",
+    "tutors": "Tutors: classes, live sessions, course material"
+  },
+  "people": [
+    {
+      "id": "arif",
+      "name": "Arif",
+      "role": "CEO",
+      "groups": [
+        "exec",
+        "all"
+      ]
+    },
+    {
+      "id": "hamid",
+      "name": "Hamid",
+      "role": "CFO",
+      "groups": [
+        "finance",
+        "all"
+      ]
+    },
+    {
+      "id": "sara",
+      "name": "Sara",
+      "role": "CTO",
+      "groups": [
+        "tech",
+        "all"
+      ]
+    },
+    {
+      "id": "ulu",
+      "name": "Ulu",
+      "role": "Social Media Strategist",
+      "groups": [
+        "marketing",
+        "all"
+      ]
+    },
+    {
+      "id": "maria",
+      "name": "Maria",
+      "role": "Tutor",
+      "teaches": "CEnT-S Maths & Physics",
+      "groups": [
+        "tutors",
+        "all"
+      ]
+    },
+    {
+      "id": "anna",
+      "name": "Anna",
+      "role": "Tutor",
+      "teaches": "Maths in CEnT-S and the TOLC-I course",
+      "groups": [
+        "tutors",
+        "all"
+      ]
+    }
+  ],
+  "access_rule": "A person can see an item if the item's acl contains any of the person's groups, or if the person is in 'exec'. Enforced in code before any model call.",
+  "contacts": [],
+  "audiences": [
+    {
+      "id": "cents-cohort1",
+      "name": "CEnT-S Cohort 1 students",
+      "size": 14,
+      "channel": "email + WhatsApp cohort group",
+      "note": "demo"
+    },
+    {
+      "id": "tolci-cohort1",
+      "name": "TOLC-I Cohort 1 students",
+      "size": 1,
+      "channel": "email + WhatsApp",
+      "note": "demo"
+    }
+  ],
+  "approvers": {
+    "finance": [
+      "CFO"
+    ],
+    "tech": [
+      "CTO"
+    ],
+    "marketing": [
+      "Social Media Strategist"
+    ],
+    "tutors": [
+      "Tutor"
+    ]
+  }
+}

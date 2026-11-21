@@ -39,7 +39,7 @@ def _sentences(text: str, n: int = 2) -> str:
 
 
 def new_email_arrives(email: dict | None = None) -> dict:
-    email = dict(email or DEMO_EMAIL)
+    email = dict(email or store.demo_events().get("new_email") or DEMO_EMAIL)
     if email["id"] in {e["id"] for e in store.incoming()}:
         return {"status": "already received"}
     store.save_incoming(store.incoming() + [email])

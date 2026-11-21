@@ -1,153 +1,150 @@
 [
   {
     "id": "mem-001",
-    "fact": "Q1 2027 cloud budget is EUR 18,000, approved by Giulia on 18 Nov 2026. It replaces the old EUR 12,000 estimate from August.",
+    "fact": "CEnT-S costs €499 (€699 struck). Black Friday: €399 for CEnT-S only, from 23 to 30 November 2026 (23:59 Rome), no code needed.",
     "sources": [
-      "email-005",
-      "email-004"
+      "notion-001",
+      "cal-001"
     ],
     "acl": [
-      "finance",
-      "tech"
+      "all"
     ],
     "status": "approved",
-    "approved_by": "giulia"
+    "approved_by": "arif"
   },
   {
     "id": "mem-002",
-    "fact": "Cash at end of October 2026 is EUR 412,000; monthly net burn is about EUR 58,000; runway is about 7 months, to mid-June 2027.",
+    "fact": "Cohort 1 runs from 1 November 2026 to 7 February 2027, with access until 31 March 2027, and has at most 20 students.",
     "sources": [
-      "email-003"
+      "notion-001"
     ],
     "acl": [
-      "finance"
+      "all"
     ],
     "status": "approved",
-    "approved_by": "giulia"
+    "approved_by": "arif"
   },
   {
     "id": "mem-003",
-    "fact": "Cantina Langhe Viva has 40 of 120 sensors offline since 18 Nov 2026, all on gateway GW-07. They will pause their renewal if it is not fixed by 27 Nov.",
+    "fact": "Withdrawal policy: 14-day right of withdrawal; full refund only if the student hasn't started the course.",
     "sources": [
-      "email-002",
-      "chat-001"
+      "notion-001"
     ],
     "acl": [
-      "sales",
-      "tech"
+      "all"
     ],
     "status": "approved",
-    "approved_by": "davide"
+    "approved_by": "arif"
   },
   {
     "id": "mem-004",
-    "fact": "Gateway firmware 2.2 drops uplinks after a cold restart; firmware 2.3 fixes it.",
+    "fact": "Cohort 1 revenue so far is €7,180 and the Cohort 1 teaching budget is €1,500 (demo figures).",
     "sources": [
-      "chat-002",
-      "doc-002"
+      "notion-002"
     ],
     "acl": [
-      "tech"
+      "finance"
     ],
     "status": "approved",
-    "approved_by": "marco"
+    "approved_by": "hamid"
   },
   {
     "id": "mem-005",
-    "fact": "SensorParts invoice INV-2026-0912 for EUR 14,640 (incl. VAT) is due on Tuesday 24 Nov 2026; this is the second notice.",
+    "fact": "The Zoom Pro card was declined: Zoom pauses on Wednesday 25 November at 23:59 unless the payment method is updated, and all lives run on Zoom.",
     "sources": [
-      "email-001"
+      "email-001",
+      "chat-008"
     ],
     "acl": [
       "finance"
     ],
     "status": "approved",
-    "approved_by": "luca"
+    "approved_by": "hamid"
   },
   {
     "id": "mem-006",
-    "fact": "November payroll inputs are due Wednesday 25 Nov 2026 at 12:00.",
+    "fact": "Maria teaches CEnT-S Maths and Physics. Anna teaches Maths in CEnT-S and the TOLC-I course.",
     "sources": [
-      "email-007"
+      "notion-001"
     ],
     "acl": [
-      "finance"
+      "all"
     ],
     "status": "approved",
-    "approved_by": "giulia"
+    "approved_by": "arif"
   },
   {
     "id": "mem-007",
-    "fact": "The budget for the open senior backend hire is EUR 52,000 gross a year.",
+    "fact": "Every cohort includes recorded classes, a weekly 90-minute Zoom live Q&A with its recording, 20 full simulation tests and a WhatsApp community.",
     "sources": [
-      "doc-001"
+      "notion-001"
     ],
     "acl": [
-      "finance"
+      "all"
     ],
     "status": "approved",
-    "approved_by": "giulia"
+    "approved_by": "arif"
   },
   {
     "id": "mem-008",
-    "fact": "From January 2027 all new gateways ship with firmware 2.3 and auto-update off; updates only in planned windows.",
+    "fact": "CEnT-S simulations draw 65 questions per attempt from an 80-question pool.",
     "sources": [
-      "chat-008",
-      "doc-002"
+      "chat-005",
+      "notion-003"
     ],
     "acl": [
       "tech"
     ],
     "status": "approved",
-    "approved_by": "marco"
+    "approved_by": "sara"
   },
   {
     "id": "mem-009",
-    "fact": "Team lunch is on Friday 27 Nov 2026 at 13:00 at the office.",
+    "fact": "The team call is on Friday 27 November at 18:00 on Zoom.",
     "sources": [
-      "chat-006"
+      "chat-007",
+      "cal-003"
     ],
     "acl": [
       "all"
     ],
     "status": "approved",
-    "approved_by": "elena"
+    "approved_by": "arif"
   },
   {
     "id": "mem-010",
-    "fact": "We answer a support email within 4 working hours and send an engineer within 2 working days for an outage.",
+    "fact": "The Black Friday carousel (6 slides) needs Arif's approval by 10:00 on 23 November to post at 11:00 on @poliprep.en.",
     "sources": [
-      "doc-003"
+      "chat-003",
+      "canva-001"
     ],
     "acl": [
-      "all"
+      "marketing"
     ],
     "status": "approved",
-    "approved_by": "paolo"
+    "approved_by": "ulu"
   },
   {
     "id": "mem-p01",
-    "fact": "Gateway firmware v2.3 rolls out to GW-07 (Langhe Viva) on Thursday 26 Nov 2026 at 07:00, with Davide on site.",
+    "fact": "This week's TOLC-I live moves to Saturday 28 November at 09:00 on Zoom (Anna, confirmed with Arif).",
     "sources": [
-      "chat-003",
-      "chat-004"
+      "chat-002",
+      "email-003"
     ],
     "acl": [
-      "tech",
-      "sales"
+      "tutors"
     ],
     "status": "pending",
     "proposed_by": "extractor"
   },
   {
     "id": "mem-p02",
-    "fact": "The Langhe Viva contract is worth EUR 83,000 a year.",
+    "fact": "The Black Friday price for CEnT-S is €299.",
     "sources": [
-      "chat-005"
+      "chat-004"
     ],
     "acl": [
-      "sales",
-      "tech"
+      "marketing"
     ],
     "status": "pending",
     "proposed_by": "extractor"

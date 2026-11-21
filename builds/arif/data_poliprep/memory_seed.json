@@ -1,0 +1,154 @@
+[
+  {
+    "id": "mem-001",
+    "fact": "CEnT-S costs €499 (€699 struck). Black Friday: €399 for CEnT-S only, from 23 to 30 November 2026 (23:59 Rome), no code needed.",
+    "sources": [
+      "notion-001",
+      "cal-001"
+    ],
+    "acl": [
+      "all"
+    ],
+    "status": "approved",
+    "approved_by": "arif"
+  },
+  {
+    "id": "mem-002",
+    "fact": "Cohort 1 runs from 1 November 2026 to 7 February 2027, with access until 31 March 2027, and has at most 20 students.",
+    "sources": [
+      "notion-001"
+    ],
+    "acl": [
+      "all"
+    ],
+    "status": "approved",
+    "approved_by": "arif"
+  },
+  {
+    "id": "mem-003",
+    "fact": "Withdrawal policy: 14-day right of withdrawal; full refund only if the student hasn't started the course.",
+    "sources": [
+      "notion-001"
+    ],
+    "acl": [
+      "all"
+    ],
+    "status": "approved",
+    "approved_by": "arif"
+  },
+  {
+    "id": "mem-004",
+    "fact": "Cohort 1 revenue so far is €7,180 and the Cohort 1 teaching budget is €1,500 (demo figures).",
+    "sources": [
+      "notion-002"
+    ],
+    "acl": [
+      "finance"
+    ],
+    "status": "approved",
+    "approved_by": "hamid"
+  },
+  {
+    "id": "mem-005",
+    "fact": "The Zoom Pro card was declined: Zoom pauses on Wednesday 25 November at 23:59 unless the payment method is updated, and all lives run on Zoom.",
+    "sources": [
+      "email-001",
+      "chat-008"
+    ],
+    "acl": [
+      "finance"
+    ],
+    "status": "approved",
+    "approved_by": "hamid"
+  },
+  {
+    "id": "mem-006",
+    "fact": "Maria teaches CEnT-S Maths and Physics. Anna teaches Maths in CEnT-S and the TOLC-I course.",
+    "sources": [
+      "notion-001"
+    ],
+    "acl": [
+      "all"
+    ],
+    "status": "approved",
+    "approved_by": "arif"
+  },
+  {
+    "id": "mem-007",
+    "fact": "Every cohort includes recorded classes, a weekly 90-minute Zoom live Q&A with its recording, 20 full simulation tests and a WhatsApp community.",
+    "sources": [
+      "notion-001"
+    ],
+    "acl": [
+      "all"
+    ],
+    "status": "approved",
+    "approved_by": "arif"
+  },
+  {
+    "id": "mem-008",
+    "fact": "CEnT-S simulations draw 65 questions per attempt from an 80-question pool.",
+    "sources": [
+      "chat-005",
+      "notion-003"
+    ],
+    "acl": [
+      "tech"
+    ],
+    "status": "approved",
+    "approved_by": "sara"
+  },
+  {
+    "id": "mem-009",
+    "fact": "The team call is on Friday 27 November at 18:00 on Zoom.",
+    "sources": [
+      "chat-007",
+      "cal-003"
+    ],
+    "acl": [
+      "all"
+    ],
+    "status": "approved",
+    "approved_by": "arif"
+  },
+  {
+    "id": "mem-010",
+    "fact": "The Black Friday carousel (6 slides) needs Arif's approval by 10:00 on 23 November to post at 11:00 on @poliprep.en.",
+    "sources": [
+      "chat-003",
+      "canva-001"
+    ],
+    "acl": [
+      "marketing"
+    ],
+    "status": "approved",
+    "approved_by": "ulu"
+  },
+  {
+    "id": "mem-p01",
+    "fact": "This week's TOLC-I live moves to Saturday 28 November at 09:00 on Zoom (Anna, confirmed with Arif).",
+    "sources": [
+      "chat-002",
+      "email-003"
+    ],
+    "acl": [
+      "tutors"
+    ],
+    "status": "pending",
+    "proposed_by": "extractor",
+    "_demo": "APPROVE live as Arif. Then ask 'When is the TOLC-I live this week?'. Only this item answers it."
+  },
+  {
+    "id": "mem-p02",
+    "fact": "The Black Friday price for CEnT-S is €299.",
+    "sources": [
+      "chat-004"
+    ],
+    "acl": [
+      "marketing"
+    ],
+    "status": "pending",
+    "proposed_by": "extractor",
+    "_demo": "REJECT live: the source says €399, not €299. People curate the memory and catch the model's mistakes."
+  }
+]

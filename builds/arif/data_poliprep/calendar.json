@@ -1,0 +1,32 @@
+[
+  {
+    "id": "cal-001",
+    "date": "2026-11-23T00:00:00+01:00",
+    "author": "ulu",
+    "title": "Black Friday starts",
+    "text": "CEnT-S €399 (no code) from Monday 23 November 00:00 to Sunday 30 November 23:59 Rome.",
+    "acl": [
+      "all"
+    ]
+  },
+  {
+    "id": "cal-002",
+    "date": "2026-11-24T09:00:00+01:00",
+    "author": "maria",
+    "title": "CEnT-S Maths live (Zoom)",
+    "text": "Weekly 90-minute live Q&A on exam problems with Maria. 14 students booked.",
+    "acl": [
+      "tutors"
+    ]
+  },
+  {
+    "id": "cal-003",
+    "date": "2026-11-27T18:00:00+01:00",
+    "author": "arif",
+    "title": "Team call (Zoom)",
+    "text": "Weekly team call.",
+    "acl": [
+      "all"
+    ]
+  }
+]
