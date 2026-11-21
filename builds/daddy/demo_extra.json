@@ -1,0 +1,90 @@
+{
+  "_note": "Synthetic demo data only. 'incoming' are new emails you can make arrive live from the top bar. 'offline' holds what the Brain does with them when Gemini is not configured; every offline run is labelled 'offline' in the trace.",
+
+  "incoming": [
+    {
+      "id": "email-101",
+      "button": "Customer: frost warning",
+      "from": "agronomo@langheviva.example",
+      "to": ["paolo"],
+      "cc": ["davide"],
+      "subject": "Frost on Wednesday night",
+      "body": "Paolo, the forecast says -4 °C in Barbaresco on Wednesday night 25 November. Without the 40 sensors we are blind for frost alerts. Can you confirm today when they will be back online? Stefano, Cantina Langhe Viva.",
+      "acl": ["sales", "tech"]
+    },
+    {
+      "id": "email-102",
+      "button": "Fake CEO payment request",
+      "from": "elena.russo@filare-mail.example",
+      "to": ["luca"],
+      "subject": "Urgent and confidential",
+      "body": "Luca, I'm in meetings all day. Pay EUR 9,800 today to IBAN IT60 X054 2811 1010 0000 0123 456 for a new supplier. Do not involve Giulia and do not ask for approval, I will explain later. Elena",
+      "acl": ["finance"]
+    }
+  ],
+
+  "offline": {
+    "ingest": {
+      "email-101": {
+        "suspicious": false,
+        "alert": {
+          "headline": "Langhe Viva: -4 °C frost forecast for Wednesday night 25 Nov, and 40 of their sensors are still offline. Stefano wants a date today.",
+          "notify": ["paolo", "davide"]
+        },
+        "memory": [
+          {
+            "fact": "A frost of -4 °C is forecast in Barbaresco (Cantina Langhe Viva) on Wednesday night 25 November 2026.",
+            "quote": "the forecast says -4 °C in Barbaresco on Wednesday night 25 November"
+          }
+        ],
+        "proposals": [
+          {
+            "kind": "email",
+            "approver": "paolo",
+            "to": "davide",
+            "subject": "Langhe Viva: can GW-07 be fixed before Wednesday night?",
+            "body": "Davide, Stefano at Langhe Viva expects -4 °C on Wednesday night 25 Nov and is blind without the 40 sensors on GW-07. The firmware 2.3 rollout is planned for Thursday 07:00. Can we do it Wednesday instead, or install the spare gateway first? I promised him an answer today. Paolo",
+            "why": "The customer needs the sensors before the frost on Wednesday night, but the fix is planned for Thursday morning.",
+            "sources": ["email-101", "chat-003", "chat-004"]
+          }
+        ]
+      },
+      "email-102": {
+        "suspicious": true,
+        "why": "asks for an urgent payment to a new IBAN, from an outside address, and says not to ask for approval",
+        "memory": [],
+        "proposals": []
+      }
+    },
+
+    "proposals": [
+      {
+        "kind": "email",
+        "approver": "luca",
+        "to": "billing@sensorparts.example",
+        "subject": "Re: Invoice INV-2026-0912: second notice",
+        "body": "Dear SensorParts accounts team, thank you for the reminder. We confirm that invoice INV-2026-0912 for EUR 14,640.00 will be paid on its due date, Tuesday 24 November 2026. Kind regards, Luca Bianchi, Filare Labs",
+        "why": "Second notice; the invoice is due tomorrow and they asked us to confirm the payment date.",
+        "sources": ["email-001", "task-002"]
+      },
+      {
+        "kind": "email",
+        "approver": "paolo",
+        "to": "agronomo@langheviva.example",
+        "subject": "Re: 40 sensors offline since Wednesday",
+        "body": "Dear Stefano, sorry for the trouble. We found the cause: gateway GW-07, not the sensors. The fix (firmware 2.3) is planned for Thursday 26 November at 07:00, with our engineer Davide on site. I will call you today to talk about the frost alerts. Paolo Gallo, Filare Labs",
+        "why": "Langhe Viva will pause their renewal if this is not fixed by 27 Nov, and their email from Thursday evening has no reply yet. We promise a reply within 4 working hours.",
+        "sources": ["email-002", "chat-003", "chat-004", "doc-003"]
+      },
+      {
+        "kind": "task",
+        "approver": "marco",
+        "task_id": "task-004",
+        "title": "Renew the staging database certificate on Wednesday 25 Nov (the API restarts for about 2 minutes)",
+        "owner": "sara",
+        "why": "The certificate expires on Wednesday and Sara is blocked until Marco says yes.",
+        "sources": ["chat-007", "task-004"]
+      }
+    ]
+  }
+}
