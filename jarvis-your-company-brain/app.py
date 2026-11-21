@@ -546,9 +546,7 @@ with st.sidebar:
                            icon=":material/check_circle:")
             elif pr.get("status") == "error":
                 st.warning("; ".join(pr.get("reasons", [])), icon=":material/info:")
-    if stripe_sync.can_sync(ss.user) and not stripe_sync.connected():
-        st.caption("Stripe is not connected for this company.")
-    elif stripe_sync.can_sync(ss.user):
+    if stripe_sync.can_sync(ss.user) and stripe_sync.connected():   # no Stripe for this company: show nothing
         st.button("Sync Stripe to the revenue page", icon=":material/payments:", key="stripe-sync", on_click=do_stripe_sync,
                   width="stretch", help="Reads Stripe payments, proposes the revenue fact (flagged if approved memory disagrees) "
                                         "and an update to the revenue page. Both wait for approval.")
