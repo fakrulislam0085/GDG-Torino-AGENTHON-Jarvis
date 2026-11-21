@@ -62,12 +62,61 @@ def ask(user_id: str, question: str) -> dict:
             m = ids[c]
             sources = [src[s] for s in m["sources"] if s in src and access.can_see(src[s], user_id)]
             citations.append({"mem_id": c, "fact": m["fact"], "sources": sources})
+    text = str(out.get("answer", "")).strip()
+    number_check = "ok"
+    if known and not numbers_supported(text, [c["fact"] for c in citations]):
+        # a number the cited facts don't contain: show the approved facts word for word instead
+        text = " ".join(c["fact"] for c in citations)
+        number_check = "replaced"
+        audit.log("answer_number_replaced", user_id, question=question)
     result = {
         "question": question,
         "known": known,
-        "answer": str(out["answer"]).strip() if known else UNKNOWN,
+        "answer": text if known else why_unknown(user_id, question),
+        "number_check": number_check,
         "citations": citations,
         "mode": mode,
     }
     audit.log("ask", user_id, question=question, known=known, cited=[c["mem_id"] for c in citations], mode=mode)
     return result
+
+
+
+_NUMS = re.compile(r"\d[\d.,:]*")
+
+
+def _norm(n: str) -> str:
+    digits = re.sub(r"\D", "", n)
+    return digits.lstrip("0") or "0"
+
+
+def numbers_supported(answer: str, facts: list) -> bool:
+    """Every number in the answer must appear in the cited facts (7,180 = 7180; 09:00 = 900)."""
+    allowed = {_norm(n) for f in facts for n in _NUMS.findall(f)}
+    return all(_norm(n) in allowed for n in _NUMS.findall(answer))
+
+
+def _names(ids) -> str:
+    ppl = store.people()
+    named = [f"{ppl[i]['name']} ({ppl[i]['role']})" for i in ids if i in ppl]
+    return " or ".join(named) if named else "the CEO"
+
+
+def why_unknown(user_id: str, question: str) -> str:
+    """Three different 'I don't know's, decided in code without sending restricted text to the model:
+    the fact exists but isn't for your role / a note is waiting for review / nothing at all."""
+    all_mem = store.memory()
+    hidden = [m for m in all_mem if m["status"] == "approved" and not access.can_see(m, user_id)]
+    hit = _offline(question, hidden) if hidden else {"known": False}
+    if hit.get("known"):
+        m = next(x for x in hidden if x["id"] == hit["cited"][0])
+        owners = [pid for pid in store.people() if pid != user_id and access.can_approve(m, pid)]
+        audit.log("ask_restricted", user_id, question=question)
+        return f"That isn't available for your role, so I can't share it. Ask {_names(owners)}."
+    pending = memory.pending_for(user_id)
+    hit = _offline(question, pending) if pending else {"known": False}
+    if hit.get("known"):
+        pid = hit["cited"][0]
+        return (f"I don't know yet. A note about this ({pid}) is waiting for review by "
+                f"{_names(memory.reviewers(pid))}. I only answer from approved memory.")
+    return UNKNOWN

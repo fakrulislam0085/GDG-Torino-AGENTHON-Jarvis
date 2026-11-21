@@ -23,18 +23,17 @@
         ]
       },
       {
-        "text": "The Zoom Pro payment card was declined and service will pause on Wednesday 25 November at 23:59 unless updated, which threatens all upcoming live sessions and the Friday team call.",
+        "text": "The Zoom Pro payment card was declined, threatening to pause service and disrupt upcoming live classes after Wednesday 25 November at 23:59.",
         "urgency": "high",
         "cited": [
           "mem-005",
           "email-001",
           "chat-008",
-          "task-001",
-          "mem-009"
+          "task-001"
         ]
       },
       {
-        "text": "Sara requires your approval to switch on the new dashboard preview for admins scheduled for Wednesday.",
+        "text": "Sara requires your approval to enable the new admin dashboard preview scheduled for Wednesday.",
         "urgency": "medium",
         "cited": [
           "chat-006",
@@ -50,7 +49,7 @@
     "mode": "gemini",
     "items": [
       {
-        "text": "You need to update the Zoom Pro payment card before service pauses on Wednesday 25 November at 23:59, which would halt all live meetings.",
+        "text": "You need to update the Zoom Pro payment card before Wednesday 25 November at 23:59 to prevent live meetings from pausing.",
         "urgency": "high",
         "cited": [
           "mem-005",
@@ -60,8 +59,8 @@
         ]
       },
       {
-        "text": "You have a task due Tuesday to respond to a parent's full refund request for a CEnT-S student who joined on 2 November and has already started classes, against our 14-day withdrawal policy requiring unstarted coursework.",
-        "urgency": "high",
+        "text": "You have a task to answer the CEnT-S refund request from a parent whose son joined 2 November and already watched classes, in light of the 14-day and unstarted course policy.",
+        "urgency": "medium",
         "cited": [
           "mem-003",
           "email-002",
@@ -70,13 +69,13 @@
       },
       {
         "text": "The Black Friday promotional pricing of €399 for CEnT-S begins today, running through 30 November.",
-        "urgency": "medium",
+        "urgency": "low",
         "cited": [
           "mem-001"
         ]
       },
       {
-        "text": "There is a team call scheduled on Zoom for Friday 27 November at 18:00.",
+        "text": "You have a team call scheduled for Friday 27 November at 18:00 on Zoom.",
         "urgency": "low",
         "cited": [
           "mem-009",
@@ -100,7 +99,7 @@
         "security": true
       },
       {
-        "text": "You need Arif's approval to switch on the new admin dashboard preview scheduled for Wednesday, as the task is currently blocked.",
+        "text": "You need Arif's approval to unblock and switch on the new dashboard preview for admins scheduled for Wednesday.",
         "urgency": "high",
         "cited": [
           "chat-006",
@@ -108,14 +107,14 @@
         ]
       },
       {
-        "text": "The CEnT-S Black Friday promotional pricing of €399 takes effect today and runs through 30 November.",
+        "text": "Black Friday pricing of €399 for CEnT-S starts today and runs through 30 November.",
         "urgency": "medium",
         "cited": [
           "mem-001"
         ]
       },
       {
-        "text": "The team call is scheduled for Friday 27 November at 18:00 on Zoom.",
+        "text": "You have a team call scheduled for Friday 27 November at 18:00 on Zoom.",
         "urgency": "low",
         "cited": [
           "chat-007",
@@ -131,7 +130,7 @@
     "mode": "gemini",
     "items": [
       {
-        "text": "Arif needs to approve the 6-slide Black Friday carousel in Canva by 10:00 today so it can be posted at 11:00 on @poliprep.en.",
+        "text": "Get Arif's approval on the 6-slide Black Friday Canva carousel by 10:00 today so it can be posted on @poliprep.en at 11:00.",
         "urgency": "high",
         "cited": [
           "mem-010",
@@ -140,7 +139,7 @@
         ]
       },
       {
-        "text": "You need to answer the email inquiry from the Brazilian applicant regarding whether CEnT-S Cohort 1 is still open and if the Black Friday price applies.",
+        "text": "Answer the email inquiry from Brazil regarding whether Cohort 1 is still open and if the Black Friday pricing applies.",
         "urgency": "high",
         "cited": [
           "email-006",
@@ -148,7 +147,7 @@
         ]
       },
       {
-        "text": "The team call is scheduled for this Friday, 27 November at 18:00 on Zoom.",
+        "text": "Attend the upcoming team call scheduled for Friday 27 November at 18:00 on Zoom.",
         "urgency": "low",
         "cited": [
           "mem-009",
@@ -164,7 +163,7 @@
     "mode": "gemini",
     "items": [
       {
-        "text": "You need to check the subtitles for the uploaded M3 maths class before it opens on Thursday.",
+        "text": "You need to check the subtitles for the M3 maths class before it opens on Thursday.",
         "urgency": "high",
         "cited": [
           "chat-001",
@@ -172,7 +171,7 @@
         ]
       },
       {
-        "text": "The team call is scheduled for this Friday, 27 November, at 18:00 on Zoom.",
+        "text": "The team call is scheduled for Friday 27 November at 18:00 on Zoom.",
         "urgency": "medium",
         "cited": [
           "mem-009",
@@ -180,7 +179,7 @@
         ]
       },
       {
-        "text": "The Black Friday promotional pricing of €399 for CEnT-S begins today and runs through 30 November.",
+        "text": "The Black Friday promotional pricing of €399 for CEnT-S starts today and runs through 30 November.",
         "urgency": "low",
         "cited": [
           "mem-001"
@@ -195,15 +194,15 @@
     "mode": "gemini",
     "items": [
       {
-        "text": "The M3 maths class is uploaded to Drive, but subtitles need to be checked before it opens on Thursday.",
-        "urgency": "high",
+        "text": "The M3 maths class is uploaded to Drive, but subtitles need to be checked before it opens this Thursday.",
+        "urgency": "medium",
         "cited": [
           "chat-001",
           "task-005"
         ]
       },
       {
-        "text": "You have the team call scheduled for Friday 27 November at 18:00 on Zoom.",
+        "text": "You have the team call scheduled for Friday, 27 November at 18:00 on Zoom.",
         "urgency": "medium",
         "cited": [
           "mem-009",
@@ -211,12 +210,11 @@
         ]
       },
       {
-        "text": "Your TOLC-I live session is confirmed for Saturday 28 November at 09:00 on Zoom.",
-        "urgency": "medium",
+        "text": "Your TOLC-I live session is confirmed for Saturday, 28 November at 09:00 on Zoom.",
+        "urgency": "low",
         "cited": [
           "email-003",
-          "chat-002",
-          "mem-006"
+          "chat-002"
         ]
       }
     ]

@@ -24,6 +24,8 @@ def can_approve(item: dict, user_id: str) -> bool:
         return False
     if "exec" in groups(user_id):
         return True
+    if "all" in item.get("acl", []):   # a company-wide fact: only the CEO decides
+        return False
     owners = store.company().get("approvers", {})
     role = store.people()[user_id]["role"]
     return all(role in owners[g] for g in item.get("acl", []) if g in owners)

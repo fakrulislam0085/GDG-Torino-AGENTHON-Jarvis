@@ -4,15 +4,18 @@
     "type": "message_colleague",
     "proposed_to": "hamid",
     "to": "arif",
-    "subject": "Approval Request: Zoom Pro Payment Method",
-    "body": "Hi Arif,\n\nOur card for the PoliPrep Zoom Pro plan was declined. Service will pause on Wednesday 25 November at 23:59 unless the payment method is updated, which will stop all live meetings. Could you please approve updating the payment card before the deadline?\n\nBest,\nHamid, PoliPrep",
+    "subject": "Approval needed: Update Zoom Pro payment card",
+    "body": "Hi Arif, could you please approve updating the payment card for our Zoom Pro plan? The previous card was declined, and service will pause on Wednesday 25 November at 23:59 if not updated. Since all our live sessions run on Zoom, we need this sorted promptly. Thanks! Best, Hamid, PoliPrep",
     "reason": "Payment task task-001 needs Arif's approval",
     "cites": [
       "task-001",
       "email-001"
     ],
+    "basis": [
+      "mem-005"
+    ],
     "status": "awaiting_approval",
-    "created": "2026-11-21T13:21:01"
+    "created": "2026-11-21T13:54:31"
   },
   {
     "id": "act-hamid-2",
@@ -20,13 +23,16 @@
     "proposed_to": "hamid",
     "to": "parent.cents@family-mail.example",
     "subject": "Re: Refund request, CEnT-S course",
-    "body": "Hello, thank you for reaching out. Under our withdrawal policy, we offer a 14-day right of withdrawal with a full refund only if the student has not started the course. Because your son has already watched the first classes, we unfortunately cannot issue a full refund. Best regards, Hamid, PoliPrep",
+    "body": "Hello, thank you for reaching out. Under our withdrawal policy, a full refund is only available within 14 days if the student has not started the course. Since your son has already watched the first classes, we are unable to issue a full refund. Best regards, Hamid, PoliPrep",
     "reason": "Reply to parent.cents@family-mail.example (email-002)",
     "cites": [
       "email-002"
     ],
+    "basis": [
+      "mem-003"
+    ],
     "status": "awaiting_approval",
-    "created": "2026-11-21T13:21:01"
+    "created": "2026-11-21T13:54:31"
   },
   {
     "id": "act-sara-1",
@@ -34,27 +40,32 @@
     "proposed_to": "sara",
     "to": "arif",
     "subject": "Approval needed: Dashboard preview for admins",
-    "body": "Hi Arif,\n\nThe task 'Switch on the dashboard preview for admins' is currently blocked on your approval and is due on 2026-11-25. Could you please take a look and approve it when you get a chance?\n\nThanks,\nSara, PoliPrep",
+    "body": "Hi Arif,\n\nCould you please review and approve the task 'Switch on the dashboard preview for admins'? It is currently blocked waiting on your approval, with a deadline of 25 November 2026.\n\nBest,\nSara, PoliPrep",
     "reason": "Task task-004 is blocked on Arif",
     "cites": [
       "task-004",
       "chat-006"
     ],
+    "basis": [],
     "status": "awaiting_approval",
-    "created": "2026-11-21T13:21:03"
+    "created": "2026-11-21T13:54:28"
   },
   {
     "id": "act-ulu-1",
     "type": "reply_draft",
     "proposed_to": "ulu",
     "to": "applicant.brazil@student-mail.example",
-    "subject": "CEnT-S Cohort 1 & Black Friday pricing",
-    "body": "Hi, thanks for reaching out! Cohort 1 has at most 20 students. Our Black Friday price is €399 for CEnT-S from 23 to 30 November 2026 (23:59 Rome) with no code needed, so it will be valid for you during that period. Best regards, Ulu, PoliPrep",
+    "subject": "CEnT-S Cohort 1 & Black Friday details",
+    "body": "Hi there, Cohort 1 has at most 20 students and runs from 1 November 2026 to 7 February 2027. The Black Friday price for CEnT-S is €399 from 23 to 30 November 2026 (23:59 Rome) with no code needed. Best regards, Ulu, PoliPrep",
     "reason": "Reply to applicant.brazil@student-mail.example (email-006)",
     "cites": [
       "email-006"
     ],
+    "basis": [
+      "mem-001",
+      "mem-002"
+    ],
     "status": "awaiting_approval",
-    "created": "2026-11-21T13:20:43"
+    "created": "2026-11-21T13:54:29"
   }
 ]

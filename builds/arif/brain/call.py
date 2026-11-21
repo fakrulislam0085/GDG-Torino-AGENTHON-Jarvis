@@ -110,7 +110,7 @@ def maybe_call(email: dict):
     store.save_calls(store.calls() + [call])
     audit.log("call_placed", owner, unprompted=True, call_id=call["id"], source=email["id"], why=call["why"],
               note="call card in the app; real phone via ElevenLabs Agents + Twilio")
-    if auto_dial_enabled():
+    if auto_dial_enabled() and not email.get("pasted"):   # a pasted email never rings a real phone
         dial_real_phone(call)
     return call
 
@@ -154,7 +154,8 @@ def call_context(user_id: str) -> dict:
             + ", ".join(f"{p['name']} ({p['role']})" for p in people.values())
             + (". Tutors: " + ", ".join(f"{c['name']} ({c['role']})" for c in contacts) if contacts else ""))
     auds = "; ".join(f"{a['name']}: {a['size']} students (demo)" for a in store.audiences().values())
-    facts = " | ".join(m["fact"] for m in memory.approved_for(user_id))[:3500]
+    # finance-only facts never leave for the voice provider (ElevenLabs); the CEO reads them in the app
+    facts = " | ".join(m["fact"] for m in memory.approved_for(user_id) if set(m.get("acl", [])) != {"finance"})[:3500]
     return {"team": team, "audiences": auds, "memory": facts}
 
 

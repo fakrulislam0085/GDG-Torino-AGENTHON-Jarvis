@@ -103,5 +103,29 @@
     "tutors": [
       "Tutor"
     ]
+  },
+  "overview": {
+    "about": "PoliPrep runs small online cohort courses that prepare students for Italian university admission tests.",
+    "offer": [
+      "CEnT-S (in English, for international applicants)",
+      "TOLC-I (in Italian)",
+      "TEST ARCHED (architecture, coming in 2027)"
+    ],
+    "how": [
+      "At most 20 students per cohort",
+      "Recorded classes and a weekly 90-minute live Q&A on Zoom",
+      "20 full simulation tests in the PoliPrep exam engine",
+      "A WhatsApp community with the tutors"
+    ],
+    "where": "Online, from Torino · poliprep.com",
+    "tools": [
+      "Gmail",
+      "Notion",
+      "Google Calendar",
+      "Canva",
+      "Instagram",
+      "Stripe",
+      "Zoom"
+    ]
   }
 }

@@ -4,6 +4,7 @@ Run from builds/arif:  .venv\\Scripts\\python -m streamlit run app.py
 from __future__ import annotations
 
 import html
+import json
 import re
 import sys
 from datetime import datetime
@@ -362,6 +363,33 @@ with st.sidebar:
     if ss.get("last_watch", {}).get("status") == "already received":
         st.warning("Jarvis already handled this email: it calls only once per email. Press **Reset the demo** to replay it.",
                    icon=":material/info:")
+    with st.expander("Paste an email · try to break Jarvis", icon=":material/shield:"):
+        ex = store.demo_events().get("examples", {})
+        e1, e2, e3 = st.columns(3)
+        for col, key, lab in ((e1, "ceo_fraud", "CEO fraud"), (e2, "reworded_injection", "Injection"), (e3, "normal", "Normal")):
+            if key in ex:
+                col.button(lab, key=f"ex-{key}", on_click=lambda k=key: ss.update(
+                    paste_from=ex[k]["from"], paste_subject=ex[k]["subject"], paste_body=ex[k]["body"]), width="stretch")
+        with st.form("paste-email", border=False):
+            st.text_input("From", key="paste_from", placeholder="someone@outside.example")
+            st.text_input("Subject", key="paste_subject")
+            st.text_area("Email", key="paste_body", height=120, placeholder="Write any email, including an attack.")
+            if st.form_submit_button("Deliver to me", icon=":material/send:"):
+                try:
+                    res = watch.paste_email(ss.user, ss.paste_from, ss.paste_subject, ss.paste_body)
+                    ss.paste_result = res
+                except (ValueError, KeyError) as e:
+                    ss.paste_result = {"status": "error", "reasons": [str(e)]}
+        pr = ss.get("paste_result")
+        if pr:
+            if pr.get("status") == "flagged":
+                st.error("Blocked: " + "; ".join(pr.get("reasons", [])) + ". No memory, no action, no call.", icon=":material/gpp_bad:")
+            elif pr.get("status") == "ingested":
+                st.success(f"Read it. New facts wait for review: {', '.join(pr.get('pending', []))}. "
+                           + ("Urgent: a call card was raised (pasted emails never ring a real phone)." if pr.get("call") else ""),
+                           icon=":material/check_circle:")
+            elif pr.get("status") == "error":
+                st.warning("; ".join(pr.get("reasons", [])), icon=":material/info:")
     if "exec" in access.groups(ss.user) or PEOPLE[ss.user]["role"] == "CFO":
         st.button("Sync Stripe → Notion", icon=":material/payments:", key="stripe-sync", on_click=do_stripe_sync, width="stretch",
                   help="Reads Stripe payments, proposes the revenue fact (flagged if Notion disagrees) and a Notion update. Both wait for approval.")
@@ -570,6 +598,30 @@ elif ss.page == PAGES[1]:
                     st.success(f"Saved as {item['id']}, approved by you and cited as {', '.join(item['sources'])}.", icon=":material/check_circle:")
             except (ValueError, PermissionError) as e:
                 st.error(str(e), icon=":material/error:")
+    ov = store.company().get("overview", {})
+    mem_all = access.visible(store.memory(), user)
+    with st.container(key="panel-overview"):
+        section(f"About {store.company_name()}", first_in_panel=True)
+        md(f"<div class='txt'>{html.escape(ov.get('about', store.company().get('company', {}).get('what', '')))}</div>"
+           f"<div class='who' style='margin-top:.6rem'><b>Courses:</b> {html.escape(' · '.join(ov.get('offer', [])))}</div>"
+           f"<div class='who'><b>How it works:</b> {html.escape(' · '.join(ov.get('how', [])))}</div>"
+           f"<div class='who'><b>Team:</b> {html.escape(' · '.join(p['name'] + ' (' + p['role'] + ')' for p in PEOPLE.values()))}</div>"
+           f"<div class='who'><b>Jarvis reads:</b> {html.escape(' · '.join(ov.get('tools', [])))} · {html.escape(ov.get('where', ''))}</div>"
+           f"<div class='who'><b>Memory you can see:</b> {sum(m['status'] == 'approved' for m in mem_all)} approved · "
+           f"{sum(m['status'] == 'pending' for m in mem_all)} waiting for review · "
+           f"{sum(m['status'] in ('superseded', 'rejected') for m in mem_all)} in history</div>")
+        data = memory.export(user) if ss.get("export_ready") else None
+        d1, d2, _ = st.columns([1.3, 1.3, 2.4])
+        if data is None:
+            d1.button("Prepare export", key="export-prepare", icon=":material/download:", width="stretch",
+                      on_click=lambda: ss.update(export_ready=True))
+        else:
+            stamp = data["exported_at"][:10]
+            d1.download_button("Download (Markdown)", memory.export_markdown(data), file_name=f"{store.company_name()}-memory-{stamp}.md",
+                               mime="text/markdown", key="export-md", icon=":material/description:", width="stretch")
+            d2.download_button("Download (JSON)", json.dumps(data, indent=2, ensure_ascii=False), file_name=f"{store.company_name()}-memory-{stamp}.json",
+                               mime="application/json", key="export-json", icon=":material/data_object:", width="stretch")
+        md("<div class='who'>The export holds only what your role may see, with sources and who approved each fact.</div>")
     fl = ss.pop("mem_flash", None)
     pend = memory.pending_for(user)
     with st.container(key="panel-pending"):
@@ -582,7 +634,8 @@ elif ss.page == PAGES[1]:
             with rise("mp", i):
                 edited = f" · edited by {html.escape(first(m['edited_by']))}" if m.get("edited_by") else ""
                 md(f"<div class='row'><div class='when medium'>Pending</div><div class='txt'>{html.escape(m['fact'])}"
-                   f"<span class='ids'>{m['id']} · proposed by {m.get('proposed_by', 'extractor')}{edited} · visible to {', '.join(m['acl'])}</span></div></div>")
+                   f"<span class='ids'>{m['id']} · proposed by {m.get('proposed_by', 'extractor')}{edited} · visible to {', '.join(m['acl'])}</span>"
+                   f"<div class='who'>Who can decide: {html.escape(', '.join(name(r) + ' (' + PEOPLE[r]['role'] + ')' for r in memory.reviewers(m['id'])) or 'the CEO')}</div></div></div>")
                 sources_block(m["sources"], user)
                 if found:
                     conflict_block(m, found)
@@ -639,7 +692,8 @@ elif ss.page == PAGES[2]:
         if not acts:
             md("<div class='empty'>Nothing proposed for you.</div>")
         for i, a in enumerate(acts):
-            label = {"awaiting_approval": ("Waiting", "medium"), "approved": ("Sent", "low"), "rejected": ("Rejected", "high")}[a["status"]]
+            label = {"awaiting_approval": ("Waiting", "medium"), "approved": ("Sent", "low"), "rejected": ("Rejected", "high"),
+                     "needs_review": ("Needs review", "high")}[a["status"]]
             with rise("ac", i):
                 md(f"<div class='row'><div class='when {label[1]}'>{label[0]}</div><div class='txt'><b>{html.escape(a['subject'])}</b>"
                    f"<div class='who'>{html.escape(kind_label(a))} · why: {html.escape(a['reason'])}</div>"
@@ -649,11 +703,31 @@ elif ss.page == PAGES[2]:
                       if a.get("meeting", {}).get("join_url") else "")
                    + "</div></div>")
                 sources_block(a["cites"], user)
-                if a["status"] == "awaiting_approval":
-                    c1, c2, _ = st.columns([1.4, 1, 2.6])
+                if a.get("edited_by"):
+                    md(f"<div class='who'>Edited by {html.escape(name(a['edited_by']))} before approval.</div>")
+                if a["status"] == "needs_review":
+                    st.warning("This draft relied on " + ", ".join(
+                        f"{s['id']} ({'replaced by ' + s['replaced_by'] if s.get('replaced_by') else s['status']})" for s in a.get("stale", []))
+                        + ", which changed after it was written. Edit it (or reject it) before it can be sent.", icon=":material/history:")
+                if a["status"] in ("awaiting_approval", "needs_review"):
+                    c1, c2, c3, _ = st.columns([1.4, 1, 1.1, 1.5])
                     c1.button("Approve and send", key=f"aa-{a['id']}", icon=":material/send:", type="primary",
                               on_click=propose.approve_action, args=(a["id"], user), width="stretch")
                     c2.button("Reject", key=f"ar-{a['id']}", icon=":material/close:", on_click=propose.reject_action, args=(a["id"], user), width="stretch")
+                    editing = ss.get("edit_action") == a["id"]
+                    c3.button("Close" if editing else "Edit draft", key=f"aedit-{a['id']}", icon=":material/close:" if editing else ":material/edit:",
+                              on_click=lambda aid=a["id"], e=editing: ss.update(edit_action=None if e else aid), width="stretch")
+                    if editing:
+                        with st.form(f"aform-{a['id']}", border=False):
+                            subj = st.text_input("Subject", value=a["subject"], key=f"aform-subj-{a['id']}")
+                            body = st.text_area("Message", value=a["body"], height=180, key=f"aform-body-{a['id']}")
+                            if st.form_submit_button("Save draft", type="primary"):
+                                try:
+                                    propose.edit_action(a["id"], user, subj, body)
+                                    ss.edit_action = None
+                                    st.rerun()
+                                except (ValueError, PermissionError) as e:
+                                    st.error(str(e), icon=":material/error:")
     box = [o for o in store.outbox() if o["proposed_to"] == user]
     with st.container(key="panel-outbox"):
         section("Outbox", len(box), first_in_panel=True, note="Mock: nothing leaves this demo.")

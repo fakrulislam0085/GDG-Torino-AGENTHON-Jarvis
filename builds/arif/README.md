@@ -1,4 +1,8 @@
-# Jarvis for Filare Labs: Arif's build (Challenge A · Company Jarvis)
+# Jarvis for PoliPrep: Arif's build (Challenge A · Company Brain)
+
+**Jarvis is PoliPrep's AI chief of staff. It speaks first, answers only from memory the team approved, and asks before it acts.** It reads PoliPrep's Gmail, Notion, Calendar, Canva, Instagram and Stripe (demo copies), writes each person a brief at 08:00, flags attacks, proposes drafts and meetings that wait for a tap, and **phones the CEO's real phone** when something is urgent.
+
+![How Jarvis works](docs/jarvis-workflow.png)
 
 **Run (Windows). Start it from `builds/arif` so the theme in `.streamlit/config.toml` loads:**
 ```powershell
@@ -6,41 +10,40 @@ cd builds\arif
 python -m venv .venv; .venv\Scripts\python -m pip install -r requirements.txt
 .venv\Scripts\python -m streamlit run app.py
 ```
-On macOS or Linux, use `.venv/bin/python`. Tests (offline, free): `.venv\Scripts\python -m pytest tests -q` (12 tests)
+Tests (offline, free): `.venv\Scripts\python -m pytest tests -q` (33 tests).
 
-**A colleague that speaks first, answers only from memory the team approved, and asks before it acts.** Jarvis watches Filare Labs' email, chat, tasks and docs (shared fake data in `../../data/`). At 08:00 it posts each person a brief nobody asked for, flags attacks hidden in emails, proposes actions that wait for a click, and says "I don't know" when the approved memory doesn't say.
+**Data:** real PoliPrep context (courses, prices, cohort rules, team roles) with **invented events**: every email, message, payment and number marked demo is made up. No real student, parent or client data. Files: `data_poliprep/`.
 
-**Demo data only.** Filare Labs and everyone in it are fictional.
+## The team (roles in code)
+| Person | Role | Sees | Approves |
+|---|---|---|---|
+| Arif | CEO | everything | everything, and company-wide facts |
+| Hamid | CFO | finance | finance facts, Stripe sync |
+| Sara | CTO | tech | tech facts |
+| Ulu | Social Media Strategist | marketing | marketing facts |
+| Maria, Anna | Tutor | tutors | tutor facts |
 
-## Gemini (Vertex AI, event credits)
-Put this in `builds/arif/.env` (git-ignored), or log in with `gcloud auth application-default login`:
-```
-GOOGLE_CLOUD_PROJECT=token-mafia-agenthon
-GOOGLE_CLOUD_LOCATION=global
-GEMINI_MODEL=gemini-3.8-flash
-# or a Vertex AI API key: GOOGLE_API_KEY=...
-# optional voice brief: ELEVENLABS_API_KEY=...  ELEVENLABS_VOICE_ID=...
-```
-With no credentials it runs an **offline fallback** (deterministic keyword matching and templates), and the sidebar badge says so. Every safety rule below holds in both modes.
+## What it does
+- **Speaks first:** an 08:00 brief per person (Slack-style chat, morning email mock-up, read aloud in an ElevenLabs voice) and alerts when an email arrives.
+- **Phones the CEO:** an urgent email (Gemini says urgent AND code finds urgency words) makes Jarvis ring the CEO's real phone (an ElevenLabs voice agent over a Twilio number). It talks live and knows the team and the approved company facts (never finance-only facts: those don't go to the voice provider). It refuses to approve anything by voice. After the call, **"Collect drafts from the call"** turns what the CEO asked for (an email to students, a Zoom meeting) into drafts that wait for approval.
+- **Curated memory:** facts proposed from sources wait for a person. Conflicts are flagged side by side ("€299 vs €399"), and the owner can **approve and replace, reject or edit**. Edits create versions, and the history is kept. **"Add what you know"** saves knowledge that isn't in any tool. An overview of the company and a **download** of the memory (Markdown or JSON, role-filtered) are on the Memory page.
+- **Answers:** only from approved memory the asker may see, with sources. Every number must appear in the cited facts. Otherwise it says one of three things: **"I don't know"**, **"not available for your role, ask Hamid"**, or **"a note is waiting for review by …"**.
+- **Only proposes:** replies, messages, announcements to students, Notion updates and Zoom meetings all wait in Approvals. The approver can **edit the draft**. A draft that relied on a fact that was replaced since is blocked until a person re-checks it.
+- **Stripe → Notion:** the CFO or CEO syncs Stripe (demo export in Stripe's format, or a test-mode key). Jarvis computes revenue, flags the conflict with what Notion says, and proposes the Notion update.
+- **Zoom:** Jarvis proposes meetings, for example "15 min with Anna to hand over the class". The meeting is created in Zoom only after approval (real with Zoom keys, a labelled demo link without).
+- **Try to break it:** the sidebar's **Paste an email** delivers your own email, including attacks. The patterns catch common and disguised attacks (look-alike letters, invisible characters, CEO fraud), and Gemini catches reworded ones. A pasted email never rings a real phone.
+- **Audit log:** every brief, question, citation, proposal, approval, call and export.
 
-## Design: rules in code, not in the prompt
-- **Answers come only from approved memory** the asker may see (`brain/memory.py`, `brain/answer.py`). Raw emails are never searched directly.
-- **The role filter runs before any model call** (`brain/access.py`). Identity comes from the role picker, never from the question text.
-- **Citations are checked in code.** Only ids we gave the model count. No valid citation means "I don't know".
-- **Jarvis has no tool that sends.** `propose.approve_action()` is called only by the Approve button, and only the person the action was proposed to can approve it. Recipients are limited in code to colleagues, or the original sender of a normal email.
-- **Injection defence** (`brain/guard.py`): suspicious emails are flagged in the brief, never shown to the model as instructions, and can never lead to an action.
-- **New memory inherits the source's access list** by code (`memory.add_pending`), not by the model.
-- **Audit log** of every brief, question, citation, proposal and approval (`state/audit.jsonl`, and the Audit log page).
+## Rules in code, not in the prompt
+- The role filter runs before any model call; identity comes from the login picker, never from what is typed.
+- Only approved memory is used. Approvals are checked by role: finance by the CFO, and company-wide facts by the CEO.
+- Citations must be ids given to the model. Numbers must be in the cited facts.
+- There is no send tool. Recipients are checked (colleagues, the original sender, known student groups, known Notion pages). Suspicious sources never lead to an action or a call. A stale draft needs review.
+- One call per email. The voice agent has no tools, and approvals happen only in the app.
 
-## Pages
-- 🧠 **Jarvis:** a Slack-style workspace. Jarvis's DM shows the 08:00 brief and alerts with 📎 sources, plus Ask Jarvis. The channels show the team's chat.
-- 🗂️ **Memory review:** approve or reject what Jarvis proposed to remember.
-- ✅ **Approvals:** proposed messages and replies, with Approve / Reject, and the outbox (mock).
-- 📧 **Morning email:** the same brief as an email mock-up.
-- 📜 **Audit log:** everything Jarvis did, plus Gemini token use for the cost-per-brief number.
-- **Sidebar:** role picker, 08:00 sweep, *Simulate: a new email arrives*, Reset demo, and the **Jury checklist**. It sets up each of the 7 checks and turns ✅ when it has been shown.
+## Stack
+Gemini 3.8 Flash on Vertex AI (location `global`, low thinking: a brief for 6 people in about 7 s, about $0.003 per brief) · ElevenLabs (voice and phone agent) · Twilio (phone line) · Streamlit · three.js (voice orb). Secrets live in `builds/arif/.env` (git-ignored); see `.env.example`.
 
 ## Honest limits
-- Fake data, no real connectors (Gmail, Slack and Drive would replace the JSON files).
-- The offline fallback matches by keywords, so it is less clever than Gemini, but it is just as safe.
-- The injection detector is pattern-based: it catches the tested attacks, and isn't a guarantee.
+- Demo copies of the tools, not live connectors (except the phone call, and Zoom/Stripe when keys are set).
+- Identity is a picker, not a login. Pattern checks catch the tested attacks and Gemini adds a second check; neither is a guarantee.

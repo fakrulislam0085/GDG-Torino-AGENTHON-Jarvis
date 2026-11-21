@@ -261,3 +261,45 @@ def edit(mem_id: str, user_id: str, new_fact: str, visible_to: list | None = Non
 
 def history_for(user_id: str) -> list:
     return [m for m in access.visible(store.memory(), user_id) if m["status"] in ("superseded", "rejected")]
+
+
+
+def reviewers(mem_id: str) -> list:
+    """Who may decide on this fact (approve, reject, edit, replace): shown on the conflict and pending views."""
+    item = next((m for m in store.memory() if m["id"] == mem_id), None)
+    return [pid for pid in store.people() if item and access.can_approve(item, pid)]
+
+
+
+def export(user_id: str) -> dict:
+    """Everything this person may see in team memory: approved facts with sources and approvers, pending items,
+    and history. Same role filter as everywhere else; logged in the audit trail."""
+    vis = access.visible(store.memory(), user_id)
+    src = {s["id"]: s for s in access.visible(store.sources(), user_id)}
+    def row(m):
+        return {"id": m["id"], "fact": m["fact"], "status": m["status"], "visible_to": m.get("acl", []),
+                "approved_by": m.get("approved_by") or m.get("reviewed_by"), "decided_at": m.get("reviewed_at"),
+                "replaced_by": m.get("superseded_by"), "edited_from": m.get("edited_from"),
+                "sources": [{"id": s, "kind": src[s]["kind"], "title": src[s]["title"]} for s in m.get("sources", []) if s in src]}
+    out = {"company": store.company_name(), "exported_by": store.people()[user_id]["name"],
+           "exported_at": datetime.now().isoformat(timespec="seconds"),
+           "approved": [row(m) for m in vis if m["status"] == "approved"],
+           "pending": [row(m) for m in vis if m["status"] == "pending"],
+           "history": [row(m) for m in vis if m["status"] in ("superseded", "rejected")]}
+    audit.log("memory_exported", user_id, approved=len(out["approved"]), pending=len(out["pending"]))
+    return out
+
+
+def export_markdown(data: dict) -> str:
+    lines = [f"# {data['company']}: team memory", "",
+             f"Exported by {data['exported_by']} on {data['exported_at'][:16].replace('T', ' ')}. "
+             "Only facts this person may see. Jarvis answers only from the approved ones.", ""]
+    for title, key in (("Approved", "approved"), ("Waiting for review", "pending"), ("History (replaced or rejected)", "history")):
+        lines += [f"## {title} ({len(data[key])})", ""]
+        for r in data[key]:
+            srcs = ", ".join(f"{s['title']} [{s['id']}]" for s in r["sources"]) or "none"
+            who = f" · approved by {r['approved_by']}" if r.get("approved_by") and key == "approved" else ""
+            extra = f" · replaced by {r['replaced_by']}" if r.get("replaced_by") else ""
+            lines.append(f"- **{r['id']}** {r['fact']}  \n  _visible to {', '.join(r['visible_to'])}{who}{extra} · sources: {srcs}_")
+        lines.append("")
+    return "\n".join(lines)

@@ -1,11 +1,11 @@
-{"ts": "2026-11-21T13:18:36", "event": "brief_posted", "user": "anna", "unprompted": true, "items": 3, "flagged": [], "mode": "gemini"}
-{"ts": "2026-11-21T13:18:37", "event": "brief_posted", "user": "hamid", "unprompted": true, "items": 4, "flagged": [], "mode": "gemini"}
-{"ts": "2026-11-21T13:18:37", "event": "brief_posted", "user": "maria", "unprompted": true, "items": 3, "flagged": [], "mode": "gemini"}
-{"ts": "2026-11-21T13:18:38", "event": "brief_posted", "user": "sara", "unprompted": true, "items": 4, "flagged": ["email-004"], "mode": "gemini"}
-{"ts": "2026-11-21T13:18:39", "event": "brief_posted", "user": "ulu", "unprompted": true, "items": 3, "flagged": [], "mode": "gemini"}
-{"ts": "2026-11-21T13:20:41", "event": "brief_posted", "user": "arif", "unprompted": true, "items": 4, "flagged": ["email-004"], "mode": "gemini"}
-{"ts": "2026-11-21T13:20:43", "event": "action_proposed", "user": "ulu", "action_id": "act-ulu-1", "kind": "reply_draft", "to": "applicant.brazil@student-mail.example", "cites": ["email-006"]}
-{"ts": "2026-11-21T13:21:01", "event": "action_proposed", "user": "hamid", "action_id": "act-hamid-1", "kind": "message_colleague", "to": "arif", "cites": ["task-001", "email-001"]}
-{"ts": "2026-11-21T13:21:01", "event": "action_proposed", "user": "hamid", "action_id": "act-hamid-2", "kind": "reply_draft", "to": "parent.cents@family-mail.example", "cites": ["email-002"]}
-{"ts": "2026-11-21T13:21:03", "event": "action_proposed", "user": "sara", "action_id": "act-sara-1", "kind": "message_colleague", "to": "arif", "cites": ["task-004", "chat-006"]}
-{"ts": "2026-11-21T13:21:03", "event": "sweep", "user": null, "people": 6}
+{"ts": "2026-11-21T13:54:27", "event": "brief_posted", "user": "sara", "unprompted": true, "items": 4, "flagged": ["email-004"], "mode": "gemini"}
+{"ts": "2026-11-21T13:54:27", "event": "brief_posted", "user": "hamid", "unprompted": true, "items": 4, "flagged": [], "mode": "gemini"}
+{"ts": "2026-11-21T13:54:27", "event": "brief_posted", "user": "anna", "unprompted": true, "items": 3, "flagged": [], "mode": "gemini"}
+{"ts": "2026-11-21T13:54:27", "event": "brief_posted", "user": "maria", "unprompted": true, "items": 3, "flagged": [], "mode": "gemini"}
+{"ts": "2026-11-21T13:54:27", "event": "brief_posted", "user": "ulu", "unprompted": true, "items": 3, "flagged": [], "mode": "gemini"}
+{"ts": "2026-11-21T13:54:27", "event": "brief_posted", "user": "arif", "unprompted": true, "items": 4, "flagged": ["email-004"], "mode": "gemini"}
+{"ts": "2026-11-21T13:54:28", "event": "action_proposed", "user": "sara", "action_id": "act-sara-1", "kind": "message_colleague", "to": "arif", "cites": ["task-004", "chat-006"]}
+{"ts": "2026-11-21T13:54:29", "event": "action_proposed", "user": "ulu", "action_id": "act-ulu-1", "kind": "reply_draft", "to": "applicant.brazil@student-mail.example", "cites": ["email-006"]}
+{"ts": "2026-11-21T13:54:31", "event": "action_proposed", "user": "hamid", "action_id": "act-hamid-1", "kind": "message_colleague", "to": "arif", "cites": ["task-001", "email-001"]}
+{"ts": "2026-11-21T13:54:31", "event": "action_proposed", "user": "hamid", "action_id": "act-hamid-2", "kind": "reply_draft", "to": "parent.cents@family-mail.example", "cites": ["email-002"]}
+{"ts": "2026-11-21T13:54:31", "event": "sweep", "user": null, "people": 6}
