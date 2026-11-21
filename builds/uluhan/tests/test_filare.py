@@ -121,3 +121,15 @@ def test_reset_cannot_interleave_with_agent_run(demo):
     client, store = demo
     with store.agent_operation:
         assert client.post("/api/reset").status_code == 409
+
+
+def test_archived_flag_comes_from_the_date_not_the_id():
+    from brain import shared
+    d = shared.load_shared()
+    live = {e["id"]: e["source"] for e in d["live_events"]}
+    assert live["email-006"]["archived"] is True            # 4 Aug vs 23 Nov sweep
+    assert live["email-008"]["archived"] is False
+    assert not any(s.get("archived") for s in d["sources"] if s["type"] == "mail")
+    import inspect
+    from brain import agents
+    assert "email-006" not in inspect.getsource(agents)   # no demo ids in agent logic

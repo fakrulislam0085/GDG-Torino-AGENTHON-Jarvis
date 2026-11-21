@@ -23,10 +23,11 @@ def fc(name, **args):
 
 class FakeModels:
     def __init__(self, script):
-        self.script, self.calls = list(script), []
+        self.script, self.calls, self.configs = list(script), [], []
 
     def generate_content(self, model, contents, config):
         self.calls.append(contents[:])
+        self.configs.append(config)
         step = self.script.pop(0)
         if isinstance(step, Exception):
             raise step
@@ -155,3 +156,15 @@ def test_model_cannot_disclose_restricted_memory_metadata(fake, person, question
     run, answer = agents.ask(store, person, question)
     assert answer["status"] == "unknown" and answer["restricted_to"] is None
     assert memory_id not in str(run)
+
+
+def test_last_turn_only_allows_the_finishing_tool(fake):
+    # Seen live on Filare: 4 of 7 briefs kept reading until MAX_TURNS and fell back to offline.
+    s = Store()
+    script = [[fc("list_new_items")]] * (agents.MAX_TURNS - 1) + [[fc("submit_brief", items=[])]]
+    cl = fake(script)
+    run = agents.brief(s, s.seed["people"][0]["id"] if hasattr(s, "seed") and "people" in s.seed else next(iter(s.people)))
+    last = cl.models.configs[-1].tool_config.function_calling_config.allowed_function_names
+    first = cl.models.configs[0].tool_config.function_calling_config.allowed_function_names
+    assert last == ["submit_brief"] and len(first) > 1
+    assert run["mode"] == "gemini" and not any(st["kind"] == "fallback" for st in run["steps"])

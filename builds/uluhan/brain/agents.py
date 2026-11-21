@@ -158,17 +158,27 @@ def _gemini_loop(ctx: T.Ctx, system: str, prompt: str) -> bool:
     names = T.TOOLSETS[ctx.agent]
     decls = [types.FunctionDeclaration(name=n, description=T.DECLS[n][1], parameters_json_schema=T.DECLS[n][0])
              for n in names]
-    cfg = types.GenerateContentConfig(
-        system_instruction=system,
-        tools=[types.Tool(function_declarations=decls)],
-        tool_config=types.ToolConfig(function_calling_config=types.FunctionCallingConfig(
-            mode="ANY", allowed_function_names=names)),
-        automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
-        thinking_config=types.ThinkingConfig(thinking_level=THINKING.upper()) if THINKING else None,
-    )
+    def config(allowed):
+        return types.GenerateContentConfig(
+            system_instruction=system,
+            tools=[types.Tool(function_declarations=decls)],
+            tool_config=types.ToolConfig(function_calling_config=types.FunctionCallingConfig(
+                mode="ANY", allowed_function_names=allowed)),
+            automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
+            thinking_config=types.ThinkingConfig(thinking_level=THINKING.upper()) if THINKING else None,
+        )
+    cfg = config(names)
+    # Last turn: only the finishing tool is allowed, so the agent always delivers (seen live: 4 of 7 briefs
+    # kept reading sources until MAX_TURNS and fell back to offline).
+    final_names = [n for n in names if n in T.TERMINAL]
     contents = [types.Content(role="user", parts=[types.Part(text=prompt)])]
     ctx.trace.run["mode"], ctx.trace.run["model"] = "gemini", MODEL
-    for _ in range(MAX_TURNS):
+    for turn in range(MAX_TURNS):
+        if turn == MAX_TURNS - 1:
+            cfg = config(final_names)
+            contents.append(types.Content(role="user", parts=[types.Part(
+                text=f"Last step: call {final_names[0]} now with what you have, citing only ids you were shown.")]))
+            ctx.trace.step("guard", f"turn limit reached: only {', '.join(final_names)} allowed now")
         resp = c.models.generate_content(model=MODEL, contents=contents, config=cfg)
         ctx.trace.usage(resp.usage_metadata)
         if not resp.candidates or not resp.candidates[0].content or not resp.candidates[0].content.parts:
@@ -281,7 +291,7 @@ def ingest(store: Store, source_id: str, trigger: str) -> dict:
     tr = Trace("ingest", "system", trigger, list(src["audience"]), store.clock)
     tr.step("trigger", f"New {src['type']} {source_id} from {src['from']}: {src['title']}")
     ctx = T.Ctx(store, "ingest", "system", None, tr, source_id=source_id)
-    if source_id == "email-006" or T.INJECTION_RE.search(src["body"]):
+    if src.get("archived") or T.INJECTION_RE.search(src["body"]):
         tr.step("guard", "Checking archived evidence or suspicious content before invoking a model.")
         _ingest_offline(ctx)
     else:

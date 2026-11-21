@@ -21,6 +21,8 @@ MEMORY_LABELS = {
     "mem-p02": ("langhe.contract.value", "Langhe Viva contract value"),
 }
 
+ARCHIVE_DAYS = 30
+
 LIVE_EMAILS = {
     "email-006": "Archived cloud budget email",
     "email-008": "Suspicious email to Sara",
@@ -78,6 +80,13 @@ def load_shared():
             "quote": primary["body"], "status": "candidate" if item["status"] == "pending" else item["status"],
             "decided_by": item.get("approved_by"), "decided_at": primary["ts"] if item.get("approved_by") else None,
         })
+
+    # Evidence older than ARCHIVE_DAYS at sweep time is "archived": it is checked against approved memory
+    # without a model and can raise a conflict, but can never silently replace a newer approved fact.
+    sweep_dt = datetime.fromisoformat(sweep_time)
+    for src in sources.values():
+        if src["type"] == "mail":
+            src["archived"] = (sweep_dt - datetime.fromisoformat(src["ts"])).days > ARCHIVE_DAYS
 
     live_events = []
     for eid, label in LIVE_EMAILS.items():
