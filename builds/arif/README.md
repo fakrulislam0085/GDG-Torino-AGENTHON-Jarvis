@@ -1,11 +1,12 @@
 # Jarvis for Filare Labs: Arif's build (Challenge A · Company Jarvis)
 
-**Run (Windows, from the repo root):**
+**Run (Windows). Start it from `builds/arif` so the theme in `.streamlit/config.toml` loads:**
 ```powershell
-python -m venv builds\arif\.venv; builds\arif\.venv\Scripts\python -m pip install -r builds\arif\requirements.txt
-builds\arif\.venv\Scripts\python -m streamlit run builds\arif\app.py
+cd builds\arif
+python -m venv .venv; .venv\Scripts\python -m pip install -r requirements.txt
+.venv\Scripts\python -m streamlit run app.py
 ```
-On macOS or Linux, use `builds/arif/.venv/bin/python`. Tests (offline, free): `builds\arif\.venv\Scripts\python -m pytest builds\arif\tests -q`
+On macOS or Linux, use `.venv/bin/python`. Tests (offline, free): `.venv\Scripts\python -m pytest tests -q` (12 tests)
 
 **A colleague that speaks first, answers only from memory the team approved, and asks before it acts.** Jarvis watches Filare Labs' email, chat, tasks and docs (shared fake data in `../../data/`). At 08:00 it posts each person a brief nobody asked for, flags attacks hidden in emails, proposes actions that wait for a click, and says "I don't know" when the approved memory doesn't say.
 
