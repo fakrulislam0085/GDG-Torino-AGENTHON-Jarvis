@@ -668,6 +668,31 @@ for c in call.calls_for(user):
         if can_harvest:
             harvest_block(c, user)
 
+@st.dialog("Talk to Jarvis", width="medium", on_dismiss=do_close_talk)
+def talk_dialog(user: str) -> None:
+    """ChatGPT-style voice mode. The signed URL is fetched once per open (nonce); the iframe content stays identical on
+    reruns, so Streamlit keeps the same iframe. The session starts only on the user's click inside the component."""
+    vcs = ss.get("voice_chat") or {}
+    if vcs.get("session") is None:
+        try:
+            with st.spinner("Opening a voice line to Jarvis…"):
+                vcs["session"] = phone.web_session(user)
+        except Exception:  # web_session never raises; belt and braces
+            vcs["session"] = {"ok": False, "message": phone.UNAVAILABLE}
+    sess = vcs["session"]
+    with st.container(key="talk-body"):
+        if sess.get("ok"):
+            voice_chat(sess["signed_url"], sess["dynamic_variables"])
+        else:
+            st.info(sess.get("message") or phone.UNAVAILABLE, icon=":material/mic_off:")
+        md("<div class='who talk-note'>Ask about your own brief. Approvals stay in the app.</div>")
+        with st.container(key="talk-foot", horizontal=True, horizontal_alignment="center", gap="small"):
+            st.button("New voice chat", key="talk-retry", icon=":material/refresh:", on_click=do_talk, args=(user,))
+            if st.button("Close", key="talk-close", icon=":material/close:"):
+                do_close_talk()
+                st.rerun()
+
+
 # ---------- pages ----------
 if ss.page == PAGES[0]:
     mark_viewed("brain")
@@ -687,6 +712,46 @@ if ss.page == PAGES[0]:
         md("<div class='counters'>" + "".join(
             f"<div class='ctr{' wait' if k != 'brief' and cn[k] else ''}'><b>{cn[k]}</b><span>{lab}</span></div>"
             for k, lab in (("brief", "Brief items"), ("review", "To review"), ("actions", "Pending actions"))) + "</div>")
+
+    # ---- Ask Jarvis: one ChatGPT-style pill right under the header; the answer lands right below it, above the brief ----
+    with st.container(key="panel-ask"):
+        # one row: the ask pill (~58%) on the left, two large labelled voice buttons on the right
+        ac, tc, pc = st.columns([5.8, 2.1, 2.1], vertical_alignment="center", gap="small")
+        with ac:
+            with st.container(key="askbar"):
+                with st.form("ask", clear_on_submit=True, border=False):
+                    fq, fb = st.columns([14, 1], vertical_alignment="center", gap="small")
+                    q = fq.text_input("Ask Jarvis", value=ss.prefill,
+                                      placeholder=DEMO.get("ask_pill", "Ask Jarvis anything about your company…"),
+                                      label_visibility="collapsed")
+                    if fb.form_submit_button("", key="ask-send", type="primary", icon=":material/arrow_upward:",
+                                             help="Ask") and q.strip():
+                        do_ask(user, q)
+                        st.rerun()
+        with tc:
+            st.button("Talk to Jarvis", key="ask-talk", icon=":material/mic:", on_click=do_talk, args=(user,),
+                      width="stretch", help="A live voice chat with Jarvis about your own brief. Approvals stay in the app.")
+        with pc:
+            if voice.available() and b["items"]:
+                st.button("Play my brief", key="brief-play", icon=":material/volume_up:", on_click=do_play_brief, args=(user,),
+                          width="stretch", help="Jarvis reads your 08:00 brief aloud")
+        chips = tally.chip_questions(DEMO)
+        if chips:
+            with st.container(key="chips", horizontal=True, gap="small", horizontal_alignment="center"):
+                for i, cq in enumerate(chips):
+                    st.button(cq, key=f"chip-{i}", on_click=do_chip, args=(cq,), width="content")
+        md("<div class='who ask-note'>Answers come only from team memory you may see, with sources. Otherwise: “I don't know”.</div>")
+        qas = ss.chat.get(user, [])
+        for i, qa in reversed(list(enumerate(qas))):   # newest first, right under the ask bar
+            with rise("qa", i):
+                md(f"<div class='q'>{esc(qa['question'])}</div>"
+                   f"<div class='a{'' if qa['known'] else ' unknown'}'>{esc(qa['answer'])}</div>")
+                sources_block([c["mem_id"] for c in qa["citations"]], user)
+                how_block(qa)
+
+    vcs = ss.get("voice_chat")
+    if vcs and vcs.get("user") == user:
+        talk_dialog(user)
 
     left = right = st.container()
     with left:
@@ -711,34 +776,8 @@ if ss.page == PAGES[0]:
                     section("New since 08:00", len(b["alerts"]), first_in_panel=True)
                     for i, it in enumerate(b["alerts"]):
                         brief_row(it, user, "al", i)
-                # header row: title + note on the left, Play / Talk on the right (columns stack on narrow widths)
-                bh1, bh2 = st.columns([3, 2], vertical_alignment="bottom")
-                with bh1:
-                    section("Your 08:00 brief", first_in_panel=not b.get("alerts"),
-                            note=f"Posted by Jarvis {esc(b.get('posted_at', ''))}. Nobody asked for it.")
-                with bh2:
-                    with st.container(key="brief-actions", horizontal=True, horizontal_alignment="right", gap="small"):
-                        if voice.available() and b["items"]:
-                            st.button("Play my brief", key="brief-play", icon=":material/volume_up:", on_click=do_play_brief, args=(user,), width="content")
-                        if b["items"]:
-                            st.button("Talk to Jarvis", key="brief-talk", icon=":material/mic:", on_click=do_talk, args=(user,), width="content",
-                                      help="A live voice chat with Jarvis about your own brief. Approvals stay in the app.")
-                vcs = ss.get("voice_chat")
-                if vcs and vcs.get("user") == user and b["items"]:
-                    if vcs.get("session") is None:
-                        try:
-                            with st.spinner("Opening a voice line to Jarvis…"):
-                                vcs["session"] = phone.web_session(user)
-                        except Exception:  # web_session never raises; belt and braces
-                            vcs["session"] = {"ok": False, "message": phone.UNAVAILABLE}
-                    sess = vcs["session"]
-                    if sess.get("ok"):
-                        voice_chat(sess["signed_url"], sess["dynamic_variables"])
-                    else:
-                        st.info(sess.get("message") or phone.UNAVAILABLE, icon=":material/mic_off:")
-                    t1, t2, _ = st.columns([1.3, 1.1, 2.6])
-                    t1.button("New voice chat", key="talk-retry", icon=":material/refresh:", on_click=do_talk, args=(user,), width="stretch")
-                    t2.button("Close", key="talk-close", icon=":material/close:", on_click=do_close_talk, width="stretch")
+                section("Your 08:00 brief", first_in_panel=not b.get("alerts"))
+                md(f"<div class='who brief-note'>Posted by Jarvis {esc(b.get('posted_at', ''))}. Nobody asked for it.</div>")
                 bv = ss.get("brief_voice")
                 if bv and bv.get("user") == user and voice.available() and b["items"]:
                     text = f"Good morning {first(user)}. " + " ".join(i["text"] for i in b["items"])
@@ -760,29 +799,6 @@ if ss.page == PAGES[0]:
                 if pending:
                     bc2, _ = st.columns([1.9, 2.8])
                     bc2.button(f"Review {len(pending)} waiting for approval", icon=":material/task_alt:", on_click=goto, args=(PAGES[2],), width="stretch")
-
-            with st.container(key="panel-ask"):
-                section("Ask Jarvis", first_in_panel=True,
-                        note="Answers come only from team memory you may see, with sources. Otherwise: “I don't know”.")
-                for i, qa in enumerate(ss.chat.get(user, [])):
-                    with rise("qa", i):
-                        md(f"<div class='q'>{esc(qa['question'])}</div>"
-                           f"<div class='a{'' if qa['known'] else ' unknown'}'>{esc(qa['answer'])}</div>")
-                        sources_block([c["mem_id"] for c in qa["citations"]], user)
-                        how_block(qa)
-                chips = tally.chip_questions(DEMO)
-                if chips:
-                    with st.container(key="chips", horizontal=True, gap="small"):
-                        for i, cq in enumerate(chips):
-                            st.button(cq, key=f"chip-{i}", on_click=do_chip, args=(cq,), width="content",
-                                      help="Ask this now, as the person signed in")
-                with st.form("ask", clear_on_submit=True, border=False):
-                    fq, fb = st.columns([5, 1])
-                    q = fq.text_input("Ask Jarvis", value=ss.prefill, placeholder=DEMO.get("ask_placeholder", "Ask about the team's work"),
-                                      label_visibility="collapsed")
-                    if fb.form_submit_button("Ask", type="primary", width="stretch") and q.strip():
-                        do_ask(user, q)
-                        st.rerun()
 
 elif ss.page == PAGES[1]:
     with h1:
