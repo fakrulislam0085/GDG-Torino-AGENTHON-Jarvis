@@ -27,7 +27,7 @@ state = {"last_error": None, "calls": 0, "input_tokens": 0, "output_tokens": 0, 
 
 # Circuit breaker: after 2 failed calls in a row, skip Gemini for PAUSE_S seconds and answer from plain rules
 # immediately (instead of making every question wait for a timeout while the Wi-Fi is down).
-TIMEOUT_S = 25
+TIMEOUT_S = 10
 PAUSE_S = 45
 _breaker = {"fails": 0, "down_until": 0.0}
 
@@ -165,7 +165,8 @@ def generate_json(system: str, prompt: str) -> tuple[dict | None, dict]:
         time.sleep(1.5)
     info.update(mode="offline", error=err, ms=int((time.time() - t0) * 1000))
     state["last_error"] = err
-    _breaker["fails"] += 1
+    # a network failure (timeout, no route) pauses Gemini at once: the next call would fail the same way
+    _breaker["fails"] += 1 if err.startswith("HTTP ") else 2
     if _breaker["fails"] >= 2:
         _breaker["down_until"] = time.time() + PAUSE_S
     return None, info

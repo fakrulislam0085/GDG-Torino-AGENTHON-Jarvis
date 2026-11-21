@@ -125,7 +125,7 @@
         <button id="sweep" title="The sweep also runs on its own at start-up and on a timer">☀ Run morning sweep</button>
         <span id="incoming"></span>
         <button id="paste" title="Type or paste your own email and see if you can trick the Brain">✉ Paste an email…</button>
-        <button id="reset" title="Restore the demo data">↺ Reset demo</button>
+        <button id="reset" style="display:none" title="Restore the demo data (CEO only, open the page with ?admin=1)">↺ Reset demo</button>
       </div>
     </header>
     <div id="content"></div>
@@ -144,7 +144,7 @@ const store = { get(k){ try { return localStorage.getItem(k); } catch { return n
 const URLP = new URLSearchParams(location.search);  // demo links: ?as=sara&view=approvals
 let S = null, me = URLP.get("as") || store.get("brain.user") || "davide", view = URLP.get("view") || store.get("brain.view") || "brain", lastJSON = "", seen = {};
 const drafts = {}, reasons = {}, speechTexts = {};
-let thinking = null;
+let thinking = null, showAllMem = false;
 const SUGGEST = ["When does the Langhe fix roll out?", "What's our cash runway?", "What's the office Wi-Fi password?",
                  "How much is the Langhe contract worth?", "What is the Q1 2027 cloud budget?"];
 const ICON = { email: "✉", chat: "#", doc: "📄", task: "☑", mem: "🧠", act: "✋" };
@@ -186,6 +186,7 @@ function renderChrome() {
   $("#mode").innerHTML = live ? (S.llm.paused ? "Brain: Gemini had errors, using plain rules for a moment" : `Brain: Gemini live (${esc(S.llm.model)})${S.llm.last_error ? " · last call failed, rules used" : ""}`)
                               : "Brain: offline rules (no Gemini key)";
   $("#clock").textContent = `Demo time: ${day(S.clock)} ${hhmm(S.clock)}`;
+  $("#reset").style.display = URLP.get("admin") && S.me.groups.includes("exec") ? "" : "none";
   $("#sweep").disabled = S.sweep === "running";
   $("#sweep").textContent = S.sweep === "running" ? "☀ Brain is writing briefs…" : "☀ Run morning sweep";
   $("#incoming").innerHTML = S.incoming.map(i => `<button data-sim="${i.id}" ${i.arrived ? "disabled" : ""} title="Make this new email arrive now">✉ ${esc(i.button)}</button>`).join(" ");
@@ -271,6 +272,7 @@ function answerCard(m) {
                  restricted: ["warn", "Not for your role"], pending: ["warn", "Waiting for a person's approval"] }[m.status];
   return `<div class="card"><span class="pill ${pill[0]}">${pill[1]}</span>
     <div style="margin-top:6px">${esc(m.text)}</div>
+    ${m.facts && m.facts.length ? `<div class="quote">From approved memory, word for word: ${m.facts.map(esc).join(" · ")}</div>` : ""}
     ${m.cites.length ? `<div class="meta" style="margin-top:6px">${m.status === "answered" ? "Memory used" : "Unapproved note"}: ${chips(m.cites)}${m.sources.length ? ` · original sources: ${chips(m.sources)}` : ""}</div>` : ""}
     <details><summary>How I got this</summary><ol>${m.trace.map(t => `<li>${esc(t)}</li>`).join("")}</ol></details></div>`;
 }
@@ -294,7 +296,7 @@ function renderApprovals() {
   if (!acts.length) return intro + `<div class="empty">No proposals you can see.</div>`;
   return intro + acts.map(a => {
     const head = `<h3>${a.kind === "email" ? "✉" : "☑"} ${esc(a.title)}</h3>
-      <div class="meta">${chip(a.id)} proposed by the Brain (${esc(a.origin)}) at ${hhmm(a.created_at)} · decides: <b>${esc(a.approver_name)}</b></div>
+      <div class="meta">${chip(a.id)} proposed by the Brain (${esc(a.origin)}) at ${hhmm(a.created_at)} · decides: <b>${esc(a.approver_name)}</b>${a.origin.includes("offline") ? ' <span class="pill grey">pre-written sample (offline mode), not model output</span>' : ""}</div>
       <div style="margin-top:6px"><b>Why:</b> ${esc(a.why)} ${chips(a.sources)}</div>${warnBox(a.warnings, "The Brain's self-check: read the draft carefully before you approve")}`;
     let body = "";
     if (a.kind === "email") {
@@ -320,18 +322,19 @@ function renderApprovals() {
 
 /* ---------- Memory ---------- */
 function renderMemory() {
-  const pend = S.memory.filter(m => m.status === "pending").sort((a, b) => b.warnings.length - a.warnings.length), ok = S.memory.filter(m => m.status === "approved"), no = S.memory.filter(m => m.status === "rejected");
+  const pend = S.memory.filter(m => m.status === "pending").sort((a, b) => b.warnings.length - a.warnings.length), shown = showAllMem ? pend : pend.slice(0, 5), ok = S.memory.filter(m => m.status === "approved"), no = S.memory.filter(m => m.status === "rejected");
   const intro = `<div class="intro">The Brain answers <b>only from approved memory</b>. New notes it extracts wait here. Compare each with its source before you decide: the model can misread.</div>`;
-  const pendHtml = pend.length ? pend.map(m => `<div class="card ${m.warnings.length ? "danger" : "warn"}"><div class="meta">${chip(m.id)} proposed by ${esc(m.proposed_by || "the Brain")} · visible to: ${esc(m.acl.join(", "))}</div>
+  const pendHtml = pend.length ? shown.map(m => `<div class="card ${m.warnings.length ? "danger" : "warn"}"><div class="meta">${chip(m.id)} proposed by ${esc(m.proposed_by || "the Brain")} · visible to: ${esc(m.acl.join(", "))}</div>
       <div class="headline">“${esc(m.fact)}”</div>${warnBox(m.warnings, "Check against the source before you approve")}
       ${m.source_items.map(s => `<div class="quote"><b>${esc(s.id)} · ${esc(s.title)}</b>\n${esc(s.text)}</div>`).join("")}
       ${m.can_review ? `<div class="row"><button class="primary" data-mem="${m.id}" data-d="approve">✓ Approve</button>
-        <input type="text" data-reason="${m.id}" placeholder="Why reject? (e.g. the source says 38k)"><button class="danger" data-mem="${m.id}" data-d="reject">✗ Reject</button></div>`
+        <input type="text" data-reason="${m.id}" placeholder="${m.warnings.length ? "Reason (required if you approve despite the warning)" : "Why reject? (e.g. the source says 38k)"}"><button class="danger" data-mem="${m.id}" data-d="reject">✗ Reject</button></div>`
         : `<div class="meta">You can't review this one: you can't see all its sources.</div>`}</div>`).join("")
     : `<div class="empty">Nothing to review.</div>`;
   const row = m => `<tr><td>${chip(m.id)}</td><td>${esc(m.fact)}${m.reason ? `<div class="meta">Reason: ${esc(m.reason)}</div>` : ""}</td><td>${chips(m.sources)}</td><td>${esc(m.acl.join(", "))}</td><td>${esc(pname(m.reviewed_by || m.approved_by || ""))}${m.reviewed_at ? " · " + hhmm(m.reviewed_at) : ""}</td></tr>`;
   const tbl = rows => `<table><tr><th>Id</th><th>Fact</th><th>Sources</th><th>Who can see</th><th>Decided by</th></tr>${rows.map(row).join("")}</table>`;
   return intro + `<h4>Waiting for a person (${pend.length})</h4>` + pendHtml +
+    (pend.length > 5 ? `<div class="row"><button data-showall="1">${showAllMem ? "Show only the top 5 (warnings first)" : `Show all ${pend.length} notes`}</button><span class="meta">Notes with warnings come first. The Brain reads at most 8 new notes per sweep.</span></div>` : "") +
     `<h4>Approved: the Brain may use these (${ok.length} you can see)</h4>` + tbl(ok) +
     (no.length ? `<h4>Rejected: never used (${no.length})</h4>` + tbl(no) : "");
 }
@@ -407,10 +410,15 @@ async function sendPaste() {
 
 /* ---------- events ---------- */
 document.addEventListener("click", async e => {
-  const t = e.target.closest("[data-view],[data-src],[data-sim],[data-act],[data-mem],[data-q],[data-switch],[data-goto],[data-speak],#close,#sweep,#reset,#paste,#pastego");
+  const t = e.target.closest("[data-view],[data-src],[data-sim],[data-act],[data-mem],[data-q],[data-switch],[data-goto],[data-speak],[data-showall],#close,#sweep,#reset,#paste,#pastego");
   if (!t) return;
   if (t.id === "close") return $("#drawer").classList.remove("open");
+  if (t.dataset.showall) { showAllMem = !showAllMem; return render(); }
   if (t.dataset.speak) {
+    try {  // ElevenLabs voice if the server has a key, otherwise the browser's own voice
+      const r = await fetch("/api/voice", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({ user: me, id: t.dataset.speak }) });
+      if (r.ok) { const a = new Audio(URL.createObjectURL(await r.blob())); a.play(); return; }
+    } catch {}
     try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(speechTexts[t.dataset.speak] || ""); u.lang = "en-GB"; speechSynthesis.speak(u); }
     catch { toast("This browser can't read aloud"); }
     return;

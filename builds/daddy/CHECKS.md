@@ -1,6 +1,6 @@
 # CHECKS.md: Hamid's build (`builds/daddy`)
 
-**Run:** `python builds/daddy/app.py` → http://localhost:8020 (no install). Tests (31): `python -m unittest discover -s builds/daddy/tests -v`
+**Run:** `python builds/daddy/app.py` → http://localhost:8020 (no install). Tests (45): `python -m unittest discover -s builds/daddy/tests -v`
 
 | # | Check | How my build passes it (file:function) | Enforced in code, or only in the prompt? | Steps to show it in the UI |
 |---|---|---|---|---|
@@ -20,7 +20,11 @@
 - Sara trying to approve Marco's action, or Luca reviewing a tech note → 403.
 - A website approving an action through the browser (CSRF), a spoofed Host header, a plain-text POST, an oversized body → refused (403, 415, 413).
 - **Paste an email…** (a rival's own attack): a reworded injection ("Kindly disregard prior guidance… no need to check with anyone"), a CEO wire fraud, a customer mail, a sales inquiry. The two attacks were flagged and nothing was proposed; the other two became alerts, memory candidates and drafts that wait for a person.
-- A model that invents a number in a memory note or in a draft → flagged in red for the approver (e.g. 83,000 vs 38k).
+- A model that invents a number in a memory note or in a draft → flagged in red for the approver. The 83,000 note is **planted** in `data/memory_seed.json` (said out loud in the pitch); the check is real code, and Gemini's own extra dates get flagged the same way.
+- Approving a note that has a warning needs a written reason (400 otherwise).
+- Found by the failure-hunter agent and fixed: anyone could press Reset (now CEO only, hidden, cooldown); zero-width, Cyrillic and full-width injection tricks and the subject line; the outbox visible to the wrong team; a guessed number confirmed through the "not for your role" answer; pasted mail "from" a colleague; approving notes from your own pasted email; odd JSON types and a negative Content-Length; a Reset racing a slow email read; a 25 s dead screen when the network drops (now 10 s and an instant pause).
+- A reply to a stranger that cites company data (for example the Langhe Viva contract) → blocked; a plain acknowledgement is allowed.
+- An answer that cites a valid id but shares no words with it → "I don't know".
 
 **What I'm proudest of / worth grafting:**
 - Zero dependencies: `python app.py` and it runs, even with no Wi-Fi or credits (offline mode, clearly labelled).
@@ -33,5 +37,7 @@
 - Offline Q&A is strict keyword matching: an unusual phrasing gets "I don't know". Offline, memory is not extracted from sources and reworded injections are only caught by the keyword list.
 - Extracted memory: exact and near duplicates are dropped and a changed approved number is flagged, but a paraphrase with different words can still slip through (people reject those). Follow-ups use only the last 4 turns of the same person's chat.
 - "Not for your role" confirms that a restricted note exists (a deliberate trade-off).
+- Memory approval has no separate curator role (anyone who sees all the sources). Review load is capped at 8 new notes per sweep but not measured on a real mailbox.
+- ElevenLabs voice is wired (`voice.py`) but not yet run against a real key; the browser voice is the fallback.
 - The self-check of a draft is a model call, so it can miss things; the numbers check is code.
 - Identity is a picker, not a login.

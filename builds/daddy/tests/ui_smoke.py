@@ -25,7 +25,7 @@ def state(u): return api(f"/api/state?user={u}")
 
 
 print("reset demo and wait for the sweep...")
-api("/api/reset", {"user": "davide"})
+api("/api/reset", {"user": "elena"})
 for _ in range(60):
     if state("davide")["sweep"] == "done": break
     time.sleep(2)
@@ -103,7 +103,7 @@ try:
     js("""(() => { $('#q').value = 'When does the Langhe fix roll out?'; $('#askform').requestSubmit(); })()""")
     drain(9)
     txt = js("document.querySelector('#content').innerText")
-    check("typing a question shows a cited answer", "26 November" in txt and "mem-p01" in txt, txt[-140:].replace("\n", " "))
+    check("typing a question shows a cited answer", "26 Nov" in txt and "mem-p01" in txt, txt[-140:].replace("\n", " "))
 
     # 3. role filter through the UI
     go("/?as=sara&view=brain")
@@ -165,6 +165,7 @@ try:
         check(f"view '{v}' renders for Giulia", n and n > 20, str(n))
 
     # 9. reset button
+    go("/?as=elena&view=brain&admin=1")
     js("document.querySelector('#reset').click()")
     drain(4)
     st = {m["id"]: m for m in state("elena")["memory"]}

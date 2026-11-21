@@ -32,14 +32,21 @@ def load_env():
 load_env()
 sys.path.insert(0, str(HERE))
 import brain as B  # noqa: E402
+import voice  # noqa: E402
 
 PERSIST = os.getenv("BRAIN_PERSIST", "on") != "off"
 BRAIN = B.Brain(persist=PERSIST)
 SWEEP_EVERY = int(os.getenv("SWEEP_EVERY_MIN", "30")) * 60
 
 
+COOLDOWN_S = {"/api/ask": 1.0, "/api/sweep": 10.0, "/api/reset": 10.0, "/api/inbound": 3.0, "/api/voice": 2.0}
+
+
 class Handler(BaseHTTPRequestHandler):
+    timeout = 15  # a client that stops sending cannot hold a thread forever
     brain = BRAIN
+    last_call: dict = {}  # (user, path) -> time of the last call: a cooldown against spam and cost
+    voice_cache: dict = {}  # (user, brief id) -> mp3, so a click never pays twice
     allowed_hosts: set[str] = set()  # "localhost:8020", "127.0.0.1:8020"; filled in by make_server()
 
     def log_message(self, *a):  # keep the console quiet
@@ -48,7 +55,7 @@ class Handler(BaseHTTPRequestHandler):
     def _send(self, code, obj=None, body=None, ctype="application/json"):
         data = body if body is not None else json.dumps(obj, ensure_ascii=False, default=str).encode()
         self.send_response(code)
-        self.send_header("Content-Type", ctype + "; charset=utf-8")
+        self.send_header("Content-Type", ctype if ctype.startswith("audio") else ctype + "; charset=utf-8")
         self.send_header("Cache-Control", "no-store")
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("Content-Length", str(len(data)))
@@ -77,8 +84,8 @@ class Handler(BaseHTTPRequestHandler):
             self._send(403, {"error": str(e)})
         except KeyError as e:
             self._send(404, {"error": f"not found: {e}"})
-        except ValueError as e:
-            self._send(400, {"error": str(e)})
+        except (ValueError, TypeError, AttributeError) as e:  # bad input of any kind: 400, never a dead connection
+            self._send(400, {"error": str(e) if isinstance(e, ValueError) else "bad request"})
 
     def do_GET(self):
         if not self._allowed(False):
@@ -97,7 +104,12 @@ class Handler(BaseHTTPRequestHandler):
         if not self._allowed(True):
             return
         u = urlparse(self.path)
-        n = int(self.headers.get("Content-Length") or 0)
+        try:
+            n = int(self.headers.get("Content-Length") or 0)
+        except ValueError:
+            n = -1
+        if n < 0:
+            return self._send(400, {"error": "bad Content-Length"})
         if n > 20_000:
             return self._send(413, {"error": "request too large"})
         try:
@@ -106,8 +118,28 @@ class Handler(BaseHTTPRequestHandler):
         except (json.JSONDecodeError, AssertionError):
             return self._send(400, {"error": "bad JSON"})
         user, brain = body.get("user", ""), self.brain
-        if user not in brain.people:
+        if not isinstance(user, str) or user not in brain.people:
             return self._send(403, {"error": "unknown user"})
+        if u.path == "/api/reset" and "exec" not in brain.people[user]["groups"]:
+            return self._send(403, {"error": "Only the CEO (exec) can reset the demo"})
+        wait = COOLDOWN_S.get(u.path)
+        now = time.time()
+        if wait and now - self.last_call.get((user, u.path), 0) < wait:
+            return self._send(429, {"error": "Slow down a little"})
+        self.last_call[(user, u.path)] = now
+        if u.path == "/api/voice":  # the brief read aloud by ElevenLabs (503 if no key: the page falls back)
+            try:
+                text = brain.brief_text(user, body.get("id", ""))
+                if not voice.configured():
+                    return self._send(503, {"error": "ElevenLabs voice is not configured"})
+                key = (user, body.get("id", ""))
+                if key not in self.voice_cache:
+                    self.voice_cache[key] = voice.speak(text)
+                return self._send(200, body=self.voice_cache[key], ctype="audio/mpeg")
+            except KeyError:
+                return self._send(404, {"error": "brief not found"})
+            except Exception as e:  # network, quota, bad key: never break the page
+                return self._send(502, {"error": f"voice failed: {type(e).__name__}"})
         routes = {
             "/api/ask": lambda: brain.ask(user, body.get("question", "")),
             "/api/memory": lambda: brain.review_memory(user, body.get("id", ""), body.get("decision", ""),
@@ -140,7 +172,7 @@ def scheduler():
 
 
 def make_server(port: int, brain=None) -> ThreadingHTTPServer:
-    handler = type("BoundHandler", (Handler,), {"brain": brain or BRAIN,
+    handler = type("BoundHandler", (Handler,), {"brain": brain or BRAIN, "last_call": {}, "voice_cache": {},
                                                 "allowed_hosts": {f"localhost:{port}", f"127.0.0.1:{port}"}})
     return ThreadingHTTPServer(("127.0.0.1", port), handler)
 
