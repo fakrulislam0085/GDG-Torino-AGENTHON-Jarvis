@@ -129,3 +129,19 @@ def test_brief_drops_uncited_items_and_unknown_recipients(fake):
     assert items[0]["proposal_id"] == "P1" and s.proposals["P1"]["to"] == "elena.conti@verdi-logistics.example"
     assert len(s.proposals) == 1                                     # attacker address refused
     assert sum(st["kind"] == "guard" for st in run["steps"]) >= 2
+
+
+def test_restricted_must_match_the_question(fake):
+    # Seen live on Gemini: "Did Verdi sign off staging?" -> "restricted to Tech" via an unrelated tech fact (M5).
+    s = Store()
+    fake([[fc("answer", status="restricted", restricted_id="M5")]])
+    run, ans = agents.ask(s, "giulia", "Did Verdi sign off staging?")
+    assert ans["status"] == "unknown"
+    assert any("does not match the question" in st["note"] for st in run["steps"])
+
+
+def test_restricted_still_works_when_relevant(fake):
+    s = Store()
+    fake([[fc("answer", status="restricted", restricted_id="M3")]])
+    _, ans = agents.ask(s, "marco", "How much is Atlas milestone 2?")
+    assert ans["status"] == "restricted" and ans["restricted_to"] == ["finance"]

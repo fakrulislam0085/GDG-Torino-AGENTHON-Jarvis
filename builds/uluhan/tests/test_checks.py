@@ -311,3 +311,20 @@ def test_voice_brief_without_key_fails_cleanly(monkeypatch):
     r = c.get("/api/brief/audio", params={"person": "giulia"})
     assert r.status_code == 503 and "not configured" in r.json()["detail"]
     assert st("giulia")["voice"] is False
+
+
+def test_one_slow_call_does_not_take_the_demo_offline(monkeypatch):
+    from brain import agents
+    monkeypatch.delenv("BRAIN_MODE", raising=False)
+    monkeypatch.setattr(agents, "_configured", lambda: object())
+    agents.reset_breaker()
+    try:
+        agents.record_failure("504 DEADLINE_EXCEEDED")
+        assert agents.client() is not None                 # still online after one failure
+        agents.record_success()
+        agents.record_failure("504")
+        assert agents.client() is not None                 # success reset the count
+        agents.record_failure("504")
+        assert agents.client() is None                     # two in a row -> breaker open
+    finally:
+        agents.reset_breaker()

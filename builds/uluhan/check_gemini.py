@@ -14,7 +14,7 @@ env.load()
 from brain import agents  # noqa: E402
 
 print("project :", os.getenv("GOOGLE_CLOUD_PROJECT") or "(not set)")
-print("location:", os.getenv("GOOGLE_CLOUD_LOCATION", "europe-west1"))
+print("location:", os.getenv("GOOGLE_CLOUD_LOCATION", "eu"))
 print("model   :", agents.MODEL)
 c = agents.client()
 if c is None:

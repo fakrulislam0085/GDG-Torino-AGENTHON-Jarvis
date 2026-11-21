@@ -59,8 +59,11 @@ _client = None
 _client_err = None
 
 
-CALL_TIMEOUT_MS = 12_000
+CALL_TIMEOUT_MS = 30_000   # a thinking model inside a tool loop can take >12 s on one call (seen live: 504 at 12 s)
 BREAKER_SECONDS = 300
+BREAKER_AFTER = 2           # consecutive failures before going offline; one slow call only falls back for that run
+THINKING = os.getenv("GEMINI_THINKING", "low")   # short tool-calling turns: low thinking = faster, cheaper
+_fails = 0
 _down_until = 0.0          # circuit breaker: after a Gemini failure, go offline for a while instead of
 _down_reason = ""          # making every click wait for another timeout (Wi-Fi dies mid-demo)
 
@@ -71,8 +74,20 @@ def trip_breaker(reason: str) -> None:
 
 
 def reset_breaker() -> None:
-    global _down_until, _down_reason
-    _down_until, _down_reason = 0.0, ""
+    global _down_until, _down_reason, _fails
+    _down_until, _down_reason, _fails = 0.0, "", 0
+
+
+def record_failure(reason: str) -> None:
+    global _fails
+    _fails += 1
+    if _fails >= BREAKER_AFTER:
+        trip_breaker(reason)
+
+
+def record_success() -> None:
+    global _fails
+    _fails = 0
 
 
 def mode_note() -> str:
@@ -104,7 +119,7 @@ def _configured():
         key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
         if project:
             _client = genai.Client(vertexai=True, project=project,
-                                   location=os.getenv("GOOGLE_CLOUD_LOCATION", "europe-west1"), http_options=opts)
+                                   location=os.getenv("GOOGLE_CLOUD_LOCATION", "eu"), http_options=opts)
         elif key and os.getenv("GOOGLE_GENAI_USE_VERTEXAI", "").lower() in ("1", "true"):
             _client = genai.Client(vertexai=True, api_key=key, http_options=opts)
         elif key:
@@ -147,6 +162,7 @@ def _gemini_loop(ctx: T.Ctx, system: str, prompt: str) -> bool:
         tool_config=types.ToolConfig(function_calling_config=types.FunctionCallingConfig(
             mode="ANY", allowed_function_names=names)),
         automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
+        thinking_config=types.ThinkingConfig(thinking_level=THINKING.upper()) if THINKING else None,
     )
     contents = [types.Content(role="user", parts=[types.Part(text=prompt)])]
     ctx.trace.run["mode"], ctx.trace.run["model"] = "gemini", MODEL
@@ -180,11 +196,12 @@ def _run(ctx: T.Ctx, system: str, prompt: str, offline_plan) -> None:
     if client() is not None:
         try:
             if _gemini_loop(ctx, system, prompt):
+                record_success()
                 return
             reason = "model did not finish"
         except Exception as e:
             reason = f"{type(e).__name__}: {str(e)[:160]}"
-            trip_breaker(reason)   # API/network failure: stop waiting on Gemini for BREAKER_SECONDS
+            record_failure(reason)   # 2 in a row -> stop waiting on Gemini for BREAKER_SECONDS
         ctx.final = None
         ctx.trace.step("fallback", f"Gemini unavailable ({reason}); running the deterministic planner with the same tools.")
     ctx.trace.run["mode"] = "offline"
@@ -221,7 +238,7 @@ def ask(store: Store, person_id: str, question: str) -> tuple[dict, dict]:
     question = (question or "").strip()[:500]
     tr = Trace("ask", person_id, "question", [p["role"]], store.clock)
     tr.step("trigger", f"{p['name']} ({p['role']}) asks: {question}")
-    ctx = T.Ctx(store, "ask", person_id, p["role"], tr)
+    ctx = T.Ctx(store, "ask", person_id, p["role"], tr, question=question)
     if not question:
         T.t_answer(ctx, "unknown")
     else:

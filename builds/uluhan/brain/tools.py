@@ -68,6 +68,7 @@ class Ctx:
     trace: "object"
     source_id: str | None = None    # ingest: the one source being read
     proposals_made: list[str] = field(default_factory=list)
+    question: str = ""            # ask: the person's question, for the relevance check on 'restricted'
     final: dict | None = None
 
 
@@ -317,6 +318,14 @@ def _valid_citations(ctx: Ctx, ids: list[str] | None) -> list[str]:
 
 # ---------------------------------------------------------------------------------------------
 # terminal tools
+def _relevant(question: str, m: dict) -> bool:
+    q = tokens(question)
+    if not q:
+        return False
+    item = tokens(m["fact"]) | tokens(m["topic"]) | tokens(m["key"].replace(".", " ").replace("_", " "))
+    return (q & ENTITIES) <= item and len(q & item) / len(q) >= 0.5
+
+
 def t_answer(ctx: Ctx, status: str, text: str = "", citations: list[str] | None = None,
              restricted_id: str | None = None) -> dict:
     s = ctx.store
@@ -331,6 +340,11 @@ def t_answer(ctx: Ctx, status: str, text: str = "", citations: list[str] | None 
             return {"ok": True}
     if status == "restricted":
         m = s.memory.get(restricted_id or "")
+        if m and m["status"] == "approved" and not can_see(ctx.role, m["audience"]) and not _relevant(ctx.question, m):
+            # Seen live: Gemini answered "restricted to Tech" for a question no fact answers, pointing at an
+            # unrelated item. Saying "restricted" must mean the restricted fact really matches the question.
+            ctx.trace.guard(f"'restricted' via {m['id']} rejected: that item does not match the question -> 'unknown'")
+            m = None
         if m and m["status"] == "approved" and not can_see(ctx.role, m["audience"]):
             owner = "Giulia Rinaldi" if "finance" in m["audience"] else "Marco Bellini"
             ctx.final = {"status": "restricted", "citations": [], "restricted_to": m["audience"],
