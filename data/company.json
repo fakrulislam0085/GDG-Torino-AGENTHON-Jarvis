@@ -1,0 +1,26 @@
+{
+  "_note": "Synthetic data for the AGENTHON demo. Filare Labs is a fictional company; every person, client, supplier, amount and address here is made up. No real client or personal data.",
+  "company": {
+    "name": "Filare Labs S.r.l.",
+    "city": "Torino",
+    "what": "IoT soil and weather sensors for vineyards in Piedmont, sold as a yearly subscription",
+    "demo_now": "2026-11-23T08:30:00+01:00"
+  },
+  "groups": {
+    "all": "everyone at Filare Labs",
+    "finance": "finance and accounting",
+    "tech": "engineering and field operations",
+    "sales": "sales and customer success",
+    "exec": "CEO: sees every group"
+  },
+  "people": [
+    { "id": "elena", "name": "Elena Russo", "role": "CEO", "groups": ["exec", "all"] },
+    { "id": "giulia", "name": "Giulia Ferrero", "role": "CFO", "groups": ["finance", "all"] },
+    { "id": "luca", "name": "Luca Bianchi", "role": "Accountant", "groups": ["finance", "all"] },
+    { "id": "marco", "name": "Marco Rossi", "role": "CTO", "groups": ["tech", "all"] },
+    { "id": "sara", "name": "Sara Conti", "role": "Backend engineer", "groups": ["tech", "all"] },
+    { "id": "davide", "name": "Davide Greco", "role": "Field IoT engineer", "groups": ["tech", "all"] },
+    { "id": "paolo", "name": "Paolo Gallo", "role": "Sales lead", "groups": ["sales", "all"] }
+  ],
+  "access_rule": "A person can see an item if the item's acl contains any of the person's groups, or if the person is in 'exec'. Enforced in code before any model call."
+}

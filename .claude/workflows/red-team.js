@@ -1,7 +1,7 @@
 export const meta = {
   name: 'red-team',
   description: 'Token Mafia at the GDG Torino AGENTHON: attack the ideas, the build or the final submission with the jury-scorer, devils-advocate and failure-hunter agents, referee the attacks, then rank and recommend',
-  whenToUse: 'At 10:10 on the candidate ideas (mode "ideas"), at 14:00 and before the 15:30 freeze on the repo (mode "build", default), at 16:15 on the submission (mode "final"). Args: { mode?: "ideas" | "build" | "final", ideas?: ["idea text", ...], files?: ["D:\\\\...\\\\file"], note?: "..." }',
+  whenToUse: 'At 13:45 on the three solo builds (mode "compare": ranks them on the 7 Challenge A checks and picks a base), before the 15:30 freeze on the chosen build (mode "build", default), at 16:15 on the submission (mode "final"). Mode "ideas" ranks idea texts. Args: { mode?: "compare" | "build" | "final" | "ideas", builds?: ["D:\\\\...\\\\builds\\\\hamid", ...], ideas?: ["idea text", ...], files?: ["D:\\\\...\\\\folder"], note?: "..." }',
   phases: [
     { title: 'Find', detail: 'collect the ideas or files to attack' },
     { title: 'Attack', detail: 'red team agents in parallel' },
@@ -61,7 +61,17 @@ const TARGETS = {
 }
 
 let targets = []
-if (mode === 'ideas') {
+if (mode === 'compare') {
+  targets = (opts.builds || []).map(p => ({ name: p.split('\\').pop() || p, what: p }))
+  if (!targets.length) {
+    phase('Find')
+    const found = await agent(
+      `List the solo build folders directly inside "${ROOT}\\builds" (one per team member, e.g. fakhrul, hamid, uluhan). Skip empty folders and folders with no code. Return each folder's name and full path. Do not open or judge the code.`,
+      { schema: TARGETS, label: 'find builds', phase: 'Find', effort: 'low' },
+    )
+    targets = (found && found.targets) || []
+  }
+} else if (mode === 'ideas') {
   targets = (opts.ideas || []).map((t, i) => ({ name: `idea ${i + 1}`, what: t }))
   if (!targets.length) {
     phase('Find')
@@ -78,7 +88,9 @@ if (mode === 'ideas') {
 if (!targets.length) {
   return mode === 'ideas'
     ? `No ideas found. Pass args.ideas: ["...", "..."] or write them in "${ROOT}\\docs\\ideas.md".`
-    : 'Nothing to attack. Pass args.files.'
+    : mode === 'compare'
+      ? `No builds found in "${ROOT}\\builds". Pass args.builds: ["<full folder path>", ...].`
+      : 'Nothing to attack. Pass args.files.'
 }
 log(`Attacking ${targets.length} target(s) in mode "${mode}": ${targets.map(t => t.name).join(', ')}`)
 
@@ -91,7 +103,21 @@ const VERDICT = {
     name: { type: 'string' },
     score: { type: 'number', description: 'final score out of 50 (5 criteria x 10) after refereeing' },
     oneLine: { type: 'string', description: 'the project in one sentence: agent that [job] for [who]' },
-    demoByLunch: { type: 'boolean', description: 'can the happy path run end to end by 12:30?' },
+    demoByLunch: { type: 'boolean', description: 'ideas mode: can the happy path run end to end by 12:30? Other modes: does the build run end to end now?' },
+    checks: {
+      type: 'array',
+      description: 'The 7 Challenge A checks from the brief, in order: 1 speaks first, 2 people curate the memory, 3 knows who is asking, 4 cites, 5 admits gaps, 6 only proposes, 7 fits the team\'s day. Empty in ideas mode.',
+      items: {
+        type: 'object',
+        properties: {
+          check: { type: 'number' },
+          verdict: { type: 'string', enum: ['yes', 'no', 'unclear'] },
+          enforcedInCode: { type: 'boolean', description: 'true only if code (not just the prompt) guarantees it' },
+          evidence: { type: 'string', description: 'file:function or the reason it fails' },
+        },
+        required: ['check', 'verdict', 'enforcedInCode', 'evidence'],
+      },
+    },
     realHoles: {
       type: 'array',
       items: {
@@ -117,10 +143,14 @@ const VERDICT = {
       items: { type: 'object', properties: { question: { type: 'string' }, bestAnswer: { type: 'string' } }, required: ['question', 'bestAnswer'] },
     },
   },
-  required: ['name', 'score', 'oneLine', 'demoByLunch', 'realHoles', 'droppedAttacks', 'strongestIdeas', 'hardestQuestions'],
+  required: ['name', 'score', 'oneLine', 'demoByLunch', 'checks', 'realHoles', 'droppedAttacks', 'strongestIdeas', 'hardestQuestions'],
 }
 
-const describe = t => (mode === 'ideas' ? `this candidate idea (${t.name}):\n"""\n${t.what}\n"""` : `the build at "${t.what}" (README.md, the code in app/, docs/)`)
+const describe = t => (mode === 'ideas'
+  ? `this candidate idea (${t.name}):\n"""\n${t.what}\n"""`
+  : mode === 'compare'
+    ? `${t.name}'s solo build of Challenge A in "${t.what}": read its README.md, its CHECKS.md (how it claims to pass each of the 7 checks), its code and its tests. It reads the shared fake company in "${ROOT}\\data". Verify every claim in CHECKS.md against the code: a check counts only if the code really does it`
+    : `the build at "${t.what}" (README.md, CHECKS.md, the code, tests, docs/)`)
 
 const verdicts = await pipeline(
   targets,
@@ -141,7 +171,8 @@ ${attacks.filter(Boolean).filter(a => a.report).map(a => `===== ${a.attacker} ==
 Your job:
 - Check every attack against the actual idea or code. An attack is WRONG if it is already covered, if it asks for things no 6-hour hackathon build could have (real customers, production scale, certifications), or if it is factually wrong. Drop wrong attacks and say why in droppedAttacks.
 - Merge duplicates. Keep only real holes, each with severity, the criterion it hurts, points out of 50 at stake, a one-sentence fix and minutes to fix.
-- Give the final score out of 50 (start from the jury-scorer's score, adjust for dropped or missed attacks), and say whether the happy path can run end to end by 12:30.
+- Give the final score out of 50 (start from the jury-scorer's score, adjust for dropped or missed attacks), and say whether it runs end to end (ideas mode: whether it could by 12:30).
+- ${mode === 'ideas' ? 'Leave checks empty.' : 'Fill checks: one entry per Challenge A check (1-7). "yes" only if the code really does it, with file:function as evidence; "unclear" if only CHECKS.md claims it; enforcedInCode false if only the prompt asks for it (role filtering and "I don\'t know" in the prompt alone are breakable by rivals).'}
 - Keep the 1-3 strongest things worth leading the pitch with, and the 3 hardest jury questions with the best short answer (or "no good answer yet").
 Plain English, short sentences. Never invent numbers, users or customers; write "needs a number" instead. You are read-only: do not edit, commit or push anything.${note}`,
     { schema: VERDICT, label: `referee: ${t.name}`, phase: 'Referee' },
@@ -160,7 +191,15 @@ const summary = await agent(
 
 ${JSON.stringify(ok, null, 2)}
 
-${mode === 'ideas'
+${mode === 'compare'
+    ? `Write the decision sheet for the 14:20 pick of the base build (Challenge A, Company Brain). The team's pick rules, in order: (1) checks passed out of 7, (2) hard to break, (3) jury score /50, (4) tie-break: easiest to finish by 15:30.
+1. **Checks matrix:** one row per build, columns 1-7 with ✅ yes / ❌ no / ❓ unclear (add 🔒 when enforced in code), then total ✅ and score /50.
+2. **Recommended base build** and why, in 2-3 sentences, following the pick rules. Say how sure you are.
+3. **Graft list:** the best parts of the other builds worth moving into the base, each with: from which build, which file, which check it fixes, minutes to graft. Only parts under 30 minutes.
+4. **Fix before the 15:30 freeze:** the base build's real holes, demo killers first, then most points per minute, each with a one-line fix and minutes.
+5. **What the live show-off must confirm:** the checks the agents could not verify from code alone (they can't see the UI).
+6. **The 5 hardest jury or rival questions** for the base build, with best short answers.`
+    : mode === 'ideas'
     ? `Write the decision sheet for the 10:00-10:15 idea pick:
 1. **Ranking table:** idea · score /50 · one line · demo by 12:30? · biggest hole.
 2. **Pick:** which idea to build, and why, in 2-3 sentences. A tie goes to the one we can demo end to end soonest.
