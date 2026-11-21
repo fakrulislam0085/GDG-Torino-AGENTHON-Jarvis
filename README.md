@@ -31,7 +31,7 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 JARVIS_DATA=data_ariete JARVIS_AUTO_DIAL=0 .venv/bin/python -m streamlit run app.py --server.port 8504
 ```
 
-Open http://localhost:8504 and follow the **Ariete click sequence** in [`CHECKS.md`](jarvis-your-company-brain/CHECKS.md). Tests (offline; they run on the Filare data): `.venv\Scripts\python -m pytest tests -q` from `jarvis-your-company-brain/` (76 passing). The Ariete demo was rehearsed separately by hand.
+Open http://localhost:8504 and follow the **Ariete click sequence** in [`CHECKS.md`](jarvis-your-company-brain/CHECKS.md). Tests (offline; they run on the Filare data): `.venv\Scripts\python -m pytest tests -q` from `jarvis-your-company-brain/` (76 passing). The Ariete demo was rehearsed separately (an offline run of the same six steps on 21 Nov; the Streamlit UI was not part of that run).
 
 ## How we built it: three builds in parallel, then the best ideas merged
 Each of us built a full version of Challenge A in the morning. Our own red-team agents (jury scorer, devil's advocate, failure hunter) attacked all three, and all three passed the 7 jury checks. We then merged the best ideas into one app, **Jarvis**:
