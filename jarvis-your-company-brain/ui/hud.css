@@ -505,3 +505,8 @@ div[role="dialog"] h2, div[role="dialog"] [data-testid="stDialogHeader"] { font-
   .st-key-ask-talk button p, .st-key-brief-play button p { font-size: .9rem; }
   .st-key-ask-talk button [data-testid="stIconMaterial"], .st-key-brief-play button [data-testid="stIconMaterial"] { font-size: 1.1rem; }
 }
+
+/* "Signed in as" picker: no browser focus outline on the inner text box (it drew a stray teal bar by the arrow);
+   the whole control gets one thin teal border instead. */
+[data-testid="stSelectbox"] input:focus, [data-testid="stSelectbox"] input:focus-visible { outline: none !important; box-shadow: none !important; }
+[data-testid="stSelectbox"] [role="group"]:focus-within { border-color: var(--cyan) !important; box-shadow: none !important; }

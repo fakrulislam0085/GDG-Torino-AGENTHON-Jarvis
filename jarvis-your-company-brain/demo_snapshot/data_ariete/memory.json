@@ -182,5 +182,29 @@
         "why": "EUR 5,400 vs EUR 6,900"
       }
     ]
+  },
+  {
+    "id": "mem-020",
+    "fact": "Ariete Tech Solutions (a fictional demo scenario built on its public services) is the tech company of the Ariete Capital group in Turin. It brings artificial intelligence to professional firms and SMEs: AI training (including AI Act AI-literacy courses for staff), mentoring next to the team, custom software and automations such as document intake, and AI agents that work inside a client's everyday tools.",
+    "sources": [
+      "doc-003"
+    ],
+    "acl": [
+      "all"
+    ],
+    "status": "approved",
+    "approved_by": "francesca"
+  },
+  {
+    "id": "mem-021",
+    "fact": "The team has 7 people: Francesca Morello (CEO), Marta Ghiglione (CFO), Stefano Arduino (Accountant), Andrea Pautasso (CTO), Giorgia Bosio (AI engineer), Lorenzo Bertola (Automation engineer) and Silvia Ferraris (Account manager).",
+    "sources": [
+      "doc-003"
+    ],
+    "acl": [
+      "all"
+    ],
+    "status": "approved",
+    "approved_by": "francesca"
   }
 ]

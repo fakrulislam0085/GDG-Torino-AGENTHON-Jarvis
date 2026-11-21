@@ -33,7 +33,7 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 JARVIS_DATA=data_ariete JARVIS_AUTO_DIAL=0 .venv/bin/python -m streamlit run app.py --server.port 8504
 ```
 
-Open http://localhost:8504 and follow the **Ariete click sequence** in [`CHECKS.md`](jarvis-your-company-brain/CHECKS.md). Tests (offline; they run on the Filare data): `.venv/bin/python -m pytest tests -q` (Windows: `.venv\Scripts\python -m pytest tests -q`) from `jarvis-your-company-brain/` (76 passing). On 21 Nov at 16:18 we also ran a clean start of the Ariete demo in the Streamlit UI on Gemini: the morning brief loaded with sources, and the Wi-Fi password question got "I don't know".
+Open http://localhost:8504 and follow the **Ariete click sequence** in [`CHECKS.md`](jarvis-your-company-brain/CHECKS.md). Tests (offline; they run on the Filare data): `.venv/bin/python -m pytest tests -q` (Windows: `.venv\Scripts\python -m pytest tests -q`) from `jarvis-your-company-brain/` (87 passing). On 21 Nov at 16:18 we also ran a clean start of the Ariete demo in the Streamlit UI on Gemini: the morning brief loaded with sources, and the Wi-Fi password question got "I don't know".
 
 ## How we built it: three builds in parallel, then the best ideas merged
 Each of us built a full version of Challenge A in the morning. Our own red-team agents (jury scorer, devil's advocate, failure hunter) attacked all three, and all three passed the 7 jury checks. We then merged the best ideas into one app, **Jarvis**:
