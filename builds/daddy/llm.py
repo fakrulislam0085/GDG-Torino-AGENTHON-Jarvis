@@ -25,6 +25,20 @@ PRICE_IN, PRICE_OUT = 0.75 / 1e6, 3.75 / 1e6  # USD per token, gemini-3.8-flash 
 _token = {"value": None, "exp": 0.0}
 state = {"last_error": None, "calls": 0, "input_tokens": 0, "output_tokens": 0, "cost_usd": 0.0}
 
+# Circuit breaker: after 2 failed calls in a row, skip Gemini for PAUSE_S seconds and answer from plain rules
+# immediately (instead of making every question wait for a timeout while the Wi-Fi is down).
+TIMEOUT_S = 25
+PAUSE_S = 45
+_breaker = {"fails": 0, "down_until": 0.0}
+
+
+def paused() -> bool:
+    return time.time() < _breaker["down_until"]
+
+
+def reset_breaker():
+    _breaker.update(fails=0, down_until=0.0)
+
 
 def model_name() -> str:
     return os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
@@ -94,7 +108,7 @@ def _request(body: dict) -> dict:
                f"/publishers/google/models/{model}:generateContent")
         headers = {"Content-Type": "application/json", "Authorization": f"Bearer {token}"}
     req = urllib.request.Request(url, data=json.dumps(body).encode(), headers=headers)
-    with urllib.request.urlopen(req, timeout=40) as r:
+    with urllib.request.urlopen(req, timeout=TIMEOUT_S) as r:
         return json.loads(r.read())
 
 
@@ -111,6 +125,10 @@ def generate_json(system: str, prompt: str) -> tuple[dict | None, dict]:
             "cost_usd": 0.0, "error": None}
     if not configured():
         info.update(mode="offline", error="Gemini not configured")
+        return None, info
+    if paused():
+        info.update(mode="offline", error=f"Gemini paused after repeated errors; using rules for "
+                                          f"{int(_breaker['down_until'] - time.time())} s more")
         return None, info
     body = {
         "systemInstruction": {"parts": [{"text": system}]},
@@ -135,6 +153,7 @@ def generate_json(system: str, prompt: str) -> tuple[dict | None, dict]:
             state["output_tokens"] += info["output_tokens"]
             state["cost_usd"] = round(state["cost_usd"] + info["cost_usd"], 6)
             state["last_error"] = None
+            _breaker["fails"] = 0
             return _parse(text), info
         except urllib.error.HTTPError as e:
             err = f"HTTP {e.code}: {e.read()[:200].decode(errors='replace')}"
@@ -146,4 +165,7 @@ def generate_json(system: str, prompt: str) -> tuple[dict | None, dict]:
         time.sleep(1.5)
     info.update(mode="offline", error=err, ms=int((time.time() - t0) * 1000))
     state["last_error"] = err
+    _breaker["fails"] += 1
+    if _breaker["fails"] >= 2:
+        _breaker["down_until"] = time.time() + PAUSE_S
     return None, info
