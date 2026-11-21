@@ -138,7 +138,29 @@ def save_incoming(items: list) -> None:
     _write(STATE / "incoming.json", items)
 
 
+SNAPSHOT = BUILD / "demo_snapshot"
+
+
 def reset_demo() -> None:
     if STATE.exists():
         shutil.rmtree(STATE)
     STATE.mkdir(parents=True, exist_ok=True)
+
+
+def has_snapshot() -> bool:
+    return (SNAPSHOT / "briefs.json").exists()
+
+
+def restore_snapshot() -> None:
+    """Instant reset for the demo: the 08:00 briefs and proposals Jarvis made earlier with Gemini (nobody asked)."""
+    reset_demo()
+    for name in ("briefs.json", "actions.json", "memory.json", "audit.jsonl"):
+        if (SNAPSHOT / name).exists():
+            shutil.copy(SNAPSHOT / name, STATE / name)
+
+
+def save_snapshot() -> None:
+    SNAPSHOT.mkdir(parents=True, exist_ok=True)
+    for name in ("briefs.json", "actions.json", "memory.json", "audit.jsonl"):
+        if (STATE / name).exists():
+            shutil.copy(STATE / name, SNAPSHOT / name)

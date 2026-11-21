@@ -16,7 +16,7 @@ def speak(user_id: str, text: str) -> bytes:
     cache = store.STATE / f"voice-{user_id}.mp3"
     if cache.exists():
         return cache.read_bytes()
-    voice = os.getenv("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWAM")
+    voice = os.getenv("ELEVENLABS_VOICE_ID", "onwK4e9ZLuTAKqWW03F9")
     r = requests.post(
         f"https://api.elevenlabs.io/v1/text-to-speech/{voice}",
         headers={"xi-api-key": os.environ["ELEVENLABS_API_KEY"], "accept": "audio/mpeg"},

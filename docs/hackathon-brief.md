@@ -50,7 +50,7 @@ Each track has a jury of 5: 1 from the track sponsor, 1 from GDG Torino, 3 exter
 - Billing account: `GDP Event Credit: DevFest Alps 2026`. It holds the credits only, with no card. **Don't click "Start free trial".**
 - Project: **`token-mafia-agenthon`** (number 757133682196), linked to that billing account.
 - The Vertex AI API (now called "Agent Platform API", `aiplatform.googleapis.com`) is enabled.
-- A test call to `gemini-3.8-flash` in `europe-west1` worked in Agent Studio.
+- `gemini-3.8-flash` is served only from location **`global`** (404 in europe-west1, europe-west4, us-central1). Use `GOOGLE_CLOUD_LOCATION=global`.
 - Endpoint: `https://europe-west1-aiplatform.googleapis.com/v1/projects/token-mafia-agenthon/locations/europe-west1/publishers/google/models/gemini-3.8-flash:generateContent`
 - Studio's default model is "Gemini 4 Carbon" in the `global` region. Pick `gemini-3.8-flash` instead: the portal only confirms GA models are covered.
 

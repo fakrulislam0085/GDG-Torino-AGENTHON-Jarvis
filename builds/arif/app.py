@@ -1,4 +1,4 @@
-"""Brain for Filare Labs: Arif's build of Challenge A (Company Brain). Run: python -m streamlit run app.py"""
+"""Jarvis for Filare Labs: Arif's build of Challenge A (Company Jarvis). Run: python -m streamlit run app.py"""
 from __future__ import annotations
 
 import html
@@ -12,7 +12,7 @@ import streamlit as st  # noqa: E402
 
 from brain import access, answer, audit, brief, llm, memory, propose, store, voice, watch  # noqa: E402
 
-st.set_page_config(page_title="Brain · Filare Labs", page_icon="🧠", layout="wide")
+st.set_page_config(page_title="Jarvis · Filare Labs", page_icon="🎩", layout="wide")
 
 st.markdown("""
 <style>
@@ -28,17 +28,20 @@ st.markdown("""
 </style>""", unsafe_allow_html=True)
 
 PEOPLE = store.people()
-PAGES = ["🧠 Brain", "🗂️ Memory review", "✅ Approvals", "📧 Morning email", "📜 Audit log"]
+PAGES = ["🎩 Jarvis", "🗂️ Memory review", "✅ Approvals", "📧 Morning email", "📜 Audit log"]
 ss = st.session_state
 ss.setdefault("user", "davide")
 ss.setdefault("page", PAGES[0])
 ss.setdefault("prefill", "")
 ss.setdefault("chat", {})
-ss.setdefault("channel", "🧠 Brain")
+ss.setdefault("channel", "🎩 Jarvis")
 
 if not store.briefs():
-    with st.spinner("Brain is running its 08:00 sweep for everyone…"):
-        brief.sweep()
+    if store.has_snapshot():
+        store.restore_snapshot()
+    else:
+        with st.spinner("Jarvis is running its 08:00 sweep for everyone…"):
+            brief.sweep()
 
 
 # ---------- helpers ----------
@@ -52,14 +55,18 @@ def goto(page: str, user: str | None = None, prefill: str = "") -> None:
     if user:
         ss.user = user
     ss.prefill = prefill
-    ss.channel = "🧠 Brain"
+    ss.channel = "🎩 Jarvis"
 
 
 def do_reset() -> None:
-    store.reset_demo()
+    """Instant: restores the 08:00 briefs Jarvis made earlier. '▶ 08:00 sweep' regenerates them live."""
     ss.chat = {}
     ss.prefill = ""
-    brief.sweep()
+    if store.has_snapshot():
+        store.restore_snapshot()
+    else:
+        store.reset_demo()
+        brief.sweep()
 
 
 def do_sweep() -> None:
@@ -121,7 +128,7 @@ def render_cites(ids: list, user: str) -> None:
 
 # ---------- sidebar ----------
 with st.sidebar:
-    st.markdown("### 🧠 Brain · Filare Labs")
+    st.markdown("### 🎩 Jarvis · Filare Labs")
     if llm.mode() == "gemini":
         st.markdown(f'<span class="pill ok">Gemini {llm.MODEL} · Vertex AI {llm.LOCATION}</span>', unsafe_allow_html=True)
     else:
@@ -130,7 +137,7 @@ with st.sidebar:
     st.caption("Groups: " + ", ".join(access.groups(ss.user)) + ". Identity comes from here, never from what you type.")
     st.radio("Go to", PAGES, key="page")
     c1, c2 = st.columns(2)
-    c1.button("▶ 08:00 sweep", on_click=do_sweep, width="stretch", help="Brain writes everyone's brief and proposes actions, without anyone asking")
+    c1.button("▶ 08:00 sweep", on_click=do_sweep, width="stretch", help="Jarvis writes everyone's brief and proposes actions, without anyone asking")
     c2.button("↺ Reset demo", on_click=do_reset, width="stretch")
     st.button("📨 Simulate: a new email arrives", on_click=do_new_email, width="stretch")
 
@@ -160,20 +167,20 @@ if ss.page == PAGES[0]:
     with left:
         st.markdown("**Filare Labs**")
         channels = sorted({s["channel"] for s in access.visible(store.sources(), user) if s["kind"] == "chat"})
-        st.radio("Channels", ["🧠 Brain"] + channels, key="channel", label_visibility="collapsed")
+        st.radio("Channels", ["🎩 Jarvis"] + channels, key="channel", label_visibility="collapsed")
     with right:
-        if ss.channel != "🧠 Brain":
+        if ss.channel != "🎩 Jarvis":
             st.markdown(f"#### {ss.channel}")
             for s in sorted((s for s in access.visible(store.sources(), user) if s.get("channel") == ss.channel), key=lambda s: s["date"]):
                 st.markdown(f'<div class="msg"><span class="who">{html.escape(name(s["author"]))}</span>'
                             f'<span class="meta">{s["date"][5:16].replace("T", " ")}</span><br>{html.escape(s["text"])}</div>', unsafe_allow_html=True)
         else:
-            st.markdown(f"#### 🧠 Brain → {me['name']}")
+            st.markdown(f"#### 🎩 Jarvis → {me['name']}")
             b = store.briefs().get(user, {"items": []})
             for title, items in (("New since your brief", b.get("alerts", [])), (f"Good morning {me['name'].split()[0]}. Here's what needs you today.", b["items"])):
                 if not items:
                     continue
-                st.markdown(f'<div class="msg"><span class="who">🧠 Brain</span><span class="meta">{b.get("posted_at", "")} · nobody asked · {b.get("mode", "")}</span>'
+                st.markdown(f'<div class="msg"><span class="who">🎩 Jarvis</span><span class="meta">{b.get("posted_at", "")} · nobody asked · {b.get("mode", "")}</span>'
                             f'<br><b>{html.escape(title)}</b></div>', unsafe_allow_html=True)
                 for i, it in enumerate(items, 1):
                     st.markdown(f'<div class="item"><span class="{it.get("urgency", "medium")}">●</span> {html.escape(it["text"])}</div>', unsafe_allow_html=True)
@@ -193,12 +200,12 @@ if ss.page == PAGES[0]:
             for qa in ss.chat.get(user, []):
                 st.markdown(f'<div class="msg"><span class="who">{html.escape(me["name"])}</span><br>{html.escape(qa["question"])}</div>', unsafe_allow_html=True)
                 cls = "" if qa["known"] else "warn"
-                st.markdown(f'<div class="msg"><span class="who">🧠 Brain</span><span class="meta">{qa["mode"]}</span><br>'
+                st.markdown(f'<div class="msg"><span class="who">🎩 Jarvis</span><span class="meta">{qa["mode"]}</span><br>'
                             f'<span class="{cls}">{html.escape(qa["answer"])}</span></div>', unsafe_allow_html=True)
                 render_cites([c["mem_id"] for c in qa["citations"]], user)
 
             with st.form("ask", clear_on_submit=True):
-                q = st.text_input("Ask Brain", value=ss.prefill, placeholder="e.g. When does the Langhe fix roll out?")
+                q = st.text_input("Ask Jarvis", value=ss.prefill, placeholder="e.g. When does the Langhe fix roll out?")
                 if st.form_submit_button("Ask") and q.strip():
                     ss.chat.setdefault(user, []).append(answer.ask(user, q))
                     ss.prefill = ""
@@ -206,7 +213,7 @@ if ss.page == PAGES[0]:
 
 elif ss.page == PAGES[1]:
     st.markdown("#### 🗂️ Memory review")
-    st.caption("Brain answers **only** from approved memory. Each item keeps the access list of its source, so people only see what their team may see.")
+    st.caption("Jarvis answers **only** from approved memory. Each item keeps the access list of its source, so people only see what their team may see.")
     pend = memory.pending_for(user)
     if not pend:
         st.write("Nothing waiting for review that you can see.")
@@ -231,7 +238,7 @@ elif ss.page == PAGES[1]:
 
 elif ss.page == PAGES[2]:
     st.markdown("#### ✅ Approvals")
-    st.caption("Brain has no tool that sends. It only proposes. An action moves to the outbox only when **you** click Approve. "
+    st.caption("Jarvis has no tool that sends. It only proposes. An action moves to the outbox only when **you** click Approve. "
                "Recipients are checked in code: colleagues, or the original sender of a normal email. Suspicious emails never lead to an action.")
     acts = propose.for_user(user)
     if not acts:
@@ -257,15 +264,15 @@ elif ss.page == PAGES[3]:
     items = b.get("alerts", []) + b["items"]
     lis = "".join(f"<li style='margin-bottom:8px'>{html.escape(i['text'])} <span class='muted'>[{', '.join(i.get('cited', []))}]</span></li>" for i in items)
     n_pending = sum(a["status"] == "awaiting_approval" for a in propose.for_user(user))
-    st.markdown(f"""<div class="mail"><div class="muted">From: Brain &lt;brain@filare-labs.example&gt; · To: {html.escape(me['name'])} · Mon 23 Nov, 08:00</div>
+    st.markdown(f"""<div class="mail"><div class="muted">From: Jarvis &lt;jarvis@filare-labs.example&gt; · To: {html.escape(me['name'])} · Mon 23 Nov, 08:00</div>
 <h3>Good morning {html.escape(me['name'].split()[0])}: {len(items)} things need you today</h3><ol>{lis}</ol>
-<p><b>{n_pending} action(s) wait for your approval.</b> Nothing is sent until you approve it in Brain.</p>
-<p class="muted">Every item cites its source. Brain only uses memory your team approved and that your role may see. (Mock-up: no real email is sent.)</p></div>""",
+<p><b>{n_pending} action(s) wait for your approval.</b> Nothing is sent until you approve it in Jarvis.</p>
+<p class="muted">Every item cites its source. Jarvis only uses memory your team approved and that your role may see. (Mock-up: no real email is sent.)</p></div>""",
                 unsafe_allow_html=True)
 
 else:
     st.markdown("#### 📜 Audit log")
-    st.caption("Everything Brain did: who asked, what it answered and cited, what it proposed, and who approved.")
+    st.caption("Everything Jarvis did: who asked, what it answered and cited, what it proposed, and who approved.")
     rows = list(reversed(audit.read()))
     st.dataframe(rows, width="stretch", height=460)
     u = llm.USAGE

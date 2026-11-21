@@ -1,7 +1,7 @@
-"""Brain only proposes. Actions wait for a person's click; nothing is sent until then.
+"""Jarvis only proposes. Actions wait for a person's click; nothing is sent until then.
 
 Rules in code, not in the prompt:
-- Brain has no tool that sends. Only approve_action(), called by a button, moves an action to the outbox.
+- Jarvis has no tool that sends. Only approve_action(), called by a button, moves an action to the outbox.
 - Recipients must be a colleague, or the original sender when replying to a normal (not suspicious) email.
 - A suspicious source can never lead to an action.
 - Only the person an action was proposed to can approve it.
@@ -92,7 +92,14 @@ def _recipient_allowed(kind: str, to: str, cites: list) -> bool:
 
 
 def propose_for(user_id: str) -> list:
-    acts = [a for a in store.actions() if a["proposed_to"] != user_id or a["status"] != "awaiting_approval"]
+    new = build_for(user_id)
+    keep = [a for a in store.actions() if a["proposed_to"] != user_id or a["status"] != "awaiting_approval"]
+    store.save_actions(keep + new)
+    return new
+
+
+def build_for(user_id: str) -> list:
+    """Work out the proposals for one person without saving (so the sweep can run people in parallel)."""
     new = []
     for n, (kind, to, subj, body, reason, cites) in enumerate(_candidates(user_id), 1):
         if not _recipient_allowed(kind, to, cites):
@@ -102,7 +109,6 @@ def propose_for(user_id: str) -> list:
              "reason": reason, "cites": cites, "status": "awaiting_approval", "created": datetime.now().isoformat(timespec="seconds")}
         new.append(a)
         audit.log("action_proposed", user_id, action_id=a["id"], kind=kind, to=to, cites=cites)
-    store.save_actions(acts + new)
     return new
 
 

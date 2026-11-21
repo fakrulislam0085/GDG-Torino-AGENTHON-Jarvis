@@ -1,4 +1,4 @@
-"""Brain watches the team's work: a new email arrives, Brain proposes memory and alerts the right people."""
+"""Jarvis watches the team's work: a new email arrives, Jarvis proposes memory and alerts the right people."""
 from __future__ import annotations
 
 import re

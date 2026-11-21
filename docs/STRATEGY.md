@@ -27,7 +27,7 @@ The jury marks **7 checks yes or no**. One "no" can drop us out of the 8–12 fi
 ## 3. Rules every build follows (so the comparison is fair)
 - **Your own folder:** `builds/arif/`, `builds/hamid/`, `builds/uluhan/`. Never edit someone else's folder. Commit and push to `main` at least every 45 minutes.
 - **Same data:** read the company from the shared `data/` folder (don't copy and edit it). Same people, same emails, same planted tests.
-- **Same model:** Gemini on Vertex AI, project `token-mafia-agenthon`, region `europe-west1`, model `gemini-3.8-flash`. No API keys in the repo (it's public): use `.env` (git-ignored).
+- **Same model:** Gemini on Vertex AI, project `token-mafia-agenthon`, location `global` (gemini-3.8-flash is NOT served in europe-west1), model `gemini-3.8-flash`. No API keys in the repo (it's public): use `.env` (git-ignored).
 - **Stack is your choice.** Python + Streamlit is the fastest path (our Reply project), and it makes grafting easier if we all use it.
 - **Runs with one command,** written at the top of your `README.md`.
 - **A `CHECKS.md` file in your folder** with, for each of the 7 checks, a line on how your build passes it: the file and function, plus the steps to show it in the UI. *If it isn't in `CHECKS.md`, the red team counts it as missing.*

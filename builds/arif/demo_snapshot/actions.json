@@ -1,0 +1,46 @@
+[
+  {
+    "id": "act-luca-1",
+    "type": "message_colleague",
+    "proposed_to": "luca",
+    "to": "giulia",
+    "subject": "Payment Approval: SensorParts Invoice INV-2026-0912",
+    "body": "Hi Giulia, could you please approve the payment for SensorParts invoice INV-2026-0912? It covers 120 soil probes (batch 7) for EUR 14,640.00 including VAT, and it is due on Tuesday, 24 November 2026. Thanks, Luca",
+    "reason": "Payment task task-002 needs the CFO's approval",
+    "cites": [
+      "task-002",
+      "email-001"
+    ],
+    "status": "awaiting_approval",
+    "created": "2026-11-21T11:25:59"
+  },
+  {
+    "id": "act-sara-1",
+    "type": "message_colleague",
+    "proposed_to": "sara",
+    "to": "marco",
+    "subject": "Approval needed: Renew staging database certificate",
+    "body": "Hi Marco, could you please review and approve the task 'Renew staging database certificate'? It is currently blocked waiting for your approval and is due on 2026-11-25. Thanks, Sara",
+    "reason": "Task task-004 is blocked on Marco",
+    "cites": [
+      "task-004",
+      "chat-007"
+    ],
+    "status": "awaiting_approval",
+    "created": "2026-11-21T11:25:59"
+  },
+  {
+    "id": "act-paolo-1",
+    "type": "reply_draft",
+    "proposed_to": "paolo",
+    "to": "agronomo@langheviva.example",
+    "subject": "Re: 40 sensors offline since Wednesday",
+    "body": "Hi Stefano, thanks for reaching out. We have identified that the 40 offline sensors in your Barbaresco plots are connected to gateway GW-07. We are treating this outage urgently and will send an engineer within 2 working days to resolve it well before November 27. I will also call you shortly to discuss the details. Best, Paolo",
+    "reason": "Reply to agronomo@langheviva.example (email-002)",
+    "cites": [
+      "email-002"
+    ],
+    "status": "awaiting_approval",
+    "created": "2026-11-21T11:26:00"
+  }
+]

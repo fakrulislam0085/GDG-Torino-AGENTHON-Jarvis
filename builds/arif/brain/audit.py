@@ -1,4 +1,4 @@
-"""Append-only log of everything Brain does: who, what, on which input, who approved."""
+"""Append-only log of everything Jarvis does: who, what, on which input, who approved."""
 from __future__ import annotations
 
 import json
