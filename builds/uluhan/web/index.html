@@ -211,14 +211,14 @@ function render() {
   const pend = S.proposals.filter(p => p.status === "pending").length;
   const openAlerts = S.alerts.filter(a => !a.closed).length;
   const nav = [["dm", "🧠 Brain", (S.brief ? 0 : 0) + openAlerts], ["email", "📧 Morning email", S.brief ? 1 : 0], ["memory", "📚 Memory review", S.candidates.length],
-    ["approvals", "✅ Approvals", pend], ["outbox", "📤 Outbox", 0], ["sources", "🗂 Sources", 0], ["audit", "🧾 Audit log", 0]];
+    ["approvals", "✅ Approvals", pend], ["outbox", "📤 Outbox", 0], ["sources", "🗂 Sources", 0], ["audit", "🧾 Audit log", 0], ["jury", "🏁 Jury checklist", 0]];
   $("#nav").innerHTML = `<div class="ws">${esc(S.company.split(" (")[0])}</div><div class="who">Demo persona · ${esc(S.person.name)}</div>
     <div class="sec">Direct messages</div>` + nav.map(([k, l, n], i) =>
     (i === 1 ? `<div class="sec">Brain</div>` : "") +
     `<a data-view="${k}" class="${view === k ? "active" : ""}"><span>${l}</span>${n ? `<span class="badge">${n}</span>` : ""}</a>`).join("");
   $("#composer").style.display = view === "dm" ? "" : "none";
   $("#suggest").innerHTML = SUGGEST.map(q => `<button type="button" data-q="${esc(q)}">${esc(q)}</button>`).join("");
-  ({dm: renderDM, email: renderEmail, memory: renderMemory, approvals: renderApprovals, outbox: renderOutbox, sources: renderSources, audit: renderAudit})[view]();
+  ({dm: renderDM, email: renderEmail, memory: renderMemory, approvals: renderApprovals, outbox: renderOutbox, sources: renderSources, audit: renderAudit, jury: renderJury})[view]();
   renderRuns();
 }
 
@@ -348,6 +348,32 @@ function renderAudit() {
     S.audit.map(a => `<tr><td>${a.i}</td><td>${time(a.clock)}</td><td>${esc(a.actor)}</td><td>${esc(a.action)}</td><td>${esc(a.target)}</td><td>${esc(a.detail)}</td></tr>`).join("") + `</table>`;
 }
 
+function renderJury() {
+  setHead("🏁 Jury checklist", "Run the seven checks, then finish with the signature change-control moment.");
+  const checks = [
+    {n: "1", title: "It speaks first", do: "Run the morning sweep, then open Brain DM.",
+      buttons: [["sweep", "Run morning sweep"], ["dm", "Open Brain DM"]], expected: "An unprompted, role-specific morning brief appears before anyone asks a question."},
+    {n: "2", title: "People curate memory", do: "As Sara or Davide, open Memory review, approve mem-p01, reject mem-p02, then ask as Sara: “When does the Langhe fix roll out?”",
+      buttons: [["memory-sara", "Review as Sara"], ["rollout-sara", "Ask as Sara"]], expected: "The answer says Thursday 26 Nov at 07:00 and cites the approved memory."},
+    {n: "3", title: "It knows who is asking", do: "Ask “What is our cash runway?” first as Giulia, then as Sara.",
+      buttons: [["runway-giulia", "Ask as Giulia"], ["runway-sara", "Ask as Sara"]], expected: "Giulia gets the approved answer; Sara gets “I don't know” without restricted details."},
+    {n: "4", title: "It cites", do: "Open Brain and inspect the source chips shown on every supported answer.",
+      buttons: [["dm", "Review answer chips"]], expected: "Each supported answer has clickable evidence chips that open the underlying source."},
+    {n: "5", title: "It admits gaps", do: "Ask: “What is the office Wi-Fi password?”",
+      buttons: [["wifi", "Ask about Wi-Fi"]], expected: "The brain says “I don't know” and provides no citation."},
+    {n: "6", title: "It only proposes", do: "As Luca, open Approvals after the sweep, inspect the pending review draft, then check Outbox before approving.",
+      buttons: [["approvals-luca", "Open Approvals as Luca"], ["outbox-luca", "Check empty Outbox"]], expected: "The draft waits for Luca; Outbox stays empty until a person approves it."},
+    {n: "7", title: "It fits the day", do: "Open Brain DM, the Morning email view, and the voice brief button.",
+      buttons: [["dm", "Open Brain DM"], ["email", "Open Morning email"], ["voice", "Play voice brief"]], expected: "The same sourced brief fits DM, email, and—when configured—voice delivery."},
+    {n: "★", title: "Change control", do: "Simulate “Archived cloud budget email” (email-006), inspect the receipt, then ask as Giulia: “What is the Q1 2027 cloud budget?”",
+      buttons: [["email-006", "Simulate archived email"], ["budget-giulia", "Ask as Giulia"]], expected: "The receipt keeps the approved record unchanged; the answer is EUR 18,000 citing mem-001."}
+  ];
+  $("#view").innerHTML = checks.map(c => `<div class="card"><div class="row"><span class="tag ${c.n === "★" ? "finance" : "all"}">${esc(c.n)}</span><b>${esc(c.title)}</b></div>
+    <div class="why"><b>${esc("Do:")}</b> ${esc(c.do)}</div>
+    <div class="row" style="margin-top:8px">${c.buttons.map(([action, label]) => `<button data-jury="${esc(action)}">${esc(label)}</button>`).join("")}</div>
+    <div class="muted" style="margin-top:7px"><b>${esc("Expected:")}</b> ${esc(c.expected)}</div></div>`).join("");
+}
+
 function renderRuns() {
   $("#runs").innerHTML = S.runs.length ? S.runs.map(r => `<div class="run ${r.id === activeRun ? "active" : ""}" data-run="${r.id}">
     <span>${{ask: "💬", brief: "☀️", ingest: "📥"}[r.agent]} ${esc(r.agent)} · ${esc(r.trigger)}</span><span class="muted">${r.mode === "gemini" ? "G" : "off"} · ${(r.ms / 1000).toFixed(1)}s</span></div>`).join("")
@@ -389,8 +415,34 @@ async function ask(q) {
 }
 
 document.addEventListener("click", async e => {
-  const t = e.target.closest("[data-view],[data-view-go],[data-run],[data-src],[data-mem],[data-prop],[data-q],[data-voice],#sweep2");
+  const t = e.target.closest("[data-view],[data-view-go],[data-run],[data-src],[data-mem],[data-prop],[data-q],[data-voice],[data-jury],#sweep2");
   if (!t) return;
+  if (t.dataset.jury) {
+    const go = v => { view = v; render(); };
+    const as = async (id, nextView, question) => {
+      $("#personSel").value = id;
+      await changePerson(id);
+      if (nextView) go(nextView);
+      if (question) await ask(question);
+    };
+    const action = t.dataset.jury;
+    if (action === "sweep") return sweep(t);
+    if (["dm", "email"].includes(action)) return go(action);
+    if (action === "memory-sara") return as("sara", "memory");
+    if (action === "rollout-sara") return as("sara", "dm", "When does the Langhe fix roll out?");
+    if (action === "runway-giulia") return as("giulia", "dm", "What is our cash runway?");
+    if (action === "runway-sara") return as("sara", "dm", "What is our cash runway?");
+    if (action === "wifi") return ask("What is the office Wi-Fi password?");
+    if (action === "approvals-luca") return as("luca", "approvals");
+    if (action === "outbox-luca") return as("luca", "outbox");
+    if (action === "voice") return withBusy(t, async () => {
+      const r = await fetch(`/api/brief/audio?person=${person}`);
+      if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || r.statusText);
+      const url = URL.createObjectURL(await r.blob()); new Audio(url).play();
+    });
+    if (action === "email-006") return withBusy(t, async () => { const r = await api("/api/events/email-006", {method: "POST"}); activeRun = r.runs[0]?.id || null; view = "dm"; await load(); toast(r.note || "Email received and processed"); });
+    if (action === "budget-giulia") return as("giulia", "dm", "What is the Q1 2027 cloud budget?");
+  }
   if (t.dataset.voice) return withBusy(t, async () => {
     const r = await fetch(`/api/brief/audio?person=${person}`);
     if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || r.statusText);
@@ -411,11 +463,11 @@ document.addEventListener("click", async e => {
 });
 $("#askForm").addEventListener("submit", e => { e.preventDefault(); ask($("#q").value); });
 $("#sweepBtn").addEventListener("click", e => sweep(e.currentTarget));
-$("#personSel").addEventListener("change", e => {
+async function changePerson(id) {
   if (busy) return;
   $("#dlg").close();
   $("#dlgBody").textContent = "";
-  person = e.target.value;
+  person = id;
   activeRun = null;
   S = null;
   $("#steps").textContent = "";
@@ -424,8 +476,9 @@ $("#personSel").addEventListener("change", e => {
   $("#view").textContent = "Loading demo persona…";
   $("#eventSel").value = "";
   $("#eventSel").disabled = true;
-  load().catch(e => toast(e.message)).finally(() => { $("#eventSel").disabled = false; });
-});
+  try { await load(); } catch (e) { toast(e.message); } finally { $("#eventSel").disabled = false; }
+}
+$("#personSel").addEventListener("change", e => changePerson(e.target.value));
 $("#eventSel").addEventListener("change", e => { const id = e.target.value; if (!id) return;
   withBusy(null, async () => { const r = await api(`/api/events/${id}`, {method: "POST"}); activeRun = r.runs[0]?.id || null; view = "dm"; await load(); if (activeRun) showRun(activeRun); toast(r.note || "Email received and processed"); }); });
 $("#resetBtn").addEventListener("click", () => withBusy(null, async () => { await api("/api/reset", {method: "POST"}); chats.clear(); activeRun = null; view = "dm"; await load(); toast("Demo reset"); }));

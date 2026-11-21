@@ -6,6 +6,19 @@ Run from the repository root with Python 3.12 and `uv`.
 uv run --no-project --python 3.12 --with-requirements builds/uluhan/requirements.txt uvicorn --app-dir builds/uluhan brain.server:app --port 8010
 ```
 
+## Signature moment: change control for company facts
+
+1. Start from the approved Q1 2027 cloud-budget fact: **EUR 18,000**.
+2. Simulate **Archived cloud budget email**; it claims the budget is **€12,000**.
+3. Show the Decision Receipt with the approved fact and incoming claim side by side.
+4. Explain why it was blocked: the email is older evidence, and only **Giulia/CFO, Marco/CTO, or Elena/CEO** may change this fact.
+5. Reject the archived claim.
+6. Ask **What is the Q1 2027 cloud budget?** The answer remains **€18,000**, with its citation.
+
+> “Most AI assistants believe the last thing they read. Ours treats an incoming email as a claim, not a decision. When a message contradicts an approved company fact, it shows both side by side, says why it didn't change anything, and only the person with authority can update the record. Your company's knowledge changes by decision, not by inbox.”
+
+**Limits:** Identity is chosen in a demo picker (no authentication).
+
 Open [http://localhost:8010](http://localhost:8010). This build reads the team's shared synthetic **Filare Labs** data from the repository's [data directory](../../data). [CHECKS.md](CHECKS.md) gives the exact seven-check route.
 
 **Change control for company facts.** The Company Brain watches new information and tells the team what needs their attention. Incoming claims go to review. An archived estimate cannot replace a newer approved decision, and a draft stays in Approvals until its designated reviewer acts. Answers use only approved evidence the selected person can see.
