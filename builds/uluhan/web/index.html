@@ -1,1 +1,336 @@
-<!doctype html><title>Company Brain</title>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Company Brain</title>
+<style>
+:root{
+  --bg:#f6f5f2; --panel:#ffffff; --ink:#1d1c1a; --muted:#6b6862; --line:#e4e1da;
+  --side:#2a1f33; --side-ink:#e9e3ef; --side-muted:#a99bb6; --side-active:#4b3a5c;
+  --accent:#5b3cc4; --accent-soft:#eee9fb;
+  --ok:#1f7a4d; --ok-soft:#e5f4ec; --warn:#9a5b00; --warn-soft:#fdf1dc;
+  --bad:#b3261e; --bad-soft:#fbe7e5; --info:#1d5fa8; --info-soft:#e4eefa;
+  --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif;color:var(--ink);background:var(--bg);height:100vh;display:grid;grid-template-rows:auto 1fr}
+button{font:inherit;cursor:pointer;border-radius:6px;border:1px solid var(--line);background:var(--panel);padding:5px 10px;color:var(--ink)}
+button:hover{border-color:#bdb8ae}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+button.ghost{background:transparent}
+button:disabled{opacity:.5;cursor:default}
+header{display:flex;align-items:center;gap:10px;padding:8px 14px;background:#1b1322;color:#fff;flex-wrap:wrap}
+header .brand{font-weight:700;letter-spacing:.2px}
+header .pill{font-size:12px;padding:2px 8px;border-radius:99px;background:#ffffff1f;color:#fff}
+header .pill.gemini{background:#2e7d5b}
+header .pill.offline{background:#a3620a}
+header .spacer{flex:1}
+header select,header button{background:#ffffff14;color:#fff;border-color:#ffffff33}
+header select{font:inherit;padding:5px 8px;border-radius:6px}
+header select option{color:#000}
+.app{display:grid;grid-template-columns:220px 1fr 380px;min-height:0}
+nav{background:var(--side);color:var(--side-ink);padding:12px 8px;overflow:auto}
+nav .ws{font-weight:700;padding:4px 10px 10px}
+nav .who{font-size:12px;color:var(--side-muted);padding:0 10px 12px}
+nav a{display:flex;justify-content:space-between;align-items:center;padding:5px 10px;border-radius:6px;color:var(--side-ink);text-decoration:none;cursor:pointer}
+nav a:hover{background:#ffffff12}
+nav a.active{background:var(--side-active)}
+nav .badge{background:#e0465e;color:#fff;border-radius:99px;font-size:11px;padding:0 6px;min-width:18px;text-align:center}
+nav .sec{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--side-muted);padding:14px 10px 4px}
+main{display:flex;flex-direction:column;min-height:0;background:var(--panel)}
+main .head{padding:12px 18px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:10px}
+main .head h2{margin:0;font-size:16px}
+main .head .sub{color:var(--muted);font-size:13px}
+.scroll{flex:1;overflow:auto;padding:14px 18px}
+.msg{display:grid;grid-template-columns:36px 1fr;gap:10px;margin-bottom:16px}
+.av{width:36px;height:36px;border-radius:8px;display:grid;place-items:center;font-weight:700;color:#fff;background:var(--accent)}
+.av.me{background:#7a6f63}
+.msg .meta{font-size:13px}.msg .meta b{margin-right:6px}.msg .meta span{color:var(--muted);font-size:12px}
+.card{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-top:6px;background:#fff}
+.card.answered{border-left:4px solid var(--ok)}
+.card.restricted{border-left:4px solid var(--warn);background:var(--warn-soft)}
+.card.unknown{border-left:4px solid #8a8780;background:#f3f2ef}
+.card.conflict{border-left:4px solid var(--bad);background:var(--bad-soft)}
+.card.suspicious{border-left:4px solid var(--bad);background:var(--bad-soft)}
+.item{padding:8px 0;border-top:1px solid var(--line)}.item:first-child{border-top:0}
+.item .hl{font-weight:600}
+.item .why{color:#45433f;margin-top:2px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font-size:12px;border:1px solid var(--line);border-radius:99px;padding:1px 8px;background:#faf9f7;cursor:pointer;color:#3d3a36}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.tag{font-size:11px;border-radius:4px;padding:1px 6px;font-weight:600;display:inline-block}
+.tag.finance{background:var(--info-soft);color:var(--info)}
+.tag.tech{background:#efe7f8;color:#6a3aa5}
+.tag.all{background:#eeece7;color:#55524c}
+.tag.pending{background:var(--warn-soft);color:var(--warn)}
+.tag.approved{background:var(--ok-soft);color:var(--ok)}
+.tag.rejected,.tag.superseded{background:#eeece7;color:#77736b}
+.proposal{border:1px dashed var(--warn);background:#fffaf0;border-radius:8px;padding:10px 12px;margin-top:8px}
+.proposal pre{white-space:pre-wrap;font:13px/1.45 inherit;margin:6px 0;background:#fff;border:1px solid var(--line);border-radius:6px;padding:8px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.composer{border-top:1px solid var(--line);padding:10px 18px 14px}
+.composer form{display:flex;gap:8px}
+.composer input{flex:1;font:inherit;padding:9px 12px;border:1px solid #cfcac0;border-radius:8px}
+.suggest{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.suggest button{font-size:12px;padding:3px 9px;border-radius:99px;background:#faf9f7}
+.muted{color:var(--muted)}
+.empty{color:var(--muted);padding:24px 0;text-align:center}
+.quote{font-style:italic;color:#4f4c47;border-left:3px solid var(--line);padding-left:8px;margin:6px 0}
+aside{border-left:1px solid var(--line);background:#fbfaf8;display:flex;flex-direction:column;min-height:0}
+aside .head{padding:12px 14px;border-bottom:1px solid var(--line)}
+aside .head h3{margin:0;font-size:14px}
+.runs{padding:8px 10px;border-bottom:1px solid var(--line);max-height:30%;overflow:auto}
+.run{font-size:12px;padding:5px 8px;border-radius:6px;cursor:pointer;display:flex;justify-content:space-between;gap:6px}
+.run:hover{background:#efece6}.run.active{background:var(--accent-soft)}
+.steps{flex:1;overflow:auto;padding:10px 12px}
+.step{display:grid;grid-template-columns:22px 1fr;gap:6px;font-size:12px;margin-bottom:8px}
+.step .k{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:11px;color:#fff;background:#8a8780}
+.step.tool_call .k{background:var(--accent)}.step.tool_result .k{background:#3f8f6a}
+.step.guard .k{background:var(--bad)}.step.fallback .k{background:#a3620a}.step.trigger .k{background:#1b1322}
+.step.model_text .k{background:var(--info)}
+.step.guard .n{color:var(--bad);font-weight:600}
+.step details{margin-top:2px}.step pre{font:11px/1.4 var(--mono);white-space:pre-wrap;word-break:break-word;background:#fff;border:1px solid var(--line);border-radius:4px;padding:6px;margin:4px 0;max-height:180px;overflow:auto}
+.usage{font-size:12px;color:var(--muted);padding:8px 12px;border-top:1px solid var(--line)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+td,th{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;color:var(--muted);font-weight:600}
+dialog{border:1px solid var(--line);border-radius:10px;max-width:560px;padding:16px 18px}
+dialog::backdrop{background:#0006}
+.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#1b1322;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;opacity:0;transition:.2s;pointer-events:none}
+.toast.on{opacity:1}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid #fff6;border-top-color:#fff;border-radius:50%;animation:s 1s linear infinite;vertical-align:-2px}
+.thinking{color:var(--muted);font-size:13px}
+@keyframes s{to{transform:rotate(360deg)}}
+@media (max-width:1100px){.app{grid-template-columns:190px 1fr}aside{display:none}}
+@media (max-width:700px){.app{grid-template-columns:1fr}nav{display:flex;overflow-x:auto;padding:6px;gap:4px}nav .ws,nav .who,nav .sec{display:none}nav a{white-space:nowrap}}
+</style>
+</head>
+<body>
+<header>
+  <span class="brand">🧠 Company Brain</span>
+  <span class="pill" title="All companies, people and messages are fictional">DEMO DATA · fictional company</span>
+  <span class="pill" id="mode">…</span>
+  <span class="pill" id="clock">…</span>
+  <span class="spacer"></span>
+  <button id="sweepBtn" title="The scheduled background job. Nobody asks the brain anything.">⏰ Run 08:00 sweep</button>
+  <select id="eventSel" title="Simulate an email arriving"><option value="">✉ Simulate incoming email…</option></select>
+  <label class="row" style="gap:6px">Viewing as
+    <select id="personSel"></select>
+  </label>
+  <button class="ghost" id="resetBtn">Reset</button>
+</header>
+<div class="app">
+  <nav id="nav"></nav>
+  <main>
+    <div class="head"><h2 id="title"></h2><span class="sub" id="subtitle"></span></div>
+    <div class="scroll" id="view"></div>
+    <div class="composer" id="composer">
+      <div class="suggest" id="suggest"></div>
+      <form id="askForm"><input id="q" autocomplete="off" placeholder="Ask the brain…"><button class="primary">Ask</button></form>
+    </div>
+  </main>
+  <aside>
+    <div class="head"><h3>Agent trace</h3><div class="muted" style="font-size:12px">Every tool call, every refused action, and what it cost.</div></div>
+    <div class="runs" id="runs"></div>
+    <div class="steps" id="steps"><div class="empty">Run the sweep or ask a question.</div></div>
+    <div class="usage" id="usage"></div>
+  </aside>
+</div>
+<dialog id="dlg"><div id="dlgBody"></div><div class="row" style="justify-content:flex-end;margin-top:12px"><button onclick="dlg.close()">Close</button></div></dialog>
+<div class="toast" id="toast"></div>
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const SUGGEST = ["Where should we send the Atlas milestone 2 invoice?", "How much is Atlas milestone 2?",
+  "When does Atlas launch?", "What is the budget for the Atlas mobile app?", "What are NordPrint payment terms?"];
+let S = null, person = "giulia", view = "dm", activeRun = null, busy = false;
+const chats = {giulia: [], marco: []};
+
+async function api(path, opts = {}) {
+  const r = await fetch(path, {headers: {"Content-Type": "application/json"}, ...opts,
+    body: opts.body ? JSON.stringify(opts.body) : undefined});
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.detail || r.statusText);
+  return j;
+}
+function toast(t) { const el = $("#toast"); el.textContent = t; el.classList.add("on"); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove("on"), 2600); }
+const tag = a => (a || []).map(x => `<span class="tag ${esc(x)}">${esc(x)}</span>`).join(" ");
+const time = c => esc((c || "").slice(11, 16));
+const chips = cits => `<div class="chips">${(cits || []).map(c =>
+  `<span class="chip" data-src="${esc(c.source_id)}" title="${esc(c.quote || c.source_title)}">📎 ${esc(c.id)} · ${esc(c.label)}</span>`).join("")}</div>`;
+
+async function load() {
+  S = await api(`/api/state?person=${person}`);
+  render();
+}
+
+function render() {
+  $("#mode").textContent = S.mode === "gemini" ? `Gemini live · ${S.model}` : "Offline fallback (no model)";
+  $("#mode").className = "pill " + S.mode;
+  $("#clock").textContent = "🕗 " + S.clock.replace("T", " ");
+  $("#personSel").innerHTML = S.people.map(p => `<option value="${p.id}" ${p.id === person ? "selected" : ""}>${esc(p.name)} · ${esc(p.role)}</option>`).join("");
+  $("#eventSel").innerHTML = `<option value="">✉ Simulate incoming email…</option>` +
+    S.pending_events.map(e => `<option value="${esc(e.id)}">${esc(e.label)}</option>`).join("");
+  const pend = S.proposals.filter(p => p.status === "pending").length;
+  const openAlerts = S.alerts.filter(a => !a.closed).length;
+  const nav = [["dm", "🧠 Brain", (S.brief ? 0 : 0) + openAlerts], ["memory", "📚 Memory review", S.candidates.length],
+    ["approvals", "✅ Approvals", pend], ["outbox", "📤 Outbox", 0], ["sources", "🗂 Sources", 0], ["audit", "🧾 Audit log", 0]];
+  $("#nav").innerHTML = `<div class="ws">${esc(S.company.split(" (")[0])}</div><div class="who">Signed in as ${esc(S.person.name)}</div>
+    <div class="sec">Direct messages</div>` + nav.map(([k, l, n], i) =>
+    (i === 1 ? `<div class="sec">Brain</div>` : "") +
+    `<a data-view="${k}" class="${view === k ? "active" : ""}"><span>${l}</span>${n ? `<span class="badge">${n}</span>` : ""}</a>`).join("");
+  $("#composer").style.display = view === "dm" ? "" : "none";
+  $("#suggest").innerHTML = SUGGEST.map(q => `<button type="button" data-q="${esc(q)}">${esc(q)}</button>`).join("");
+  ({dm: renderDM, memory: renderMemory, approvals: renderApprovals, outbox: renderOutbox, sources: renderSources, audit: renderAudit})[view]();
+  renderRuns();
+}
+
+function setHead(t, s) { $("#title").textContent = t; $("#subtitle").textContent = s; }
+
+function proposalBox(p) {
+  if (!p) return "";
+  const btns = p.status === "pending"
+    ? `<div class="row"><button class="ok" data-prop="${p.id}" data-act="approve">Approve & send</button><button data-prop="${p.id}" data-act="reject">Reject</button>
+       <span class="muted">Nothing is sent until you approve.</span></div>`
+    : `<div class="muted">${p.status === "approved" ? "✅ Approved" : "✖ Rejected"} by ${esc(p.decided_by)} at ${time(p.decided_at)}${p.status === "approved" ? " · in Outbox (mock)" : ""}</div>`;
+  return `<div class="proposal"><div class="row"><span class="tag pending">${esc(p.status)}</span><b>Draft email</b> to ${esc(p.to)}</div>
+    <div><b>${esc(p.subject)}</b></div><pre>${esc(p.body)}</pre><div class="muted" style="font-size:12px">Why: ${esc(p.reason)}</div>${chips(p.citations)}${btns}</div>`;
+}
+
+function renderDM() {
+  setHead("🧠 Brain", `Direct messages with ${S.person.name}`);
+  const props = Object.fromEntries(S.proposals.map(p => [p.id, p]));
+  let h = "";
+  if (!S.brief) h += `<div class="empty">No brief yet. At 08:00 the brain sweeps overnight email, chat and tasks and writes to each person on its own.<br><br>
+    <button class="primary" id="sweep2">⏰ Run 08:00 sweep</button></div>`;
+  else {
+    const b = S.brief;
+    h += `<div class="msg"><div class="av">🧠</div><div><div class="meta"><b>Brain</b><span>${time(b.generated_at)} · morning brief, unprompted · <a href="#" data-run="${b.run_id}">trace</a></span></div>
+      <div class="card"><div>Good morning ${esc(S.person.name.split(" ")[0])}. ${b.items.length ? `${b.items.length} thing${b.items.length > 1 ? "s" : ""} need${b.items.length > 1 ? "" : "s"} you today:` : "Nothing needs you today."}</div>
+      ${b.items.map((it, i) => `<div class="item"><div class="hl">${i + 1}. ${esc(it.headline)}</div><div class="why">${esc(it.why)}</div>${chips(it.citations)}${proposalBox(props[it.proposal_id])}</div>`).join("")}
+      </div></div></div>`;
+  }
+  for (const a of S.alerts) {
+    h += `<div class="msg"><div class="av">🧠</div><div><div class="meta"><b>Brain</b><span>${time(a.created_at)} · ${a.kind === "conflict" ? "memory conflict" : "suspicious message"}, unprompted</span></div>
+      <div class="card ${a.kind}"><b>${a.kind === "conflict" ? "⚠ This contradicts what we know" : "⛔ I did not act on this message"}</b><div class="why">${esc(a.text)}</div>
+      ${a.kind === "conflict" && !a.closed ? `<div class="row" style="margin-top:6px"><button data-view-go="memory">Review in Memory</button></div>` : ""}
+      ${a.closed ? `<div class="muted">Resolved.</div>` : ""}${proposalBox(props[a.proposal_id])}</div></div></div>`;
+  }
+  for (const m of chats[person]) {
+    if (m.who === "me") h += `<div class="msg"><div class="av me">${esc(S.person.name[0])}</div><div><div class="meta"><b>${esc(S.person.name)}</b><span>${time(m.clock)}</span></div><div>${esc(m.text)}</div></div></div>`;
+    else if (m.thinking) h += `<div class="msg"><div class="av">🧠</div><div class="thinking">Searching memory you're allowed to see…</div></div>`;
+    else {
+      const a = m.answer, lbl = {answered: "", restricted: "🔒 Restricted", unknown: "🤷 I don't know"}[a.status];
+      h += `<div class="msg"><div class="av">🧠</div><div><div class="meta"><b>Brain</b><span>${time(m.clock)} · <a href="#" data-run="${m.run}">trace</a></span></div>
+        <div class="card ${a.status}">${lbl ? `<b>${lbl}</b><br>` : ""}${esc(a.text)}${chips(a.citations)}</div></div></div>`;
+    }
+  }
+  $("#view").innerHTML = h;
+  $("#view").scrollTop = 1e9;
+}
+
+function memCard(m, actions) {
+  return `<div class="card ${m.conflicts_with ? "conflict" : ""}"><div class="row">${tag(m.audience)} <span class="tag ${m.status === "candidate" ? "pending" : m.status}">${esc(m.status)}</span>
+    <b>${esc(m.topic)}</b> <span class="muted">${esc(m.id)}</span></div>
+    <div style="margin-top:4px">${esc(m.fact)}</div>
+    <div class="quote">“${esc(m.quote)}” — <span class="chip" data-src="${esc(m.source_id)}">📎 ${esc(m.source_id)}</span></div>
+    ${m.conflicts_with ? `<div style="color:var(--bad);font-weight:600">Contradicts approved ${esc(m.conflicts_with)}. Approving replaces it.</div>` : ""}
+    ${m.superseded_by ? `<div class="muted">Replaced by ${esc(m.superseded_by)}</div>` : ""}
+    ${m.decided_by ? `<div class="muted" style="font-size:12px">Decided by ${esc(m.decided_by)} at ${time(m.decided_at)}</div>` : ""}
+    ${actions ? `<div class="row" style="margin-top:6px"><button class="ok" data-mem="${m.id}" data-act="approve">Approve</button><button data-mem="${m.id}" data-act="reject">Reject</button>
+      <span class="muted">Only approved items can be used in answers.</span></div>` : ""}</div>`;
+}
+function renderMemory() {
+  setHead("📚 Memory review", "The brain proposes. People decide what it remembers.");
+  $("#view").innerHTML = `<h3>Waiting for review (${S.candidates.length})</h3>` +
+    (S.candidates.length ? S.candidates.map(m => memCard(m, true)).join("") : `<div class="empty">Nothing to review.</div>`) +
+    `<h3>Approved memory you can see (${S.memory.filter(m => m.status === "approved").length})</h3>` + S.memory.map(m => memCard(m, false)).join("") +
+    (S.decided_candidates.length ? `<h3>Rejected</h3>` + S.decided_candidates.map(m => memCard(m, false)).join("") : "");
+}
+function renderApprovals() {
+  setHead("✅ Approvals", "Actions the brain drafted. Nothing happens until a person approves.");
+  $("#view").innerHTML = S.proposals.length ? S.proposals.slice().reverse().map(proposalBox).join("") : `<div class="empty">No proposals for ${esc(S.person.role)}.</div>`;
+}
+function renderOutbox() {
+  setHead("📤 Outbox", "Mock outbox: approved emails land here. Nothing leaves the demo.");
+  $("#view").innerHTML = S.outbox.length ? S.outbox.map(o => `<div class="card"><div class="row"><span class="tag approved">approved by ${esc(o.approved_by)}</span> to <b>${esc(o.to)}</b> <span class="muted">${time(o.at)}</span></div>
+    <div><b>${esc(o.subject)}</b></div><pre style="white-space:pre-wrap">${esc(o.body)}</pre><div class="muted">${esc(o.note)}</div></div>`).join("") : `<div class="empty">Empty. Approve a draft to see it here.</div>`;
+}
+function renderSources() {
+  setHead("🗂 Sources", `Email, chat, tasks and docs ${S.person.name} may see`);
+  $("#view").innerHTML = `<table><tr><th>Id</th><th>Type</th><th>When</th><th>From</th><th>Title</th><th>Audience</th></tr>` +
+    S.sources.map(s => `<tr><td><span class="chip" data-src="${esc(s.id)}">${esc(s.id)}</span></td><td>${esc(s.type)}</td><td>${esc(s.ts.replace("T", " "))}</td><td>${esc(s.from)}</td><td>${esc(s.title)}</td><td>${tag(s.audience)}</td></tr>`).join("") + `</table>`;
+}
+function renderAudit() {
+  setHead("🧾 Audit log", "Who did what, on which input, and who approved it");
+  $("#view").innerHTML = `<table><tr><th>#</th><th>Clock</th><th>Actor</th><th>Action</th><th>Target</th><th>Detail</th></tr>` +
+    S.audit.map(a => `<tr><td>${a.i}</td><td>${time(a.clock)}</td><td>${esc(a.actor)}</td><td>${esc(a.action)}</td><td>${esc(a.target)}</td><td>${esc(a.detail)}</td></tr>`).join("") + `</table>`;
+}
+
+function renderRuns() {
+  $("#runs").innerHTML = S.runs.length ? S.runs.map(r => `<div class="run ${r.id === activeRun ? "active" : ""}" data-run="${r.id}">
+    <span>${{ask: "💬", brief: "☀️", ingest: "📥"}[r.agent]} ${esc(r.agent)} · ${esc(r.trigger)}</span><span class="muted">${r.mode === "gemini" ? "G" : "off"} · ${(r.ms / 1000).toFixed(1)}s</span></div>`).join("")
+    : `<div class="muted" style="font-size:12px;padding:4px">No runs yet.</div>`;
+  if (!activeRun && S.runs.length) showRun(S.runs[0].id);
+}
+async function showRun(id) {
+  activeRun = id;
+  document.querySelectorAll(".run").forEach(e => e.classList.toggle("active", e.dataset.run === id));
+  let r;
+  try { r = await api(`/api/runs/${id}?person=${person}`); } catch { return; }
+  const icon = {trigger: "▶", tool_call: "→", tool_result: "←", guard: "!", fallback: "↯", model_text: "✎", final: "✓"};
+  $("#steps").innerHTML = r.steps.map(s => `<div class="step ${s.kind}"><div class="k">${icon[s.kind] || "·"}</div><div>
+    <div class="n">${esc(s.note)} <span class="muted">${s.ms}ms</span></div>
+    ${s.args || s.result ? `<details><summary class="muted">data</summary><pre>${esc(JSON.stringify(s.args || s.result, null, 1))}</pre></details>` : ""}</div></div>`).join("");
+  const u = r.usage;
+  $("#usage").innerHTML = `${esc(r.mode === "gemini" ? r.model : "offline planner")} · ${u.input_tokens} in / ${u.output_tokens} out tokens · <b>$${u.cost_usd.toFixed(4)}</b> · ${(r.ms / 1000).toFixed(1)}s`;
+}
+
+async function withBusy(btn, fn) {
+  if (busy) return; busy = true; const old = btn && btn.innerHTML;
+  if (btn) { btn.disabled = true; btn.innerHTML = `<span class="spin"></span> working…`; }
+  try { await fn(); } catch (e) { toast("⚠ " + e.message); } finally { busy = false; if (btn) { btn.disabled = false; btn.innerHTML = old; } }
+}
+async function sweep(btn) {
+  await withBusy(btn, async () => { const r = await api("/api/sweep", {method: "POST"}); activeRun = null; view = "dm"; await load(); toast(`Sweep done: ${r.runs.length} agent runs`); });
+}
+async function ask(q) {
+  q = q.trim(); if (!q || busy) return;
+  const c = chats[person]; c.push({who: "me", text: q, clock: S.clock}); c.push({thinking: true}); $("#q").value = ""; renderDM();
+  await withBusy(null, async () => {
+    try { const r = await api("/api/ask", {method: "POST", body: {person, question: q}});
+      c.pop(); c.push({who: "brain", answer: r.answer, run: r.run.id, clock: S.clock}); activeRun = r.run.id; }
+    catch (e) { c.pop(); throw e; }
+    await load(); showRun(activeRun);
+  });
+}
+
+document.addEventListener("click", async e => {
+  const t = e.target.closest("[data-view],[data-view-go],[data-run],[data-src],[data-mem],[data-prop],[data-q],#sweep2");
+  if (!t) return;
+  if (t.dataset.run) { e.preventDefault(); return showRun(t.dataset.run); }
+  if (t.dataset.view || t.dataset.viewGo) { view = t.dataset.view || t.dataset.viewGo; return render(); }
+  if (t.dataset.q) return ask(t.dataset.q);
+  if (t.id === "sweep2") return sweep(t);
+  if (t.dataset.src) {
+    const s = S.sources.find(x => x.id === t.dataset.src);
+    $("#dlgBody").innerHTML = s ? `<div class="row">${tag(s.audience)}<span class="muted">${esc(s.type)} · ${esc(s.ts.replace("T", " "))}</span></div><h3 style="margin:8px 0">${esc(s.title)}</h3>
+      <div class="muted">From ${esc(s.from)}${s.to ? " → " + esc(s.to) : ""}</div><pre style="white-space:pre-wrap;font:14px/1.5 inherit;background:#faf9f7;padding:10px;border-radius:6px">${esc(s.body)}</pre>`
+      : `<b>${esc(t.dataset.src)}</b><p class="muted">You don't have access to this source.</p>`;
+    return $("#dlg").showModal();
+  }
+  if (t.dataset.mem) return withBusy(t, async () => { await api(`/api/memory/${t.dataset.mem}/${t.dataset.act}`, {method: "POST", body: {person}}); toast(`${t.dataset.mem} ${t.dataset.act}d by ${S.person.name}`); await load(); });
+  if (t.dataset.prop) return withBusy(t, async () => { await api(`/api/proposals/${t.dataset.prop}/${t.dataset.act}`, {method: "POST", body: {person}}); toast(t.dataset.act === "approve" ? "Approved: moved to Outbox (mock)" : "Rejected: nothing sent"); await load(); });
+});
+$("#askForm").addEventListener("submit", e => { e.preventDefault(); ask($("#q").value); });
+$("#sweepBtn").addEventListener("click", e => sweep(e.currentTarget));
+$("#personSel").addEventListener("change", e => { person = e.target.value; activeRun = null; load(); });
+$("#eventSel").addEventListener("change", e => { const id = e.target.value; if (!id) return;
+  withBusy(null, async () => { const r = await api(`/api/events/${id}`, {method: "POST"}); activeRun = r.runs[0]?.id || null; view = "dm"; await load(); if (activeRun) showRun(activeRun); toast(r.note || "Email received and processed"); }); });
+$("#resetBtn").addEventListener("click", () => withBusy(null, async () => { await api("/api/reset", {method: "POST"}); chats.giulia = []; chats.marco = []; activeRun = null; view = "dm"; await load(); toast("Demo reset"); }));
+load().catch(e => toast("⚠ " + e.message));
+</script>
+</body>
+</html>

@@ -26,6 +26,7 @@ The acting person is always sent by the UI (`person`), never chosen by the model
 | POST | `/api/proposals/{id}/approve` | `{person}` | `{proposal: Proposal, outbox_item}` | 6 |
 | POST | `/api/proposals/{id}/reject` | `{person}` | `{proposal: Proposal}` | 6 |
 | POST | `/api/reset` | `{}` | `{ok: true}` | — |
+| GET | `/api/runs/{run_id}?person=giulia` | — | `Run` (full trace; only runs this person may see) | trace |
 
 Errors: `403 {detail}` when the person is not allowed (e.g. tech approving a finance memory), `404` unknown id, `409` already decided.
 
@@ -103,7 +104,7 @@ Errors: `403 {detail}` when the person is not allowed (e.g. tech approving a fin
   "started_at": "...", "ms": 2140,
   "steps": [{
     "i": 1,
-    "kind": "tool_call" | "tool_result" | "guard" | "model_text" | "final" | "fallback",
+    "kind": "trigger" | "tool_call" | "tool_result" | "guard" | "model_text" | "fallback",
     "tool": "search_memory" | null,
     "args": {...} | null,
     "result": {...} | null,           // already permission-filtered
