@@ -1,6 +1,6 @@
 {
   "id": "mail-new",
-  "label": "Synthetic newer cloud budget claim · EUR 25,000",
+  "label": "Synthetic email · newer cloud budget claim · EUR 25,000",
   "source": {
     "id": "mail-new",
     "type": "mail",
@@ -10,7 +10,7 @@
     "from": "sara@filare.example",
     "to": "",
     "recipient_ids": [],
-    "title": "Budget update? · synthetic demo claim",
+    "title": "Email · Budget update? · synthetic demo claim",
     "body": "I think the Q1 2027 cloud budget is now EUR 25,000."
   },
   "fallback_candidates": [{

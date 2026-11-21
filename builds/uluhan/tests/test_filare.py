@@ -311,3 +311,120 @@ def test_archived_rejection_preserves_valid_budget_draft(demo):
     assert client.post(path, json={"person": "giulia"}).status_code == 200
     assert client.post(path, json={"person": "giulia"}).status_code == 409
     assert len(store.outbox) == 1
+
+
+def _open_budget_reviews(client):
+    reviews = {}
+    for source_id, reviewer in (("mail-new", "giulia"), ("slack-budget", "marco")):
+        path = f"/api/events/{source_id}"
+        assert len(client.post(path).json()["runs"]) == 1
+        assert client.post(path).json()["runs"] == []
+        workspace = state(client, reviewer)
+        alert, = [a for a in workspace["alerts"] if a["source_id"] == source_id]
+        candidate, = [m for m in workspace["candidates"] if m["source_id"] == source_id]
+        assert candidate["reviewed_against"] == "mem-001"
+        receipt = alert["receipt"]
+        assert receipt["current"]["id"] == receipt["original_revision"] == "mem-001"
+        assert receipt["you_can_approve"] and "18,000" in receipt["current"]["fact"]
+        reviews[source_id] = (f"/api/memory/{alert['candidate_id']}/approve",
+                              {"person": reviewer, "reviewed_against": receipt["current"]["id"]})
+    return reviews
+
+
+def test_competing_reviews_and_fresh_reassessment(demo):
+    client, store = demo
+    client.post("/api/sweep")
+    client.post("/api/events/email-006")
+    draft, = state(client, "giulia")["proposals"]
+    invoice, = state(client, "luca")["proposals"]
+    assert draft["citations"][0]["id"] == "mem-001" and draft["status"] == "pending"
+    client.post(f"/api/memory/{_conflict(client, 'sara')['candidate_id']}/reject", json={"person": "sara"})
+    # Ordinary acknowledgement on the same topic, with no new decision.
+    followup = dict(store.sources["email-005"], id="followup", body="Thanks, the report is on its way.")
+    store.live_events["followup"] = {"id": "followup", "source": followup, "label": "Follow-up",
+                                     "fallback_candidates": []}
+    assert client.post("/api/events/followup").status_code == 200
+    assert not any(a["source_id"] == "followup" for a in store.alerts)
+    assert store.proposals[invoice["id"]]["status"] == "pending"
+    reviews = _open_budget_reviews(client)
+    email, giulia = reviews["mail-new"]
+    slack, marco = reviews["slack-budget"]
+    assert client.post(slack, json={"person": "sara", "reviewed_against": "mem-001"}).status_code == 403
+    accepted = client.post(email, json=giulia)
+    assert accepted.status_code == 200
+    winner = accepted.json()["memory"]["id"]
+    for original_review in (marco, {"person": "marco"}):
+        response = client.post(slack, json=original_review)
+        assert response.status_code == 409
+        assert winner in response.json()["detail"] and "25,000" in response.json()["detail"]
+    pending, = [a["receipt"] for a in state(client, "marco")["alerts"] if a["source_id"] == "slack-budget"]
+    assert pending["claim"]["status"] == "candidate" and not pending["record_changed"]
+    assert pending["current"]["id"] == winner and pending["original_revision"] == "mem-001"
+    assert pending["current"]["sources"][0]["id"] == "mail-new"
+    assert pending["claim"]["sources"][0]["id"] == "slack-budget"
+    assert any(a["actor"] == "marco" and a["action"] == "memory.review_stale" for a in store.audit)
+    assert client.post(slack, json={"person": "sara", "reviewed_against": winner}).status_code == 403
+    assert client.post(f"/api/proposals/{draft['id']}/approve", json={"person": "giulia"}).status_code == 409
+    assert not store.outbox
+    assert client.post(f"/api/proposals/{invoice['id']}/approve", json={"person": "luca"}).status_code == 200
+    assert [o["proposal_id"] for o in store.outbox] == [invoice["id"]]
+    # Marco must explicitly review against the €25,000 decision before accepting Slack.
+    assert client.post(slack, json={**marco, "reviewed_against": winner}).status_code == 200
+    receipts = {a["source_id"]: a["receipt"] for a in state(client, "marco")["alerts"]}
+    assert receipts["mail-new"]["record_changed"] and receipts["mail-new"]["claim"]["status"] == "superseded"
+    assert receipts["slack-budget"]["record_changed"] and receipts["slack-budget"]["current"]["id"] == winner
+    assert receipts["slack-budget"]["original_revision"] == "mem-001"
+    assert receipts["email-006"]["outcome"].startswith("Claim rejected by Sara")
+
+
+def test_simultaneous_budget_approvals_have_one_winner(demo):
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Barrier
+
+    client, store = demo
+    reviews = _open_budget_reviews(client)
+    barrier = Barrier(2)
+
+    def publish(review):
+        path, body = review
+        barrier.wait(timeout=5)
+        return client.post(path, json=body).status_code
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        assert sorted(pool.map(publish, reviews.values())) == [200, 409]
+    assert len([a for a in store.audit if a["action"] == "memory.superseded"]) == 1
+    assert len([m for m in store.memory.values() if m["key"] == "cloud.budget.q1.2027"
+                and m["status"] == "approved"]) == 1
+
+
+def test_orchard_shadow_workspace(demo):
+    from billing_shadow import replay
+    replay(demo[0])
+
+
+def test_reject_orchard_correction_releases_only_the_original_hold(demo):
+    client, _ = demo
+    client.post("/api/events/orchard-acceptance")
+    client.post("/api/events/orchard-correction")
+    workspace = state(client, "giulia")
+    draft, = workspace["proposals"]
+    alert, = workspace["alerts"]
+    path = f"/api/memory/{alert['candidate_id']}/reject"
+    assert client.post(path, json={"person": "luca"}).status_code == 403
+    assert client.post(path, json={"person": "giulia"}).status_code == 200
+    resumed, = state(client, "giulia")["proposals"]
+    assert resumed["id"] == draft["id"] and resumed["status"] == "pending"
+    assert client.post(f"/api/proposals/{draft['id']}/approve", json={"person": "giulia"}).status_code == 200
+
+
+def test_old_email_copies_preserve_fresh_orchard_handoff(demo):
+    client, _ = demo
+    client.post("/api/events/orchard-acceptance")
+    client.post("/api/events/orchard-correction")
+    alert, = state(client, "giulia")["alerts"]
+    client.post(f"/api/memory/{alert['candidate_id']}/approve", json={"person": "giulia"}).raise_for_status()
+    for name in ("followup", "duplicate"):
+        client.post(f"/api/events/orchard-{name}").raise_for_status()
+        old, fresh = state(client, "giulia")["proposals"]
+        assert old["status"] == "withdrawn" and fresh["status"] == "pending"
+        assert fresh["citations"][0]["id"] == alert["candidate_id"]

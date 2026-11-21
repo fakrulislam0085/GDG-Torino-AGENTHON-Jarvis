@@ -24,6 +24,10 @@ class PersonBody(BaseModel):
     person: str
 
 
+class ReviewBody(PersonBody):
+    reviewed_against: str | None = None
+
+
 class AskBody(BaseModel):
     person: str
     question: str
@@ -115,7 +119,7 @@ def event(event_id: str):
     except KeyError:
         raise HTTPException(404, "unknown event")
     if runs is None:
-        return {"runs": [], "note": "Already received. Replaying the same email changes nothing."}
+        return {"runs": [], "note": "Already received. Replaying the same message changes nothing."}
     return {"runs": [_run_summary(r) for r in runs]}
 
 
@@ -127,7 +131,7 @@ def ask(body: AskBody):
     return {"run": run, "answer": answer}
 
 
-def _decide_memory(mid: str, pid: str, approve: bool):
+def _decide_memory(mid: str, pid: str, approve: bool, reviewed_against: str | None = None):
     _person(pid)
     with store.lock:
         m = store.memory.get(mid)
@@ -135,17 +139,24 @@ def _decide_memory(mid: str, pid: str, approve: bool):
             raise HTTPException(404, "unknown memory item")
         if not can_see(store.access(pid), m["audience"]):
             raise HTTPException(403, "This person cannot curate that item")
+        if m.get("reviewer_id", pid) != pid:
+            raise HTTPException(403, "Only the designated milestone reviewer can decide this correction.")
         if m["status"] != "candidate":
             raise HTTPException(409, f"already {m['status']}")
-        if approve and store.replays_current_evidence(m):
-            raise HTTPException(409, "Source predates the approved record. Review newer evidence.")
         if approve:
-            # Change control: replacing an approved fact needs authority over it, not just visibility.
-            current = next((o for o in store.memory.values() if o is not m and o["status"] == "approved"
-                            and o["key"] == m["key"] and same_audience(m["audience"], o["audience"])), None)
+            current = store.approved_revision(m)
             if current and not store.may_revise(pid, current):
                 names = ", ".join(p["name"] for p in store.fact_reviewers(current) or [])
                 raise HTTPException(403, f"Only {names} can change this approved fact. Being newer is not enough.")
+            # Clients without a revision token can approve only against the original basis.
+            basis = reviewed_against if reviewed_against is not None else m.get("reviewed_against", m.get("conflicts_with"))
+            if basis != (current["id"] if current else None):
+                detail = f"{current['id']} · {current['fact']}" if current else "No active record."
+                store.log(pid, "memory.review_stale", mid, f"Reviewed against {basis}; current: {detail}", m["audience"])
+                raise HTTPException(409, f"Review is stale. Reassess against the current record: {detail}")
+            if store.replays_current_evidence(m):
+                raise HTTPException(409, "Source predates the approved record. Review newer evidence.")
+            m["approved_against"] = basis
         m["status"] = "approved" if approve else "rejected"
         m["decided_by"], m["decided_at"] = pid, store.clock
         if approve:
@@ -165,14 +176,19 @@ def _decide_memory(mid: str, pid: str, approve: bool):
                     pr["status"], pr["decided_by"], pr["decided_at"] = "withdrawn", "brain", store.clock
                     store.log("brain", "proposal.withdrawn", pr["id"], f"stale after {mid} was approved",
                               [pr["owner_role"]])
+        if m.get("reviewer_id"):
+            from . import billing
+            trace = agents.Trace("draft", pid, "milestone review", m["audience"], store.clock)
+            billing.resolve(store, m, approve, trace)
+            agents._record(store, trace.done("done", {"memory_id": mid}), pid, "review", m["topic"], m["audience"])
         store.log(pid, "memory.approved" if approve else "memory.rejected", mid, f"{m['topic']}: {m['fact']}",
                   m["audience"])
         return {"memory": m}
 
 
 @app.post("/api/memory/{mid}/approve")
-def approve_memory(mid: str, body: PersonBody):
-    return _decide_memory(mid, body.person, True)
+def approve_memory(mid: str, body: ReviewBody):
+    return _decide_memory(mid, body.person, True, body.reviewed_against)
 
 
 @app.post("/api/memory/{mid}/reject")
@@ -188,6 +204,8 @@ def _decide_proposal(pid_: str, person: str, approve: bool):
             raise HTTPException(404, "unknown proposal")
         if not store.may_decide_proposal(person, pr):
             raise HTTPException(403, "Only the designated reviewer can decide this proposal")
+        if pr["status"] == "held":
+            raise HTTPException(409, "Handoff held for customer correction. Giulia must review the acceptance.")
         if pr["status"] != "pending":
             raise HTTPException(409, f"already {pr['status']}")
         if approve and any(

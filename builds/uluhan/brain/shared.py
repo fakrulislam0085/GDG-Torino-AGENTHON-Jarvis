@@ -99,10 +99,11 @@ def load_shared():
         "key": "cloud.budget.q1.2027", "topic": "Q1 2027 cloud budget",
         "fact": archived_email["body"], "quote": archived_email["body"],
     })
-    # One build-local synthetic event; shared team data stays unchanged.
-    live_events.append(json.loads(
-        (Path(__file__).resolve().parent.parent / "data" / "newer-budget-event.json").read_text(encoding="utf-8")
-    ))
+    fixture_dir = Path(__file__).resolve().parent.parent / "data"
+    for filename in ("newer-budget-event.json", "slack-budget-event.json"):
+        live_events.append(json.loads((fixture_dir / filename).read_text(encoding="utf-8")))
+    from .billing import event as billing_event
+    live_events.append(billing_event("acceptance"))
     return {
         "company": company["company"]["name"], "people": people, "memory": memory,
         "sources": list(sources.values()), "live_events": live_events,

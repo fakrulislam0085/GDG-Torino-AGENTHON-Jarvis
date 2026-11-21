@@ -14,7 +14,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
-from .store import Store, can_see, same_audience
+from .store import Store, can_see
 
 STOP = set("""a an the is are was were be been of to in on for and or with at by from this that these those it its
 what when where who whom which how why do does did we our you your i me my us they them their there here as
@@ -200,7 +200,7 @@ def t_list_memory_keys(ctx: Ctx) -> dict:
                      if m["status"] == "approved" and all(can_see(r, m["audience"]) for r in roles)]}
 
 
-def t_propose_memory(ctx: Ctx, key: str, topic: str, fact: str, quote: str) -> dict:
+def t_propose_memory(ctx: Ctx, key: str, topic: str, fact: str, quote: str, *, draft_reply: bool = True) -> dict:
     s = ctx.store
     src = s.sources[ctx.source_id]
     if INJECTION_RE.search(src["body"]) or any(
@@ -219,15 +219,14 @@ def t_propose_memory(ctx: Ctx, key: str, topic: str, fact: str, quote: str) -> d
     cand = {"id": mid, "key": key, "topic": topic[:80], "fact": fact[:400], "audience": list(src["audience"]),
             "status": "candidate", "source_id": src["id"], "quote": quote, "conflicts_with": None,
             "superseded_by": None, "decided_by": None, "decided_at": None}
+    old = s.approved_revision(cand)
+    cand["reviewed_against"] = old["id"] if old else None
     s.memory[mid] = cand
     s.log("brain", "memory.candidate", mid, f"{topic}: candidate from {src['id']}", cand["audience"])
     result = {"status": "candidate_created", "id": mid, "audience": cand["audience"],
               "note": "A person must approve it before anyone can use it."}
     # A conflict is only raised against facts the source's audience may see (no cross-role key reuse).
-    clash = [m for m in s.memory.values() if m["status"] == "approved" and m["key"] == key
-             and norm(m["fact"]) != norm(fact) and same_audience(m["audience"], cand["audience"])]
-    if clash:
-        old = clash[0]
+    if old and norm(old["fact"]) != norm(fact):
         cand["conflicts_with"] = old["id"]
         cand["stale_evidence"] = s.replays_current_evidence(cand)
         roles = cand["audience"]
@@ -242,7 +241,7 @@ def t_propose_memory(ctx: Ctx, key: str, topic: str, fact: str, quote: str) -> d
         s.alerts.append(alert)
         s.log("brain", "alert.conflict", aid, f"{old['id']} vs {mid}", old["audience"])
         sender = (EMAIL_RE.findall(src["from"]) or [""])[0]
-        if sender and not cand["stale_evidence"] and src["from"] not in {p.get("email") for p in s.people.values()}:
+        if draft_reply and sender and not cand["stale_evidence"] and src["from"] not in {p.get("email") for p in s.people.values()}:
             pid = s.next_id("P")
             s.proposals[pid] = {
                 "id": pid, "kind": "email", "owner_role": roles[0], "to": sender,

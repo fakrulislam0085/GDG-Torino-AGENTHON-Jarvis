@@ -498,7 +498,17 @@ def receive_event(store: Store, event_id: str) -> list[dict] | None:
         store.sources[src["id"]] = src
         store.processed_sources.add(src["id"])
         store.clock = max(store.clock, src["ts"])
-    run = ingest(store, src["id"], f"new email {src['id']}")
+        fixture = store.live_events[event_id].get("orchard_fixture")
+        if fixture:
+            from . import billing
+            trace = Trace("ingest", "system", "annotated Orchard replay", src["audience"], store.clock)
+            trace.guard("Simulated customer email. Milestone, version and scope come from fixture annotations.")
+            billing.receive(store, fixture, src, trace)
+            run = trace.done("done", {"source_id": src["id"]})
+            _record(store, run, "brain", "ingest", src["title"], src["audience"])
+            return [run]
+    channel = "email" if src["type"] == "mail" else src["type"]
+    run = ingest(store, src["id"], f"new {channel} {src['id']}")
     with store.lock:
         basis = store.memory.get(store.live_events[event_id].get("confirmation_basis"))
         if basis and basis["status"] == "approved":

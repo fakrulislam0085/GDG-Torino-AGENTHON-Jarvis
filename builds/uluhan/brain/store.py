@@ -93,9 +93,15 @@ class Store:
         )
 
     # ---- change control -------------------------------------------------
+    def approved_revision(self, item: dict) -> dict | None:
+        return next((m for m in self.memory.values() if m["status"] == "approved"
+                     and m["key"] == item["key"] and same_audience(m["audience"], item["audience"])), None)
+
     def fact_reviewers(self, fact: dict) -> list[dict] | None:
         """Who may replace an approved fact: whoever approved it, a lead of a team that owns it, or exec.
         Being newer never makes a message authoritative. None = no approver on record (any curator may decide)."""
+        if fact.get("reviewer_id"):
+            return [self.people[fact["reviewer_id"]]]
         if not fact.get("decided_by") or fact["decided_by"] not in self.people:
             return None
         owners = set(fact["audience"]) - {"all"}
@@ -131,7 +137,13 @@ class Store:
             p = self.people.get(pid or "")
             return f"{p['name']} ({p.get('title', p.get('role', ''))})" if p else (pid or "nobody")
 
-        stale = bool(new.get("stale_evidence")) or self.replays_current_evidence(new)
+        original = old
+        if new["status"] == "candidate":
+            old = self.approved_revision(new) or original
+        elif new.get("approved_against"):
+            old = self.memory[new["approved_against"]]
+        stale = bool(new.get("stale_evidence")) or (
+            new["status"] == "candidate" and self.replays_current_evidence(new))
         reviewers = self.fact_reviewers(old)
         old_date, new_src = (old.get("decided_at") or "")[:10], sources(new)
         new_date = new_src[0]["date"] if new_src else ""
@@ -148,11 +160,16 @@ class Store:
             outcome = f"Claim rejected by {who(new.get('decided_by'))}. Company record unchanged by this claim."
         elif replaced_by_claim:
             outcome = f"Record replaced after review by {who(new.get('decided_by'))}."
+        elif new["status"] == "candidate" and old["id"] != original["id"]:
+            outcome = "The original decision was superseded. Review this claim against the current record."
         elif new["status"] == "candidate":
             outcome = "Awaiting a decision. Company record unchanged."
         else:
             outcome = "This claim did not replace the referenced record."
         return {
+            "original_revision": original["id"],
+            "original_fact": original["fact"],
+            "original_sources": sources(original),
             "current": {"id": old["id"], "fact": old["fact"], "status": old["status"], "approved_by": who(old.get("decided_by")),
                         "approved_on": old_date, "sources": sources(old)},
             "claim": {"id": new["id"], "fact": new["fact"], "status": new["status"], "dated": new_date,
@@ -162,7 +179,7 @@ class Store:
             "record_changed": replaced_by_claim,
             "outcome": outcome,
             "you_can_approve": (new["status"] == "candidate" and not stale and self.may_revise(person_id, old)),
-            "you_can_reject": new["status"] == "candidate",
+            "you_can_reject": new["status"] == "candidate" and new.get("reviewer_id", person_id) == person_id,
         }
 
     def visible_memory(self, role: str | list[str], statuses=("approved",)) -> list[dict]:

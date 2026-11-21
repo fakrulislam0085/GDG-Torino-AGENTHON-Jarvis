@@ -2,7 +2,21 @@
 
 Finance or the COO is the proposed buyer at a fixed-fee implementation firm. Head of Delivery is the proposed champion. The measurable outcome is time to an accurate, invoice-ready handoff. Issuance, payment and customer communication stay in the firm's systems.
 
-Run `../../.venv/bin/python billing_shadow.py` from this directory. Four synthetic email copies represent one milestone. A coordinator manually identifies the milestone, evidence version and accepted sites using the X- headers. Delivery supplies its own ready record. Finance approves acceptance of A+B. A follow-up and a forwarded old copy leave the draft pending. A separate thread narrows acceptance to A. The shadow runner withdraws the pending handoff and names Giulia in the audit while the earlier acceptance is still approved. After review only a new draft citing the revised decision and delivery task reaches the mock outbox. This single-process replay measures no real-world delay or labor savings.
+## One-minute workspace replay
+
+Use **Jury checklist → Open Orchard handoff** on a fresh instance. The replay loads a historical approval by Giulia. It uses four synthetic customer emails from `billing_examples/`; the coordinator’s milestone, version and accepted scope annotations drive the hold. The delivery task is a separate source.
+
+| Stage time | Click and visible result |
+|---|---|
+| 0–12 s | Expand **Read draft · Orchard finance handoff · A+B**. Its citations open the accepted customer email and the delivery-ready task. Leave it pending. |
+| 12–22 s | In the message selector, simulate the ordinary follow-up and forwarded duplicate. Approvals still shows the same pending handoff. |
+| 22–40 s | Simulate **Customer correction · Site A only**. The receipt shows the approved A+B email beside the corrected email. Finance is already on hold and Giulia is the named reviewer. Open either source chip. |
+| 40–50 s | As Giulia, click **Replace the record**. In Approvals the original draft is closed and the fresh Site A draft cites the correction and delivery task. |
+| 50–60 s | Click **Approve to mock outbox** on the fresh draft. Open Outbox to show the single internal Site A handoff. |
+
+Run `../../.venv/bin/python billing_shadow.py` from this directory for the same endpoint replay. If Giulia rejects the correction while A+B is still active, the original handoff returns to pending. Invoice issuance and customer communication remain in the firm’s systems.
+
+**Plain-text trial.** A separate synthetic message paraphrased the correction without the fixture annotations. Vertex Gemini 3.8 Flash identified Site A, Site B’s outstanding testing and the conflict with the correct Orchard decision in 12.73 seconds. The original draft remained pending. The verified automatic hold uses annotated replay inputs. No real customer milestone or time savings have been measured.
 
 ## Incumbent comparison on that same case
 

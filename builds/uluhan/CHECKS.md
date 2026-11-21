@@ -1,5 +1,7 @@
 # CHECKS.md · Uluhan · Challenge A
 
+**Concurrent review prototype (optional).** In deterministic offline mode, simulate the archived email to prepare Giulia’s €18,000 confirmation. Reject the archive. Use the message selector to receive the simulated €25,000 email and the €22,000 Slack claim. Open Brain in two tabs as Giulia and Marco while both receipts still show €18,000. Approve the email as Giulia, then click **Replace the record** on Marco’s already-open Slack receipt. The stale request returns 409. The refreshed receipt shows €25,000, the Slack evidence and the original €18,000 basis. In Giulia’s Approvals, try releasing the original confirmation and open her empty mock outbox. Marco can separately reassess the claim and click **Approve against current record**. Both receipts retain the reviewer and the decision each one replaced.
+
 **Run from the repository root:** `uv run --no-project --python 3.12 --with-requirements builds/uluhan/requirements.txt uvicorn --app-dir builds/uluhan brain.server:app --port 8010`
 
 | # | Check | Where it lives | Enforcement | Steps to show it in the UI |
