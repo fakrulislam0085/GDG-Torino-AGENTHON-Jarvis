@@ -1,7 +1,6 @@
 # Jarvis film: cue sheet
 
 - **Film:** `out/jarvis-film.mp4`. 1920×1080, 30 fps, H.264 + AAC, **21.00 s** (hard cap 21), about −16 LUFS, −1.5 dBTP peak.
-- **Clean (no voice, keeps UI ticks and the closing tone):** `out/jarvis-film_clean-no-voice.mp4`.
 - **Audio:** voiced with ElevenLabs stock voice **Daniel** (`onwK4e9ZLuTAKqWW03F9`, eleven_multilingual_v2), 3 lines. The SFX are synthesized in `tools/mix.py`.
 - **Presenter cut point:** the final frame (orb + closing line + credit + caption) is complete at **0:19.65**. It holds to **0:20.97**.
 - **Data:** `jarvis-your-company-brain/data_ariete`, updated demo date **Sat 21 Nov 2026**.
