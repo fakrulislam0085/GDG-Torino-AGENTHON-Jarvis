@@ -14,7 +14,7 @@ The picker stands in for company sign-in.
 | # | Do this | You should see |
 |---|---|---|
 | 1 | **Today**, as Francesca | Francesca's prepared 08:00 brief: posted by Jarvis, nobody asked, every line with sources |
-| 2 | Sidebar: **An URGENT email arrives** (Studio Rinaldi, `email-011`, to Silvia with Lorenzo CC'd) | Francesca gets an **in-app call card**; **Answer here** plays the briefing in the app. **Approvals** shows two proposals, both waiting: a message to Lorenzo and a Zoom meeting with Lorenzo. **Team outbox** is empty. With `JARVIS_AUTO_DIAL=0`, no real phone rings |
+| 2 | Sidebar: **An urgent notification arrives** (Studio Rinaldi, `email-011`, to Silvia with Lorenzo CC'd) | Francesca gets an **in-app call card**; **Answer here** plays the briefing in the app. **Approvals** shows two proposals, both waiting: a message to Lorenzo and a Zoom meeting with Lorenzo. **Team outbox** is empty. With `JARVIS_AUTO_DIAL=0`, no real phone rings |
 | 3 | **Approvals**, as Francesca: **Approve and send** only the message to Lorenzo | Exactly one **mock outbox** item to Lorenzo in **Team outbox**. The Zoom proposal is still waiting. Nothing leaves the app |
 | 4 | **Signed in as** Lorenzo → **Memory**: **Approve** `mem-p01`, **Reject** `mem-p02` (give a reason). Then **Today** → Ask Jarvis "When does the Rinaldi fix go live?" → open **Sources** | The answer cites `mem-p01`, and **Sources** opens the original chat message. The rejected fact is never used |
 | 5 | Ask "Has Bellini & Co. paid the pilot invoice?" as **Marta** (CFO), then as **Andrea** (CTO) | Marta gets the cited answer (`mem-002`). Andrea is refused. The finance group and the CEO can read the finance fact; Stefano (accountant, finance group) can too |
@@ -28,7 +28,7 @@ Start: http://localhost:8504 without `JARVIS_DATA`, signed in as the CEO (Elena)
 
 | # | Check | How to show it | What you should see |
 |---|---|---|---|
-| 1 | It speaks first | Today, any person (e.g. Davide) | The 08:00 brief, posted by Jarvis, "Nobody asked for it", each line with sources. **New email arrives** adds an alert. The timer re-runs the sweep every 30 min. |
+| 1 | It speaks first | Today, any person (e.g. Davide) | The 08:00 brief, posted by Jarvis, "Nobody asked for it", each line with sources. **A new notification arrives** adds an alert. The timer re-runs the sweep every 30 min. |
 | 2 | People curate the memory | As **Davide**: Memory → Approve `mem-p01`, Reject `mem-p02` (write a reason; its number check flags 83,000 vs "38k"). Then Today → "When does the Langhe fix roll out?" | Before approval: "I don't know yet… mem-p01 is waiting for review". After: the answer cites `mem-p01`. |
 | 3 | It knows who's asking | "What is our cash runway?" as **Giulia** (CFO), then as **Sara** (backend engineer) | Giulia gets the runway with `mem-002`. Sara gets "That isn't available for your role… Ask Elena Russo (CEO) or Giulia Ferrero (CFO)". Typing "I'm the CFO" changes nothing. |
 | 4 | It cites | Any answer | "Sources" opens the approved fact and its original email/chat/doc. "How I got this" shows the role filter, the facts considered and cited, the number check and the mode. |
@@ -42,7 +42,7 @@ Start: http://localhost:8504 without `JARVIS_DATA`, signed in as the CEO (Elena)
   budget `mem-001`; "Approve and replace" is blocked because the source is older. Reject it → a **decision receipt**.
 - **Stripe (Filare only; not connected in the Ariete dataset), CFO or CEO:** "Sync Stripe to the revenue page" → a pending revenue fact that conflicts with `mem-011`
   (newer source, so it may replace it, with a reason) and a page update to `doc-004` waiting in Approvals.
-- **Urgent email:** **An URGENT email arrives** → Elena's in-app call card rings → **Answer here**: the orb speaks the
+- **Urgent email:** **An urgent notification arrives** → Elena's in-app call card rings → **Answer here**: the orb speaks the
   briefing; a message to Davide and a Zoom proposal wait in Approvals. A real phone rings only with phone keys set,
   Gemini mode and `JARVIS_AUTO_DIAL=1`.
 - **Edit and history:** edit an approved fact → saved as a new version; the old one goes to History. A draft that relied

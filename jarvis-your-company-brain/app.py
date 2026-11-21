@@ -540,8 +540,8 @@ with st.sidebar:
     if is_ceo(ss.user):
         st.button("Reset the demo", icon=":material/restart_alt:", on_click=do_reset, width="stretch",
                   help="CEO only: back to the 08:00 state")
-    st.button("New email arrives", icon=":material/mark_email_unread:", on_click=do_new_email, width="stretch")
-    st.button("An URGENT email arrives", icon=":material/notification_important:", on_click=do_urgent_email, width="stretch",
+    st.button("A new notification arrives", icon=":material/notifications:", on_click=do_new_email, width="stretch")
+    st.button("An urgent notification arrives", icon=":material/notification_important:", on_click=do_urgent_email, width="stretch",
               help="Jarvis decides it's urgent, calls the CEO with a spoken briefing, and prepares a fix that waits for approval")
     if store.demo_events().get("frost_warning"):
         st.button("Customer: frost warning", icon=":material/ac_unit:", on_click=do_frost_warning, width="stretch",
