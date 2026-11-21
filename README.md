@@ -7,7 +7,7 @@ An AI colleague for a small company. It reads the team's email, chat, tasks and 
 
 ![How Jarvis works: it reads, guards, a person approves, then it answers and proposes](pitch/agenthon-deck/assets/how-it-works.png)
 
-> **Start here: [`builds/best`](builds/best/README.md)**, the Jarvis app (how to run it, the 7 checks, 76 tests). Pitch deck: [`pitch/agenthon-deck/`](pitch/agenthon-deck/) · Film: [`pitch/jarvis-film/out/jarvis-film.mp4`](pitch/jarvis-film/out/).
+> **Start here: [Jarvis – your company brain](jarvis-your-company-brain/README.md)** (`jarvis-your-company-brain/`), the app (how to run it, the 7 checks, 76 tests). Pitch deck: [`pitch/agenthon-deck/`](pitch/agenthon-deck/) · Film: [`pitch/jarvis-film/out/jarvis-film.mp4`](pitch/jarvis-film/out/).
 >
 > Demo company: a **fictional scenario built on Ariete Tech Solutions' public services. Not Ariete's data.** All people, clients, emails and numbers are invented.
 
@@ -38,7 +38,7 @@ Prompt-injection emails, CEO-fraud payment requests, disguised characters, rewor
 - Demo data, not live connectors. The phone call, Zoom and Stripe are real when keys are set.
 - Identity is a picker, not a company login.
 - Pattern and AI checks catch the attacks we tested; neither is a guarantee.
-- No API keys in this repo: the app reads a git-ignored `.env` (see `builds/best/.env.example`).
+- No API keys in this repo: the app reads a git-ignored `.env` (see `jarvis-your-company-brain/.env.example`).
 
 ## Docs
 [Event brief](docs/hackathon-brief.md) · [Challenge A plan](docs/PLAN-A.md) · [Our strategy](docs/STRATEGY.md) · [Red-team report](docs/red-team-compare.md)

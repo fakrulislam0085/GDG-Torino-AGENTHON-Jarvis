@@ -4,7 +4,7 @@ Safety, in code and in the agent's instructions:
 - The agent has no tools. It can't send, pay or change anything. Fixes wait for a click in the Jarvis app.
 - A spoken "approve it" is never enough (a voice can be spoofed): the agent says the approval must be tapped in Jarvis.
 - It only knows what we pass for this call (the situation and the prepared fix). Anything else gets "I don't know".
-- Secrets and the phone number live in builds/best/.env (git-ignored); nothing here is printed.
+- Secrets and the phone number live in jarvis-your-company-brain/.env (git-ignored); nothing here is printed.
 - This build uses its own ElevenLabs agent name, so it never rewrites the agent another build's live demo uses.
 """
 from __future__ import annotations

@@ -4,7 +4,7 @@
 - **Clean (no voice, keeps UI ticks and the closing tone):** `out/jarvis-film_clean-no-voice.mp4`.
 - **Audio:** voiced with ElevenLabs stock voice **Daniel** (`onwK4e9ZLuTAKqWW03F9`, eleven_multilingual_v2), 3 lines. The SFX are synthesized in `tools/mix.py`.
 - **Presenter cut point:** the final frame (orb + closing line + credit + caption) is complete at **0:19.45**. It holds to **0:20.97**.
-- **Data:** `builds/best/data_ariete`, updated demo date **Sat 21 Nov 2026**.
+- **Data:** `jarvis-your-company-brain/data_ariete`, updated demo date **Sat 21 Nov 2026**.
 
 ## Picture
 

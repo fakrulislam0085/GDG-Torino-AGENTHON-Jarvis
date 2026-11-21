@@ -1,6 +1,6 @@
 # Facts: Token Mafia · Jarvis (AGENTHON finalist pitch)
 Audience: competition jury (5: 1 sponsor Ariete Tech Solutions, 1 GDG Torino, 3 external) · Decision: score us top 2 in "Agentic AI for business" · Format: spoken 3 min + questions
-Founder decisions that override rules: two versions. A = Filare Labs story + Filare demo; B = PoliPrep problem (founder's own company) + Filare demo. PoliPrep internal context may be named (founder, 2026-11-21). Demo build = builds/best (Filare data, light UI).
+Founder decisions that override rules: two versions. A = Filare Labs story + Filare demo; B = PoliPrep problem (founder's own company) + Filare demo. PoliPrep internal context may be named (founder, 2026-11-21). Demo build = jarvis-your-company-brain (Filare data, light UI).
 
 | ID | Fact | Source | Date checked |
 |---|---|---|---|
@@ -24,11 +24,11 @@ Founder decisions that override rules: two versions. A = Filare Labs story + Fil
 | F18 | Hamid and Uluhan are engineering students at Politecnico di Torino | founder, chat | 2026-11-21 |
 | F20 | PoliPrep CEnT-S Cohort 1 has 14 of 20 places filled | LifeAtPoliTO/PoliPrep/context/business.md (founder, Nov 8) | 2026-11-21 |
 | F19 | Ghost-deck headlines approved; product name "Jarvis"; ask = a pilot with Ariete | founder, chat | 2026-11-21 |
-| F21 | Demo data (Ariete scenario): client Studio Rinaldi's document-intake automation stopped Wednesday night; 60 client files stuck before the 28 Nov tax deadline; the email went to the account manager (Silvia), cc the automation engineer; the CFO-only fact is Bellini & Co.'s unpaid pilot invoice INV-2026-014 (EUR 4,800) | builds/best/data_ariete/emails.json email-011, memory_seed.json mem-002 | 2026-11-21 |
+| F21 | Demo data (Ariete scenario): client Studio Rinaldi's document-intake automation stopped Wednesday night; 60 client files stuck before the 28 Nov tax deadline; the email went to the account manager (Silvia), cc the automation engineer; the CFO-only fact is Bellini & Co.'s unpaid pilot invoice INV-2026-014 (EUR 4,800) | jarvis-your-company-brain/data_ariete/emails.json email-011, memory_seed.json mem-002 | 2026-11-21 |
 
 | F22 | Demo company = a fictional scenario built on Ariete Tech Solutions' PUBLIC services (AI training, mentoring, custom automations, AI agents for professional firms and SMEs; Turin; Ariete Capital group). People, events, clients and numbers are invented; no Ariete finances | founder decision 21 Nov 14:40; docs/sponsor-research.md (arietetech.com, read 21 Nov) | 2026-11-21 |
-| F23 | builds/best: 63 automated tests pass offline (builds/arif: 33) | pytest, 21 Nov ~15:00 | 2026-11-21 |
+| F23 | jarvis-your-company-brain: 63 automated tests pass offline (builds/arif: 33) | pytest, 21 Nov ~15:00 | 2026-11-21 |
 
 ## Missing (NEED)
-- Cost per brief for builds/best (slides keep the builds/arif figure, labelled)
+- Cost per brief for jarvis-your-company-brain (slides keep the builds/arif figure, labelled)
 - Market size: not estimated (said on the slide; no TAM)

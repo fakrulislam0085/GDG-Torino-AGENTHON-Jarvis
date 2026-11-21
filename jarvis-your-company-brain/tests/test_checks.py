@@ -1,6 +1,6 @@
 """Offline tests for the 7 jury checks, the rival attacks and the best-of-three grafts, on the Filare Labs demo data
 (7 people: CEO, CFO, Accountant, CTO, Backend engineer, Field IoT engineer, Sales lead).
-Run from builds/best: ..\\arif\\.venv\\Scripts\\python -m pytest tests -q"""
+Run from jarvis-your-company-brain: ..\\arif\\.venv\\Scripts\\python -m pytest tests -q"""
 import os
 import sys
 import tempfile

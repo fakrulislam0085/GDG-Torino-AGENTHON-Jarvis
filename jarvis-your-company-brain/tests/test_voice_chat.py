@@ -1,5 +1,5 @@
 """Offline tests for "Talk to Jarvis" (phone.web_session). The ElevenLabs HTTP is mocked: no real network.
-Run from builds/best with the arif venv: python -m pytest tests -q"""
+Run from jarvis-your-company-brain: python -m pytest tests -q"""
 import os
 import sys
 import tempfile

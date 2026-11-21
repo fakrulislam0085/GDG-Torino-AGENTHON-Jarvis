@@ -1,5 +1,5 @@
 """Offline tests for the Today header counters, the sidebar nav badges and the one-tap question chips (ui/counts.py).
-Run from builds/best: ..\\arif\\.venv\\Scripts\\python -m pytest tests -q"""
+Run from jarvis-your-company-brain: ..\\arif\\.venv\\Scripts\\python -m pytest tests -q"""
 import os
 import sys
 import tempfile

@@ -1,6 +1,6 @@
 """Zoom: Jarvis proposes meetings; a meeting is created only after a person taps Approve.
 
-Real Zoom: a Server-to-Server OAuth app (Zoom Marketplace) with scope to create meetings, and in builds/best/.env:
+Real Zoom: a Server-to-Server OAuth app (Zoom Marketplace) with scope to create meetings, and in jarvis-your-company-brain/.env:
 ZOOM_ACCOUNT_ID, ZOOM_CLIENT_ID, ZOOM_CLIENT_SECRET. Without them (or in offline/test mode) the join link is a labelled demo link.
 """
 from __future__ import annotations

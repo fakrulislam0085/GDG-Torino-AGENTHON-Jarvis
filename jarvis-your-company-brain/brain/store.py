@@ -1,9 +1,9 @@
 """Company data + runtime state.
 
-The company is a data folder inside builds/best, chosen by JARVIS_DATA (default data_filare: Filare Labs, a fictional
+The company is a data folder inside jarvis-your-company-brain, chosen by JARVIS_DATA (default data_filare: Filare Labs, a fictional
 company). Swapping the company is a data swap: no code names a person or a company.
-Runtime state lives in builds/best/state/<data folder>/ (git-ignored) and the instant-reset snapshot in
-builds/best/demo_snapshot/<data folder>/, so two companies never mix their memory, briefs or approvals."""
+Runtime state lives in jarvis-your-company-brain/state/<data folder>/ (git-ignored) and the instant-reset snapshot in
+jarvis-your-company-brain/demo_snapshot/<data folder>/, so two companies never mix their memory, briefs or approvals."""
 from __future__ import annotations
 
 import json

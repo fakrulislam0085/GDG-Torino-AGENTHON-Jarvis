@@ -1,7 +1,7 @@
 """Jarvis, best-of-three build: Company Brain (Challenge A) on the Filare Labs demo data, light theme.
 Everything company-specific (people, checklist, default user, placeholders, pages) comes from <JARVIS_DATA>/company.json
 (default data_filare: Filare Labs).
-Run from builds/best:  ..\\arif\\.venv\\Scripts\\python -m streamlit run app.py --server.port 8504
+Run from jarvis-your-company-brain:  ..\\arif\\.venv\\Scripts\\python -m streamlit run app.py --server.port 8504
 """
 from __future__ import annotations
 

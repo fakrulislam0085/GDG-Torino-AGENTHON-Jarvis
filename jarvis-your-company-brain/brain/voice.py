@@ -1,4 +1,4 @@
-"""The morning brief, read aloud with ElevenLabs (only if ELEVENLABS_API_KEY is set in builds/best/.env).
+"""The morning brief, read aloud with ElevenLabs (only if ELEVENLABS_API_KEY is set in jarvis-your-company-brain/.env).
 Only the text the person already sees is sent (their role-filtered brief or call script). The audio cache is keyed by a
 hash of that text, so a changed brief is never read out from an old recording."""
 from __future__ import annotations

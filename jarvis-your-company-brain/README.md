@@ -1,4 +1,4 @@
-# Jarvis, best-of-three build (Company Brain, Challenge A)
+# Jarvis – your company brain
 
 **On stage today:** a fictional scenario built on **Ariete Tech Solutions'** public services (AI agents and automations for professional firms, Turin). People, clients, events and numbers are invented; no Ariete data (`data_ariete/`, set with `JARVIS_DATA=data_ariete`). The same app also runs on **Filare Labs**, the team's shared fictional vineyard-sensor company (`data_filare/`, the default). Swapping company is a data swap.
 Jarvis watches the team's email, chat, tasks and docs, keeps a shared memory that people curate, speaks first with a
@@ -12,7 +12,7 @@ All data is synthetic. No real client or personal data.
 
 ## Run it
 
-From `builds/best`, with Python 3.11+:
+From this folder (`jarvis-your-company-brain`), with Python 3.11+:
 
 ```
 python -m venv .venv
@@ -38,7 +38,7 @@ Tests (offline, no network):
 
 | Key | What it does |
 |---|---|
-| `JARVIS_DATA` | Which company to run on: a data folder in `builds/best` (default `data_filare`). Swapping company is a data swap. |
+| `JARVIS_DATA` | Which company to run on: a data folder in `jarvis-your-company-brain` (default `data_filare`). Swapping company is a data swap. |
 | `JARVIS_AUTO_DIAL` | `0` (default). Jarvis never rings a real phone by itself. The in-app call card always works. |
 | `JARVIS_CALL_NAME` | Optional name Jarvis says on the phone. Default: the CEO's first name from the data. |
 | `JARVIS_SWEEP_MINUTES` | Minutes between automatic morning sweeps while the app is open (default 30, `0` = off). |

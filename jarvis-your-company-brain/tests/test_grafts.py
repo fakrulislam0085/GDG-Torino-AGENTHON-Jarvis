@@ -1,5 +1,5 @@
 """Offline tests for the second round of grafts (self-check, quote check, outbox privacy, timer, strict matching).
-Run from builds/best: ..\\arif\\.venv\\Scripts\\python -m pytest tests -q"""
+Run from jarvis-your-company-brain: ..\\arif\\.venv\\Scripts\\python -m pytest tests -q"""
 import os
 import sys
 import tempfile
