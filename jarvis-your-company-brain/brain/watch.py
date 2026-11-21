@@ -80,7 +80,7 @@ def new_email_arrives(email: dict | None = None) -> dict:
                     audit.log("memory_candidate_dropped", None, source=email["id"], fact=fact[:200],
                               reason="its quote is not found word for word in the source")
             facts = facts[:2]
-            alert = str(out.get("alert") or "").strip() or None
+            alert = str(out.get("alert", "")).strip() or None
         except llm.LLMUnavailable as e:
             audit.log("llm_fallback", None, where="watch", error=str(e)[:200])
     if not facts:   # offline (or every candidate dropped): the first sentences, which are their own exact quote

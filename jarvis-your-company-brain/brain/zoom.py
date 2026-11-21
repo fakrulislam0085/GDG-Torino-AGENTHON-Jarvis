@@ -36,10 +36,7 @@ def valid_meeting(m: dict) -> dict | None:
         start = datetime.fromisoformat(str(m.get("start", ""))[:16])
     except ValueError:
         return None
-    try:
-        minutes = max(10, min(60, int(m.get("minutes") or 15)))
-    except (TypeError, ValueError):
-        minutes = 15
+    minutes = max(10, min(60, int(m.get("minutes") or 15)))
     team = store.team()
     invitees = [i for i in (m.get("with") or []) if i in team]
     topic = str(m.get("topic") or "").strip()[:120]
