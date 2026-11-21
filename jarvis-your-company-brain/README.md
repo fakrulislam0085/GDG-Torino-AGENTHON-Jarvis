@@ -42,11 +42,14 @@ Tests (offline, no network):
 .venv\Scripts\python -m pytest tests -q    # Windows
 ```
 
-76 tests pass. They run on the default Filare Labs data. The Ariete demo is a separate, hand-run rehearsal (see `CHECKS.md`).
+87 tests pass. They run on the default Filare Labs data. The Ariete demo is a separate, hand-run rehearsal (see `CHECKS.md`).
 
 Also new today:
 - **Talk to Jarvis**, a live voice chat about your own brief in the browser. It cannot approve anything.
 - Question chips, header counters and menu counts.
+- Today: the ask bar at the top, with **Talk to Jarvis** (opens a voice dialog) and **Play my brief** next to it.
+- Morning email: **"How your 08:00 email is made"**: the sources (Gmail, team chat, task board, docs; demo copies), the live actions, and Read → Guard → Memory → Brief → 08:00 email, every count filtered by role.
+- Uluhan's **frost-warning hold** (Filare data): when a customer needs coverage before the scheduled repair, the waiting customer reply is held and one internal request waits for the sales owner.
 - The demo is dated to the hackathon day (Sat 21 Nov 2026).
 
 We make no general voice-privacy claim. **Play my brief** sends the listener's own brief text, which can include finance items (seen in a stubbed test), to the voice provider. The voice chat's filter is not complete either. On stage we show the brief on screen.

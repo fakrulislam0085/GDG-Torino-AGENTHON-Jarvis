@@ -66,7 +66,7 @@ Start: http://localhost:8504 without `JARVIS_DATA`, signed in as the CEO (Elena)
 
 ## Tests
 
-From `jarvis-your-company-brain/`: `.venv\Scripts\python -m pytest tests -q` (macOS/Linux: `.venv/bin/python -m pytest tests -q`). Offline, on the default Filare Labs data: **76 passing**. The Ariete click sequence above is a separate, hand-run rehearsal. The tests cover the 7 checks, attacks, conflicts/edit/history, approval
+From `jarvis-your-company-brain/`: `.venv\Scripts\python -m pytest tests -q` (macOS/Linux: `.venv/bin/python -m pytest tests -q`). Offline, on the default Filare Labs data: **87 passing**. The Ariete click sequence above is a separate, hand-run rehearsal. The tests cover the 7 checks, attacks, conflicts/edit/history, approval
 rights, manual notes, Stripe, urgent call + harvest + Zoom, paste attacks, stale drafts, the number check, three kinds of
 "I don't know", export, the circuit breaker, and the second-round grafts (self-check, quote check, outbox privacy,
 timer, strict matching, data-folder switch).
