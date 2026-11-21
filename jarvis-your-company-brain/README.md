@@ -37,8 +37,9 @@ Open http://localhost:8504. With Google Application Default Credentials (or `GOO
 
 Tests (offline, no network):
 
-```
-.venv\Scripts\python -m pytest tests -q
+```bash
+.venv/bin/python -m pytest tests -q        # macOS / Linux
+.venv\Scripts\python -m pytest tests -q    # Windows
 ```
 
 76 tests pass. They run on the default Filare Labs data. The Ariete demo is a separate, hand-run rehearsal (see `CHECKS.md`).
